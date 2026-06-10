@@ -1,0 +1,29 @@
+{
+  "name": "@china-ru/db",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist", "drizzle"],
+  "scripts": {
+    "generate": "drizzle-kit generate:pg",
+    "migrate": "node --loader tsx ./src/migrate.ts",
+    "studio": "drizzle-kit studio",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist drizzle"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.36.0",
+    "postgres": "^3.4.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.28.0",
+    "tsx": "^4.17.0",
+    "typescript": "^5.7.2"
+  }
+}

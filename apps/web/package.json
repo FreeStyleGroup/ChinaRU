@@ -1,0 +1,31 @@
+{
+  "name": "@china-ru/web",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@china-ru/shared": "workspace:*",
+    "next": "^15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "i18next": "^24.0.0",
+    "react-i18next": "^15.0.0",
+    "axios": "^1.7.0",
+    "clsx": "^2.1.0",
+    "date-fns": "^4.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.7.2",
+    "tailwindcss": "^4.0.0",
+    "postcss": "^8.4.0"
+  }
+}

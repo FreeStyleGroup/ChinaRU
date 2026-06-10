@@ -1,0 +1,5 @@
+import Link from 'next/link';
+export const metadata = { title: 'Language School | China-RU' };
+export default function SchoolPage() {
+  return <div className="min-h-screen bg-gray-50"><div className="max-w-7xl mx-auto px-4 py-12"><Link href="/" className="text-blue-600 mb-6 inline-block">← Home</Link><h1 className="text-4xl font-bold mb-8">Chinese Language School</h1><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><div className="bg-white rounded-lg shadow p-4"><p className="text-2xl font-bold">HSK 1</p><p className="text-gray-600 text-sm">Beginner</p></div><div className="bg-white rounded-lg shadow p-4"><p className="text-2xl font-bold">HSK 3</p><p className="text-gray-600 text-sm">Elementary</p></div><div className="bg-white rounded-lg shadow p-4"><p className="text-2xl font-bold">HSK 5</p><p className="text-gray-600 text-sm">Intermediate</p></div><div className="bg-white rounded-lg shadow p-4"><p className="text-2xl font-bold">HSK 6</p><p className="text-gray-600 text-sm">Advanced</p></div></div></div></div>;
+}

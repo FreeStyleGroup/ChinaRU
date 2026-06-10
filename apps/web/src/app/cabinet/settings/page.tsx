@@ -1,0 +1,3 @@
+export default function SettingsPage() {
+  return <div><h1 className="text-3xl font-bold mb-8">Settings</h1><div className="bg-white rounded-lg shadow p-6 space-y-6"><div><h2 className="text-xl font-bold mb-4">Notifications</h2><label className="flex items-center gap-2"><input type="checkbox" defaultChecked /><span>Email Notifications</span></label></div><div><h2 className="text-xl font-bold mb-4">Privacy</h2><label className="flex items-center gap-2"><input type="checkbox" defaultChecked /><span>Public Profile</span></label></div><button className="bg-blue-600 text-white px-4 py-2 rounded">Save Settings</button></div></div>;
+}

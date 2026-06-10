@@ -1,0 +1,3 @@
+export default function SellerCenterPage() {
+  return <div><h1 className="text-3xl font-bold mb-8">Seller Center</h1><div className="grid grid-cols-1 md:grid-cols-4 gap-4"><div className="bg-white rounded-lg shadow p-6"><p className="text-3xl font-bold">0</p><p className="text-gray-600">Products</p></div><div className="bg-white rounded-lg shadow p-6"><p className="text-3xl font-bold">0</p><p className="text-gray-600">Sales</p></div><div className="bg-white rounded-lg shadow p-6"><p className="text-3xl font-bold">0</p><p className="text-gray-600">Revenue</p></div><div className="bg-white rounded-lg shadow p-6"><p className="text-3xl font-bold">5.0</p><p className="text-gray-600">Rating</p></div></div></div>;
+}

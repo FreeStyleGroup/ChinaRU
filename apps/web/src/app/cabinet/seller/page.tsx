@@ -43,6 +43,11 @@ export default function SellerCenterPage() {
           <h2 className="text-xl font-bold mb-2">📊 Analytics</h2>
           <p className="text-gray-600">View sales and performance metrics</p>
         </Link>
+
+        <Link href="/cabinet/seller/jobs" className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+          <h2 className="text-xl font-bold mb-2">💼 Manage Jobs</h2>
+          <p className="text-gray-600">Post and manage job listings</p>
+        </Link>
       </div>
     </div>
   );

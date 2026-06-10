@@ -3,6 +3,7 @@ import { createAuthRoutes } from './auth.routes';
 import { createCatalogRoutes } from './catalog.routes';
 import { createOrdersRoutes } from './orders.routes';
 import { createTravelRoutes } from './travel.routes';
+import { createJobsRoutes } from './jobs.routes';
 
 export function createApiRouter(): Router {
   const router = Router();
@@ -24,17 +25,14 @@ export function createApiRouter(): Router {
   // Travel routes
   router.use('/travel', createTravelRoutes());
 
+  // Jobs routes
+  router.use('/jobs', createJobsRoutes());
+
   // Search routes (will be added)
   // router.use('/search', searchRoutes);
 
   // Seller routes (will be added)
   // router.use('/seller', sellerRoutes);
-
-  // Travel routes (will be added)
-  // router.use('/travel', travelRoutes);
-
-  // Jobs routes (will be added)
-  // router.use('/jobs', jobRoutes);
 
   // Metro routes (will be added)
   // router.use('/metro', metroRoutes);

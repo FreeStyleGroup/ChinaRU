@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import axios from 'axios';
+import { cartHelper } from '@/lib/cart';
 
 interface Product {
   id: string;
@@ -18,6 +19,7 @@ interface Product {
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -42,8 +44,15 @@ export default function ProductDetailPage() {
   }, [params.slug]);
 
   const handleAddToCart = () => {
-    // TODO: Implement cart logic
-    alert(`Added ${quantity} item(s) to cart`);
+    if (product) {
+      cartHelper.addItem({
+        productId: product.id,
+        productName: product.nameRu,
+        price: product.price,
+        quantity,
+      });
+      router.push('/cart');
+    }
   };
 
   if (loading) return <div className="max-w-7xl mx-auto px-4 py-12">Loading...</div>;

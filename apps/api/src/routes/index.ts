@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { createAuthRoutes } from './auth.routes';
+import { createCatalogRoutes } from './catalog.routes';
 
 export function createApiRouter(): Router {
   const router = Router();
@@ -12,8 +13,8 @@ export function createApiRouter(): Router {
   // Auth routes
   router.use('/auth', createAuthRoutes());
 
-  // Catalog routes (will be added)
-  // router.use('/catalog', catalogRoutes);
+  // Catalog routes
+  router.use('/catalog', createCatalogRoutes());
 
   // Search routes (will be added)
   // router.use('/search', searchRoutes);

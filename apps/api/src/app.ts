@@ -35,16 +35,9 @@ export function createApp(): Express {
   });
   app.use('/api/', limiter);
 
-  // Health check
-  app.get(
-    '/api/health',
-    asyncHandler(async (req, res) => {
-      res.json({ status: 'ok' });
-    })
-  );
-
-  // API routes (will be added in routes/index.ts)
-  // app.use('/api', apiRoutes);
+  // Import and use API routes
+  const { createApiRouter } = await import('./routes');
+  app.use('/api/v1', createApiRouter());
 
   // 404
   app.use((req, res) => {

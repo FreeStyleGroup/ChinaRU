@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { createAuthRoutes } from './auth.routes';
 
 export function createApiRouter(): Router {
   const router = Router();
@@ -8,8 +9,8 @@ export function createApiRouter(): Router {
     res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // Auth routes (will be added)
-  // router.use('/auth', authRoutes);
+  // Auth routes
+  router.use('/auth', createAuthRoutes());
 
   // Catalog routes (will be added)
   // router.use('/catalog', catalogRoutes);

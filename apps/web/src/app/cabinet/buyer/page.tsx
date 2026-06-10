@@ -2,17 +2,44 @@ export const metadata = {
   title: 'Buyer Dashboard | China-RU',
 };
 
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
 export default function BuyerDashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/auth/login');
+    } else {
+      setUser(JSON.parse(userData));
+    }
+  }, [router]);
+
+  if (!user) return null;
+
   const stats = [
-    { label: 'Total Orders', value: '12', icon: '📦' },
-    { label: 'Spent', value: '$1,234', icon: '💰' },
-    { label: 'Favorites', value: '28', icon: '❤️' },
-    { label: 'Unread Messages', value: '3', icon: '💬' },
+    { label: 'Total Orders', value: '0', icon: '📦' },
+    { label: 'Spent', value: '$0', icon: '💰' },
+    { label: 'Favorites', value: '0', icon: '❤️' },
+    { label: 'Unread Messages', value: '0', icon: '💬' },
   ];
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Welcome to Your Buyer Cabinet</h1>
+      <h1 className="text-3xl font-bold mb-2">Welcome, {user.name}! 👋</h1>
+      <p className="text-gray-600 mb-8">{user.email}</p>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         {stats.map(stat => (

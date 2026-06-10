@@ -62,9 +62,15 @@ export default function Home() {
 
   useEffect(() => {
     const hasAccess = localStorage.getItem('protected-access') === 'true';
+    const user = localStorage.getItem('user');
+
     if (!hasAccess) {
       router.push('/protected');
+    } else if (!user) {
+      // Protected but not logged in - show public home
+      setIsLoggedIn(true);
     } else {
+      // Logged in user
       setIsLoggedIn(true);
     }
   }, [router]);

@@ -1,35 +1,13 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "baseUrl": ".",
     "paths": {
-      "@china-ru/shared": ["packages/shared/src"],
-      "@china-ru/db": ["packages/db/src"],
-      "@china-ru/ui": ["packages/ui/src"]
+      "@china-ru/shared": ["packages/shared/src/index.ts"],
+      "@china-ru/db": ["packages/db/src/index.ts"],
+      "@china-ru/ui": ["packages/ui/src/index.ts"]
     }
   },
   "include": [],
-  "references": [
-    { "path": "./packages/shared" },
-    { "path": "./packages/db" },
-    { "path": "./packages/ui" },
-    { "path": "./apps/api" },
-    { "path": "./apps/web" },
-    { "path": "./apps/admin" }
-  ]
+  "exclude": ["node_modules", "**/dist", "**/.next", "**/.turbo"]
 }

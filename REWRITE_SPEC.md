@@ -34,6 +34,7 @@
 ## 1. Стратегия rewrite'а
 
 **НЕ** редактировать существующие файлы Haiku. Подход:
+
 1. Сохранить текущий `main` как `archive/haiku-mvp` (тег), чтобы история не терялась.
 2. Переписывать пакет за пакетом снизу вверх: `db` → `shared` → `api` → `web` → `admin`.
 3. Каждый слой закрывается тестами и зелёным typecheck до перехода к следующему.
@@ -64,6 +65,7 @@ china-ru/
 ```
 
 ### Принципы
+
 - **Single source of truth для типов**: Zod-схема в `packages/shared` → `z.infer` даёт DTO →
   тот же тип использует api (валидация), web (формы), admin. Никаких ручных дублей интерфейсов.
 - **Repository pattern**: весь доступ к БД — в `packages/db/repositories/*`. Сервисы оперируют
@@ -80,7 +82,7 @@ china-ru/
 
 1. **Drizzle: повторные `.where()`** перетирают условие, а не AND-ят.
    → Собирать `conditions: SQL[]`, один `.where(and(...conditions))`.
-2. **Count с пагинацией** должен применять ТЕ ЖЕ фильтры, что и выборка. Использовать `sql\`count(*)\``.
+2. **Count с пагинацией** должен применять ТЕ ЖЕ фильтры, что и выборка. Использовать `sql\`count(\*)\``.
 3. **`this` в объект-литералах** не биндится — отсюда классы для сервисов.
 4. **Авторизация ролей**: каждая мутация seller/admin — через `requireRole`, не только `requireAuth`.
 5. **Транзакции**: создание заказа со списанием остатков — `db.transaction()`.
@@ -96,6 +98,7 @@ china-ru/
 ## 4. Функциональный объём (фичи, которые должны работать)
 
 Перенести/переписать из MVP:
+
 - **Auth**: register → email verify → login → rotating refresh (httpOnly) → logout → forgot/reset.
   OAuth (Google/Yandex/VK/WeChat) — задизайнить, реализовать минимум Google+Yandex.
 - **Каталог**: дерево категорий, листинг с фильтрами (цена/категория/бренд/рейтинг), SSR карточка товара, Meilisearch-поиск.
@@ -125,16 +128,16 @@ china-ru/
 
 ## 6. Порядок исполнения (фазы rewrite'а)
 
-| Фаза | Содержание | Gate |
-|---|---|---|
-| R0 | Тег `archive/haiku-mvp`. Базовая инфра: tsconfig strict, ESLint/Prettier, Vitest, turbo pipeline, CI скелет. | CI зелёный на пустых тестах |
-| R1 | `packages/db`: финальная схема + индексы + миграции + repositories + seed. | db собирается, миграции применяются |
-| R2 | `packages/shared`: Zod-схемы всех доменов → z.infer DTO, constants, enums. | typecheck зелёный |
-| R3 | `apps/api`: config(Zod), middleware stack, errorHandler, auth (из FreeStyle), все домены (controllers→services→repos), OpenAPI, тесты. | coverage ≥70% сервисов, integration зелёные |
-| R4 | `apps/web`: Server Components, SSR каталог/товар/travel/jobs, единый API-клиент, auth-context (cookie), формы, корзина, кабинеты. | Lighthouse ≥90, SSR HTML в view-source |
-| R5 | `apps/admin`: Vite SPA, RBAC, таблицы, модерация, аналитика-дашборд. | auth-guard работает, e2e зелёные |
-| R6 | SEO (JSON-LD/OG/sitemap), i18n ru/en/zh, Redis-кеш, rate-limit, security headers, observability. | acceptance bar (раздел 0) весь зелёный |
-| R7 | Docs (architecture, ADR, README, Swagger), docker-compose prod, deploy.yml на VPS, staging. | деплой на staging работает |
+| Фаза | Содержание                                                                                                                             | Gate                                        |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| R0   | Тег `archive/haiku-mvp`. Базовая инфра: tsconfig strict, ESLint/Prettier, Vitest, turbo pipeline, CI скелет.                           | CI зелёный на пустых тестах                 |
+| R1   | `packages/db`: финальная схема + индексы + миграции + repositories + seed.                                                             | db собирается, миграции применяются         |
+| R2   | `packages/shared`: Zod-схемы всех доменов → z.infer DTO, constants, enums.                                                             | typecheck зелёный                           |
+| R3   | `apps/api`: config(Zod), middleware stack, errorHandler, auth (из FreeStyle), все домены (controllers→services→repos), OpenAPI, тесты. | coverage ≥70% сервисов, integration зелёные |
+| R4   | `apps/web`: Server Components, SSR каталог/товар/travel/jobs, единый API-клиент, auth-context (cookie), формы, корзина, кабинеты.      | Lighthouse ≥90, SSR HTML в view-source      |
+| R5   | `apps/admin`: Vite SPA, RBAC, таблицы, модерация, аналитика-дашборд.                                                                   | auth-guard работает, e2e зелёные            |
+| R6   | SEO (JSON-LD/OG/sitemap), i18n ru/en/zh, Redis-кеш, rate-limit, security headers, observability.                                       | acceptance bar (раздел 0) весь зелёный      |
+| R7   | Docs (architecture, ADR, README, Swagger), docker-compose prod, deploy.yml на VPS, staging.                                            | деплой на staging работает                  |
 
 После каждой фазы: `npm run typecheck && npm run lint && npm run test && npm run build`. Отдельный коммит на фазу.
 

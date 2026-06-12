@@ -1,0 +1,211 @@
+import { createServer, type Server } from 'node:http';
+
+import {
+  CategoryRepository,
+  ProductRepository,
+  SellerRepository,
+  UserRepository,
+  type Database,
+} from '@china-ru/db';
+import { createTestDb } from '@china-ru/db/testing';
+import request from 'supertest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+
+import { createApp } from './app';
+import { loadConfig } from './config';
+import { createLogger } from './logger';
+
+interface Seeded {
+  productSlug: string;
+  productId: string;
+}
+
+let db: Database;
+let close: () => Promise<void>;
+let server: Server;
+let seeded: Seeded;
+
+async function seed(database: Database): Promise<Seeded> {
+  const users = new UserRepository(database);
+  const sellers = new SellerRepository(database);
+  const categories = new CategoryRepository(database);
+  const products = new ProductRepository(database);
+
+  const sellerUser = await users.create({
+    email: 'seller@china-ru.test',
+    passwordHash: 'x',
+    role: 'seller',
+  });
+  const profile = await sellers.create({
+    userId: sellerUser.id,
+    companyName: 'Test Seller Co',
+  });
+  const category = await categories.create({ slug: 'machines', nameRu: 'Станки' });
+  const product = await products.create({
+    sellerId: profile.id,
+    categoryId: category.id,
+    slug: 'cnc-router-1325',
+    sku: 'CNC-1325',
+    nameRu: 'ЧПУ-фрезер 1325',
+    price: '100.00',
+    stock: 5,
+    status: 'active',
+  });
+  return { productSlug: product.slug, productId: product.id };
+}
+
+beforeAll(async () => {
+  const handle = await createTestDb();
+  db = handle.db;
+  close = handle.close;
+  server = createServer(createApp({ db, config: loadConfig(), logger: createLogger('test') }));
+  await new Promise<void>(resolve => {
+    server.listen(0, resolve);
+  });
+  seeded = await seed(db);
+});
+
+afterAll(async () => {
+  await new Promise<void>((resolve, reject) => {
+    server.close(err => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
+  await close();
+});
+
+describe('health & openapi', () => {
+  it('GET /api/health → ok envelope', async () => {
+    const res = await request(server).get('/api/health');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ ok: true, data: { status: 'ok', service: 'api' } });
+  });
+
+  it('GET /api/v1/openapi.json → OpenAPI 3.1 document', async () => {
+    const res = await request(server).get('/api/v1/openapi.json');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ openapi: '3.1.0' });
+    expect(res.body.paths).toHaveProperty('/auth/login');
+  });
+
+  it('unknown route → 404 envelope', async () => {
+    const res = await request(server).get('/api/v1/does-not-exist');
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ ok: false, error: { code: 'not_found' } });
+  });
+});
+
+describe('auth flow', () => {
+  let agent: ReturnType<typeof request.agent>;
+  beforeAll(() => {
+    agent = request.agent(server);
+  });
+
+  it('rejects invalid registration with 422 + field errors', async () => {
+    const res = await request(server)
+      .post('/api/v1/auth/register')
+      .send({ email: 'not-an-email', password: 'short' });
+    expect(res.status).toBe(422);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.error.code).toBe('validation');
+    expect(res.body.error.fields).toHaveProperty('email');
+  });
+
+  it('registers, sets cookies and returns the user', async () => {
+    const res = await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'Buyer@China-RU.test', password: 'secret123' });
+    expect(res.status).toBe(201);
+    expect(res.body.data.user.email).toBe('buyer@china-ru.test');
+    expect(res.body.data.tokens.accessToken).toBeTypeOf('string');
+    expect(res.headers['set-cookie']).toBeDefined();
+  });
+
+  it('rejects duplicate email with 409', async () => {
+    const res = await request(server)
+      .post('/api/v1/auth/register')
+      .send({ email: 'buyer@china-ru.test', password: 'secret123' });
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe('email_taken');
+  });
+
+  it('GET /auth/me with session cookie returns the current user', async () => {
+    const res = await agent.get('/api/v1/auth/me');
+    expect(res.status).toBe(200);
+    expect(res.body.data.email).toBe('buyer@china-ru.test');
+  });
+
+  it('GET /auth/me without auth → 401', async () => {
+    const res = await request(server).get('/api/v1/auth/me');
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('unauthorized');
+  });
+});
+
+describe('catalog', () => {
+  it('lists products with the seeded item', async () => {
+    const res = await request(server).get('/api/v1/catalog/products');
+    expect(res.status).toBe(200);
+    expect(res.body.data.total).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.items[0]).toHaveProperty('slug');
+  });
+
+  it('returns a product by slug', async () => {
+    const res = await request(server).get(`/api/v1/catalog/products/${seeded.productSlug}`);
+    expect(res.status).toBe(200);
+    expect(res.body.data.slug).toBe(seeded.productSlug);
+  });
+
+  it('returns category tree', async () => {
+    const res = await request(server).get('/api/v1/catalog/categories');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data)).toBe(true);
+  });
+
+  it('404 for unknown slug', async () => {
+    const res = await request(server).get('/api/v1/catalog/products/nope');
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('orders', () => {
+  let agent: ReturnType<typeof request.agent>;
+
+  beforeAll(async () => {
+    agent = request.agent(server);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'orderer@china-ru.test', password: 'secret123' });
+  });
+
+  it('rejects order creation without auth → 401', async () => {
+    const res = await request(server)
+      .post('/api/v1/orders')
+      .send({ items: [{ productId: seeded.productId, qty: 1 }] });
+    expect(res.status).toBe(401);
+  });
+
+  it('creates an order, computes total and decrements stock', async () => {
+    const res = await agent
+      .post('/api/v1/orders')
+      .send({ items: [{ productId: seeded.productId, qty: 2 }] });
+    expect(res.status).toBe(201);
+    expect(res.body.data.totalAmount).toBe('200.00');
+    expect(res.body.data.items).toHaveLength(1);
+
+    const product = await request(server).get(`/api/v1/catalog/products/${seeded.productSlug}`);
+    expect(product.body.data.stock).toBe(3);
+  });
+
+  it('rejects an empty order with 422', async () => {
+    const res = await agent.post('/api/v1/orders').send({ items: [] });
+    expect(res.status).toBe(422);
+  });
+
+  it('lists the buyer orders', async () => {
+    const res = await agent.get('/api/v1/orders');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(1);
+  });
+});

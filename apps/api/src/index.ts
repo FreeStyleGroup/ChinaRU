@@ -1,10 +1,16 @@
 /**
  * @china-ru/api — REST API (Node 22 + Express): routes → controllers → services → repositories.
- * HTTP-сервер, middleware, auth и домены реализуются в фазе R3. Сейчас — health-нагрузка.
+ * Точка входа сервера — server.ts. Этот модуль реэкспортирует публичную поверхность
+ * (фабрику приложения, конфиг) и хелпер health-нагрузки.
  */
 import { ok } from '@china-ru/shared';
 
 import type { ApiResponse } from '@china-ru/shared';
+
+export { createApp } from './app';
+export { createContainer } from './container';
+export { loadConfig, ConfigError } from './config';
+export type { AppConfig } from './config';
 
 export interface HealthPayload {
   status: 'ok';

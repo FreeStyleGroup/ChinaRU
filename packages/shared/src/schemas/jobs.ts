@@ -223,6 +223,40 @@ export const resumeDtoSchema = z.object({
 });
 export type ResumeDto = z.infer<typeof resumeDtoSchema>;
 
+/* ─────────── Публичная база резюме (витрина для работодателей) ─────────── */
+
+/** Фильтр публичного каталога резюме (query-string → coerce). */
+export const resumeListQuerySchema = paginationQuerySchema.extend({
+  category: jobCategorySchema.optional(),
+  experience: resumeExperienceSchema.optional(),
+  hskLevel: z.coerce.number().int().min(1).max(6).optional(),
+  search: z.string().trim().min(1).max(100).optional(),
+});
+export type ResumeListQuery = z.infer<typeof resumeListQuerySchema>;
+
+/**
+ * Публичная карточка резюме: только опубликованные, без приватных полей.
+ * Соискатель раскрывается как публичный ID / никнейм / имя + «синяя галочка».
+ */
+export const resumePublicDtoSchema = z.object({
+  id: idSchema,
+  position: z.string(),
+  category: jobCategorySchema.nullable(),
+  salary: z.string().nullable(),
+  experience: resumeExperienceSchema.nullable(),
+  skills: z.string().nullable(),
+  about: z.string().nullable(),
+  hskLevel: z.number().int().nullable(),
+  rating: z.string(),
+  reviewCount: z.number().int(),
+  publishedAt: isoDateTime.nullable(),
+  candidatePublicId: z.number().int(),
+  candidateName: z.string().nullable(),
+  candidateNickname: z.string().nullable(),
+  candidateVerified: z.boolean(),
+});
+export type ResumePublicDto = z.infer<typeof resumePublicDtoSchema>;
+
 /* ───────────────── Модерация контента (резюме/вакансии) ───────────────── */
 
 /** Решение модератора: опубликовать или отклонить (с причиной). */

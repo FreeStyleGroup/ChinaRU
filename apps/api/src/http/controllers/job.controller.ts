@@ -4,6 +4,7 @@ import {
   idSchema,
   jobListQuerySchema,
   ok,
+  resumeListQuerySchema,
   updateApplicationStatusSchema,
   upsertResumeSchema,
 } from '@china-ru/shared';
@@ -17,6 +18,8 @@ import type { RequestHandler } from 'express';
 export interface JobController {
   getResume: RequestHandler;
   upsertResume: RequestHandler;
+  listPublicResumes: RequestHandler;
+  getPublicResume: RequestHandler;
   listVacancies: RequestHandler;
   getVacancy: RequestHandler;
   categoryCounts: RequestHandler;
@@ -39,6 +42,16 @@ export function createJobController(deps: { jobs: JobService }): JobController {
       if (!req.auth) throw new UnauthorizedError();
       const input = upsertResumeSchema.parse(req.body);
       res.json(ok(await deps.jobs.upsertResume(req.auth.userId, input)));
+    }),
+
+    listPublicResumes: asyncHandler(async (req, res) => {
+      const query = resumeListQuerySchema.parse(req.query);
+      res.json(ok(await deps.jobs.listPublishedResumes(query)));
+    }),
+
+    getPublicResume: asyncHandler(async (req, res) => {
+      const id = idSchema.parse(req.params.id);
+      res.json(ok(await deps.jobs.getPublicResume(id)));
     }),
 
     listVacancies: asyncHandler(async (req, res) => {

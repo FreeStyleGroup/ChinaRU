@@ -1,6 +1,7 @@
 {
   "nav": {
     "catalog": "Catalog",
+    "jobs": "Jobs",
     "login": "Sign in",
     "register": "Sign up",
     "logout": "Sign out",

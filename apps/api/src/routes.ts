@@ -57,6 +57,9 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/account/applications', requireAuth, jobs.myApplications);
   router.get('/jobs', jobs.listVacancies);
   router.get('/jobs/categories', jobs.categoryCounts);
+  // Статические сегменты строго до параметрического '/jobs/:id'.
+  router.get('/jobs/resumes', jobs.listPublicResumes);
+  router.get('/jobs/resumes/:id', jobs.getPublicResume);
   router.get('/jobs/:id', jobs.getVacancy);
   router.post('/jobs/:id/apply', requireAuth, jobs.apply);
   router.get('/seller/vacancies', requireAuth, jobs.myVacancies);

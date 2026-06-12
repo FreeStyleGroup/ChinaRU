@@ -7,6 +7,8 @@ import type {
   Paginated,
   ProductDto,
   ProductListQuery,
+  ResumeListQuery,
+  ResumePublicDto,
 } from '@china-ru/shared';
 
 /** Базовый URL API для server-side запросов (внутренний адрес сервиса). */
@@ -72,10 +74,27 @@ function buildJobQuery(query: Partial<JobListQuery>): string {
   return qs ? `?${qs}` : '';
 }
 
+function buildResumeQuery(query: Partial<ResumeListQuery>): string {
+  const params = new URLSearchParams();
+  if (query.page) params.set('page', String(query.page));
+  if (query.category) params.set('category', query.category);
+  if (query.experience) params.set('experience', query.experience);
+  if (query.hskLevel) params.set('hskLevel', String(query.hskLevel));
+  if (query.search) params.set('search', query.search);
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
 export const jobsApi = {
   vacancies: (query: Partial<JobListQuery> = {}) =>
     apiGet<Paginated<JobListingPublicDto>>(`/jobs${buildJobQuery(query)}`, { revalidate: 120 }),
   vacancy: (id: string) =>
     apiGet<JobListingPublicDto>(`/jobs/${encodeURIComponent(id)}`, { revalidate: 120 }),
   categoryCounts: () => apiGet<JobCategoryCount[]>('/jobs/categories', { revalidate: 300 }),
+  resumes: (query: Partial<ResumeListQuery> = {}) =>
+    apiGet<Paginated<ResumePublicDto>>(`/jobs/resumes${buildResumeQuery(query)}`, {
+      revalidate: 120,
+    }),
+  resume: (id: string) =>
+    apiGet<ResumePublicDto>(`/jobs/resumes/${encodeURIComponent(id)}`, { revalidate: 120 }),
 };

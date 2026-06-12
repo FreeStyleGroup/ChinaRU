@@ -24,6 +24,9 @@ export function Header() {
           <Link href="/catalog" className="text-muted transition-colors hover:text-ink">
             {t('catalog')}
           </Link>
+          <Link href="/jobs" className="text-muted transition-colors hover:text-ink">
+            {t('jobs')}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

@@ -85,6 +85,45 @@ describe('resume moderation', () => {
   });
 });
 
+describe('public resume database', () => {
+  it('hides pending resumes, exposes published ones with candidate data and filters', async () => {
+    const seeker = await makeAgent('seeker-pub@x.test', null);
+    const create = await seeker
+      .put('/api/v1/account/resume')
+      .send({ position: 'Переводчик китайского', category: 'translation', hskLevel: 5 });
+    expect(create.status).toBe(200);
+    const resumeId = create.body.data.id as string;
+
+    // Пока на модерации — в публичной базе резюме не появляется.
+    const before = await request(server).get('/api/v1/jobs/resumes');
+    expect(before.body.data.items.some((r: { id: string }) => r.id === resumeId)).toBe(false);
+
+    // Деталь скрытого резюме недоступна публично.
+    const hidden = await request(server).get(`/api/v1/jobs/resumes/${resumeId}`);
+    expect(hidden.status).toBe(404);
+
+    const admin = await makeAgent('admin-pub@x.test', 'admin');
+    await admin.post(`/api/v1/admin/resumes/${resumeId}/moderate`).send({ status: 'published' });
+
+    // После публикации видно в базе с данными кандидата.
+    const after = await request(server).get('/api/v1/jobs/resumes?category=translation');
+    const found = after.body.data.items.find((r: { id: string }) => r.id === resumeId);
+    expect(found).toBeTruthy();
+    expect(found.position).toBe('Переводчик китайского');
+    expect(found.candidatePublicId).toBeGreaterThanOrEqual(100001);
+    expect(found.candidateVerified).toBe(false);
+
+    // Фильтр по другой категории не возвращает это резюме.
+    const other = await request(server).get('/api/v1/jobs/resumes?category=it');
+    expect(other.body.data.items.some((r: { id: string }) => r.id === resumeId)).toBe(false);
+
+    // Деталь доступна публично.
+    const detail = await request(server).get(`/api/v1/jobs/resumes/${resumeId}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body.data.hskLevel).toBe(5);
+  });
+});
+
 describe('vacancy moderation', () => {
   it('blocks non-sellers, accepts a seller vacancy as pending, admin publishes it → visible in /jobs', async () => {
     const buyer = await makeAgent('buyer-vac@x.test', null);

@@ -6,10 +6,22 @@ import {
 } from '@china-ru/shared';
 import { Container } from '@china-ru/ui';
 
+import { JobsTabs } from '@/components/jobs/jobs-tabs';
 import { Link } from '@/i18n/navigation';
 import { jobsApi } from '@/lib/api';
 
 import type { Metadata } from 'next';
+
+/** Популярные города для быстрого фильтра (как в Bitrix-разделе «Работа в Китае»). */
+const POPULAR_CITIES = ['Пекин', 'Шанхай', 'Гуанчжоу', 'Шэньчжэнь', 'Иу', 'Гонконг'];
+
+/** Преимущества работы в Китае (блок «Почему Китай»). */
+const WHY_CHINA = [
+  { icon: '💰', title: 'Высокие зарплаты', text: 'Конкурентные оклады и релокейт-пакеты от работодателей.' },
+  { icon: '🌏', title: 'Карьера в Азии', text: 'Опыт в крупнейшей экономике мира и международных компаниях.' },
+  { icon: '🈶', title: 'Языковая практика', text: 'Подтверждённый HSK повышает рейтинг и шансы на оффер.' },
+  { icon: '🤝', title: 'Прямые предложения', text: 'Вакансии напрямую от проверенных компаний без посредников.' },
+];
 
 export const metadata: Metadata = {
   title: 'Работа в Китае — вакансии от ведущих компаний | China.ru',
@@ -90,8 +102,10 @@ export default async function JobsPage({
 
   return (
     <Container className="py-8">
+      <JobsTabs active="vacancies" />
+
       {/* Hero */}
-      <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-accent p-8 text-white sm:p-12">
+      <section className="mt-6 overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-accent p-8 text-white sm:p-12">
         <p className="text-xs font-semibold uppercase tracking-wider text-white/70">
           Вакансии · Резюме · Карьера
         </p>
@@ -137,6 +151,30 @@ export default async function JobsPage({
         </div>
       </section>
 
+      {/* Популярные города */}
+      <section className="mt-8">
+        <h2 className="text-xl font-bold text-ink">Популярные города</h2>
+        <p className="text-sm text-muted">Где больше всего предложений</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {POPULAR_CITIES.map(city => {
+            const active = city === sp.city;
+            return (
+              <Link
+                key={city}
+                href={active ? '/jobs' : `/jobs?city=${encodeURIComponent(city)}`}
+                className={`rounded-full border px-4 py-2 text-sm transition-colors ${
+                  active
+                    ? 'border-brand bg-brand text-white'
+                    : 'border-line bg-white text-ink hover:border-brand'
+                }`}
+              >
+                {city}
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
       {/* Вакансии */}
       <section className="mt-8">
         <div className="flex items-center justify-between">
@@ -161,6 +199,48 @@ export default async function JobsPage({
             ))}
           </div>
         )}
+      </section>
+
+      {/* Почему Китай */}
+      <section className="mt-10">
+        <h2 className="text-xl font-bold text-ink">Почему работать в Китае</h2>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {WHY_CHINA.map(b => (
+            <div key={b.title} className="rounded-2xl border border-line bg-white p-5">
+              <span className="text-3xl">{b.icon}</span>
+              <p className="mt-3 font-semibold text-ink">{b.title}</p>
+              <p className="mt-1 text-sm text-muted">{b.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA для соискателей и работодателей */}
+      <section className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-surface p-6">
+          <p className="font-semibold text-ink">Ищете работу?</p>
+          <p className="mt-1 text-sm text-muted">
+            Создайте резюме в личном кабинете — после проверки оно появится в базе для работодателей.
+          </p>
+          <Link
+            href="/cabinet/jobs"
+            className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Создать резюме
+          </Link>
+        </div>
+        <div className="rounded-2xl border border-line bg-surface p-6">
+          <p className="font-semibold text-ink">Ищете сотрудников?</p>
+          <p className="mt-1 text-sm text-muted">
+            Станьте работодателем, разместите вакансию и получайте отклики от кандидатов.
+          </p>
+          <Link
+            href="/jobs/resumes"
+            className="mt-3 inline-block rounded-lg border border-line bg-white px-4 py-2 text-sm font-medium text-ink hover:border-brand"
+          >
+            Смотреть резюме
+          </Link>
+        </div>
       </section>
     </Container>
   );

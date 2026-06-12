@@ -7,6 +7,7 @@ import {
   toJobListingPublicDto,
   toMyApplicationDto,
   toResumeDto,
+  toResumePublicDto,
 } from '../dto';
 
 import type {
@@ -27,6 +28,8 @@ import type {
   MyApplicationDto,
   Paginated,
   ResumeDto,
+  ResumeListQuery,
+  ResumePublicDto,
   UpdateApplicationStatusInput,
   UpsertResumeInput,
 } from '@china-ru/shared';
@@ -54,7 +57,30 @@ export class JobService {
     return toResumeDto(resume);
   }
 
-  /* ── Публичная витрина ── */
+  /* ── Публичная база резюме (для работодателей) ── */
+
+  async listPublishedResumes(query: ResumeListQuery): Promise<Paginated<ResumePublicDto>> {
+    const { rows, total } = await this.resumes.listPublic({
+      page: query.page,
+      limit: query.pageSize,
+      ...(query.category ? { category: query.category } : {}),
+      ...(query.experience ? { experience: query.experience } : {}),
+      ...(query.hskLevel ? { hskLevel: query.hskLevel } : {}),
+      ...(query.search ? { search: query.search } : {}),
+    });
+    return paginate(rows.map(toResumePublicDto), total, {
+      page: query.page,
+      pageSize: query.pageSize,
+    });
+  }
+
+  async getPublicResume(id: string): Promise<ResumePublicDto> {
+    const found = await this.resumes.findPublicById(id);
+    if (!found) throw new NotFoundError('Резюме не найдено', 'resume_not_found');
+    return toResumePublicDto(found);
+  }
+
+  /* ── Публичная витрина вакансий ── */
 
   async listPublishedVacancies(query: JobListQuery): Promise<Paginated<JobListingPublicDto>> {
     const { rows, total } = await this.listings.listPublic({

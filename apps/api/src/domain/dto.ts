@@ -8,6 +8,7 @@ import type {
   Product,
   ProductImage,
   Resume,
+  ResumeWithUser,
   ReviewWithAuthor,
   SellerProfile,
   User,
@@ -22,6 +23,7 @@ import type {
   ProductDto,
   ProductImageDto,
   ResumeDto,
+  ResumePublicDto,
   ReviewDto,
   SellerProfileDto,
   UserDto,
@@ -164,6 +166,26 @@ export function toResumeDto(r: Resume): ResumeDto {
     publishedAt: r.publishedAt ? r.publishedAt.toISOString() : null,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
+  };
+}
+
+export function toResumePublicDto(r: ResumeWithUser): ResumePublicDto {
+  return {
+    id: r.id,
+    position: r.position,
+    category: r.category,
+    salary: r.salary,
+    experience: r.experience,
+    skills: r.skills,
+    about: r.about,
+    hskLevel: r.hskLevel,
+    rating: r.rating,
+    reviewCount: r.reviewCount,
+    publishedAt: r.publishedAt ? r.publishedAt.toISOString() : null,
+    candidatePublicId: r.candidatePublicId,
+    candidateName: r.candidateName,
+    candidateNickname: r.candidateNickname,
+    candidateVerified: r.candidateVerified,
   };
 }
 

@@ -45,6 +45,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── account (кабинет) ─────────
   router.patch('/account/profile', requireAuth, account.updateProfile);
   router.put('/account/menu', requireAuth, account.updateMenu);
+  router.put('/account/nickname', requireAuth, account.setNickname);
+  router.get('/account/seller', requireAuth, account.getSeller);
+  router.post('/account/seller/apply', requireAuth, account.applySeller);
+  router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);
@@ -55,6 +59,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   const onlyAdmin = [requireAuth, requireRole('admin')];
   router.get('/admin/stats', onlyAdmin, admin.stats);
   router.get('/admin/users', onlyAdmin, admin.users);
+  router.post('/admin/users/:id/verify', onlyAdmin, admin.verifyUser);
   router.get('/admin/sellers', onlyAdmin, admin.sellers);
   router.post('/admin/sellers/:id/verify', onlyAdmin, admin.verifySeller);
   router.get('/admin/products', onlyAdmin, admin.products);

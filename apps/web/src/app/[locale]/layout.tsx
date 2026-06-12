@@ -2,14 +2,15 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
-import type { Metadata } from 'next';
-import type { ReactNode } from 'react';
 
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { routing } from '@/i18n/routing';
 import { AuthProvider } from '@/lib/auth-context';
 import { SITE_NAME, SITE_URL } from '@/lib/seo';
+
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 
 import '../globals.css';
 

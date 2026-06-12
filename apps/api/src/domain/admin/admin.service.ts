@@ -29,6 +29,7 @@ import type {
   SellerProfileDto,
   SellerVerifyDecisionInput,
   UserDto,
+  UserVerifyDecisionInput,
 } from '@china-ru/shared';
 
 export interface AdminServiceDeps {
@@ -88,6 +89,10 @@ export class AdminService {
       verifiedAt: decision.status === 'verified' ? new Date() : null,
     });
     if (!updated) throw new NotFoundError('Продавец не найден', 'seller_not_found');
+    // Подтверждение магазина повышает роль пользователя до продавца.
+    if (decision.status === 'verified') {
+      await this.deps.users.update(updated.userId, { role: 'seller' });
+    }
     await this.deps.audit.record({
       actorId: actor.userId,
       action: 'seller.verify',
@@ -97,6 +102,27 @@ export class AdminService {
       ip: actor.ip ?? null,
     });
     return toSellerProfileDto(updated);
+  }
+
+  /** Верификация пользователя («синяя галочка»): разблокирует выбор никнейма. */
+  async verifyUser(
+    id: string,
+    decision: UserVerifyDecisionInput,
+    actor: ActorContext
+  ): Promise<UserDto> {
+    const updated = await this.deps.users.update(id, {
+      verifiedAt: decision.verified ? new Date() : null,
+    });
+    if (!updated) throw new NotFoundError('Пользователь не найден', 'user_not_found');
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'user.verify',
+      entity: 'user',
+      entityId: id,
+      meta: { verified: decision.verified },
+      ip: actor.ip ?? null,
+    });
+    return toUserDto(updated);
   }
 
   async listProducts(query: ProductListQuery): Promise<Paginated<ProductDto>> {

@@ -4,10 +4,11 @@ import { CABINET_SECTIONS } from '@china-ru/shared';
 import { Button } from '@china-ru/ui';
 import { useState } from 'react';
 
-import { NavIcon } from './nav-icon';
 
 import { accountClient } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth-context';
+
+import { NavIcon } from './nav-icon';
 
 const OPTIONAL = CABINET_SECTIONS.filter(s => !s.pinned);
 

@@ -2,14 +2,15 @@ import { PRODUCT_SORTS, type ProductSort } from '@china-ru/shared';
 import { Container } from '@china-ru/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import type { CategoryTreeNode, Paginated, ProductDto } from '@china-ru/shared';
-import type { Metadata } from 'next';
 
 import { ProductCard } from '@/components/product-card';
 import { Link } from '@/i18n/navigation';
 import { catalogApi } from '@/lib/api';
 import { localizedName } from '@/lib/localize';
 import { buildMetadata } from '@/lib/seo';
+
+import type { CategoryTreeNode, Paginated, ProductDto } from '@china-ru/shared';
+import type { Metadata } from 'next';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

@@ -43,6 +43,15 @@ export class UserRepository {
     return row ?? null;
   }
 
+  async findByNickname(nickname: string): Promise<User | null> {
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.nickname, nickname), isNull(users.deletedAt)))
+      .limit(1);
+    return row ?? null;
+  }
+
   async update(id: string, patch: UserUpdate): Promise<User | null> {
     const [row] = await this.db
       .update(users)

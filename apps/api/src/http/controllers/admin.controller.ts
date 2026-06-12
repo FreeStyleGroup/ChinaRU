@@ -8,6 +8,7 @@ import {
   productListQuerySchema,
   reviewModerationSchema,
   sellerVerifyDecisionSchema,
+  userVerifyDecisionSchema,
 } from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
@@ -19,6 +20,7 @@ import type { Request, RequestHandler } from 'express';
 export interface AdminController {
   stats: RequestHandler;
   users: RequestHandler;
+  verifyUser: RequestHandler;
   sellers: RequestHandler;
   verifySeller: RequestHandler;
   products: RequestHandler;
@@ -41,6 +43,12 @@ export function createAdminController(deps: { admin: AdminService }): AdminContr
     users: asyncHandler(async (req, res) => {
       const query = adminUserListQuerySchema.parse(req.query);
       res.json(ok(await deps.admin.listUsers(query)));
+    }),
+
+    verifyUser: asyncHandler(async (req, res) => {
+      const id = idSchema.parse(req.params.id);
+      const decision = userVerifyDecisionSchema.parse(req.body);
+      res.json(ok(await deps.admin.verifyUser(id, decision, actorOf(req))));
     }),
 
     sellers: asyncHandler(async (req, res) => {

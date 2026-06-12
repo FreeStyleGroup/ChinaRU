@@ -1,10 +1,11 @@
 import { Card, CardBody } from '@china-ru/ui';
 
-import type { ProductDto } from '@china-ru/shared';
 
 import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/format';
 import { localizedName } from '@/lib/localize';
+
+import type { ProductDto } from '@china-ru/shared';
 
 export function ProductCard({ product, locale }: { product: ProductDto; locale: string }) {
   const image = product.images[0];

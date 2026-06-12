@@ -1,8 +1,9 @@
-import type { MetadataRoute } from 'next';
 
 import { routing } from '@/i18n/routing';
 import { catalogApi } from '@/lib/api';
 import { absoluteUrl } from '@/lib/seo';
+
+import type { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = routing.locales.flatMap(locale => [

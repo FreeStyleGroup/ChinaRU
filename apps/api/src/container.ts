@@ -106,7 +106,7 @@ export function createContainer(deps: ContainerDeps): Container {
     config.cache.categoriesTtl
   );
   const orders = new OrderService(orderRepo);
-  const account = new AccountService(userRepo);
+  const account = new AccountService(userRepo, sellerRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,

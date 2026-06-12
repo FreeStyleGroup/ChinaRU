@@ -3,10 +3,11 @@
 import { Button, buttonVariants, Container } from '@china-ru/ui';
 import { useTranslations } from 'next-intl';
 
-import { LocaleSwitcher } from './locale-switcher';
 
 import { Link } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth-context';
+
+import { LocaleSwitcher } from './locale-switcher';
 
 export function Header() {
   const t = useTranslations('nav');

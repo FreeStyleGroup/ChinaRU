@@ -15,6 +15,27 @@
       "when": 1781230786400,
       "tag": "0001_fixed_masked_marvel",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781264600373,
+      "tag": "0002_volatile_scourge",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781265111720,
+      "tag": "0003_slimy_archangel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781265802835,
+      "tag": "0004_cool_sphinx",
+      "breakpoints": true
     }
   ]
 }

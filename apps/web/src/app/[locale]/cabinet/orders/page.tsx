@@ -3,9 +3,10 @@
 import { Badge } from '@china-ru/ui';
 import { useEffect, useState } from 'react';
 
+import { orderClient } from '@/lib/api-client';
+
 import type { OrderDto } from '@china-ru/shared';
 
-import { orderClient } from '@/lib/api-client';
 
 export default function CabinetOrdersPage() {
   const [orders, setOrders] = useState<OrderDto[] | null>(null);

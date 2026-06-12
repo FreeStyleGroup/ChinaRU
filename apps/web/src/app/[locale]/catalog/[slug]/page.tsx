@@ -2,14 +2,15 @@ import { Badge, Container } from '@china-ru/ui';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import type { ProductDto } from '@china-ru/shared';
-import type { Metadata } from 'next';
 
 import { OrderButton } from '@/components/order-button';
 import { ApiError, catalogApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { localizedName, pickText } from '@/lib/localize';
 import { breadcrumbJsonLd, buildMetadata, productJsonLd } from '@/lib/seo';
+
+import type { ProductDto } from '@china-ru/shared';
+import type { Metadata } from 'next';
 
 async function loadProduct(slug: string): Promise<ProductDto | null> {
   try {

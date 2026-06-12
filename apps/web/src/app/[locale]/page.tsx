@@ -1,13 +1,14 @@
 import { Button, buttonVariants, Container } from '@china-ru/ui';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-import type { ProductDto } from '@china-ru/shared';
-import type { Metadata } from 'next';
 
 import { ProductCard } from '@/components/product-card';
 import { Link } from '@/i18n/navigation';
 import { catalogApi } from '@/lib/api';
 import { buildMetadata, organizationJsonLd } from '@/lib/seo';
+
+import type { ProductDto } from '@china-ru/shared';
+import type { Metadata } from 'next';
 
 export async function generateMetadata({
   params,

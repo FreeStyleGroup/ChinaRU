@@ -14,6 +14,9 @@ export * from './common';
 // Пагинация
 export * from './pagination';
 
+// Китайский зодиак (раздел «Гороскоп» в кабинете)
+export * from './zodiac';
+
 // Доменные схемы и DTO
 export * from './schemas/auth';
 export * from './schemas/user';

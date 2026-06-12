@@ -1,10 +1,13 @@
 import type {
   ApiResponse,
   AuthTokens,
+  ChangePasswordInput,
   CreateOrderInput,
+  CreateSellerProfileInput,
   LoginInput,
   OrderDto,
   RegisterInput,
+  SellerProfileDto,
   UpdateProfileInput,
   UserDto,
 } from '@china-ru/shared';
@@ -49,6 +52,12 @@ export const authClient = {
     call<SessionResponse>('/auth/login', { method: 'POST', body: JSON.stringify(input) }),
   logout: () => call<{ loggedOut: boolean }>('/auth/logout', { method: 'POST' }),
   me: () => call<UserDto>('/auth/me'),
+  /** Смена пароля рвёт сессию на сервере — после успеха требуется повторный вход. */
+  changePassword: (input: ChangePasswordInput) =>
+    call<{ changed: boolean }>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
 };
 
 export const orderClient = {
@@ -62,4 +71,17 @@ export const accountClient = {
     call<UserDto>('/account/profile', { method: 'PATCH', body: JSON.stringify(input) }),
   updateMenu: (sections: string[]) =>
     call<UserDto>('/account/menu', { method: 'PUT', body: JSON.stringify({ sections }) }),
+  setNickname: (nickname: string) =>
+    call<UserDto>('/account/nickname', { method: 'PUT', body: JSON.stringify({ nickname }) }),
+  getSeller: () => call<SellerProfileDto | null>('/account/seller'),
+  applySeller: (input: CreateSellerProfileInput) =>
+    call<SellerProfileDto>('/account/seller/apply', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  setSellerNickname: (nickname: string) =>
+    call<SellerProfileDto>('/account/seller/nickname', {
+      method: 'PUT',
+      body: JSON.stringify({ nickname }),
+    }),
 };

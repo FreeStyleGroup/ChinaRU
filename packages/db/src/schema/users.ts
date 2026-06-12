@@ -24,14 +24,23 @@ export const users = pgTable(
   'users',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    /** Числовой публичный ID (по умолчанию). Никнейм можно выбрать после верификации. */
+    publicId: integer('public_id').generatedByDefaultAsIdentity({ startWith: 100001 }).notNull(),
+    /** Выбранный никнейм; доступен только верифицированному пользователю. */
+    nickname: text('nickname'),
     email: text('email').notNull(),
     emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
+    /** Верификация профиля («синяя галочка»); разблокирует выбор никнейма. */
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
     passwordHash: text('password_hash').notNull(),
     role: userRole('role').notNull().default('buyer'),
     status: userStatus('status').notNull().default('pending_verify'),
     locale: localeEnum('locale').notNull().default('ru'),
     name: text('name'),
+    lastName: text('last_name'),
     phone: text('phone'),
+    /** Дата рождения в формате YYYY-MM-DD; используется разделом «Гороскоп». */
+    birthday: text('birthday'),
     avatarUrl: text('avatar_url'),
     /** Включённые опциональные разделы кабинета (ключи из CABINET_SECTIONS). */
     menuSections: text('menu_sections')
@@ -43,6 +52,8 @@ export const users = pgTable(
   },
   t => [
     uniqueIndex('users_email_uidx').on(t.email),
+    uniqueIndex('users_public_id_uidx').on(t.publicId),
+    uniqueIndex('users_nickname_uidx').on(t.nickname),
     index('users_role_idx').on(t.role),
     index('users_status_idx').on(t.status),
   ]
@@ -55,10 +66,17 @@ export const sellerProfiles = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    /** Числовой публичный ID магазина (по умолчанию). Никнейм — после верификации. */
+    publicId: integer('public_id').generatedByDefaultAsIdentity({ startWith: 100001 }).notNull(),
+    /** Никнейм магазина; доступен после верификации (verifyStatus = verified). */
+    nickname: text('nickname'),
     companyName: text('company_name').notNull(),
     companyNameZh: text('company_name_zh'),
     legalType: text('legal_type'),
     inn: text('inn'),
+    /** Контакты заявки (видны модератору). */
+    contactEmail: text('contact_email'),
+    contactPhone: text('contact_phone'),
     description: text('description'),
     rating: numeric('rating', { precision: 3, scale: 2 }).notNull().default('0'),
     reviewCount: integer('review_count').notNull().default(0),
@@ -69,6 +87,8 @@ export const sellerProfiles = pgTable(
   },
   t => [
     uniqueIndex('seller_profiles_user_uidx').on(t.userId),
+    uniqueIndex('seller_profiles_public_id_uidx').on(t.publicId),
+    uniqueIndex('seller_profiles_nickname_uidx').on(t.nickname),
     index('seller_profiles_verify_idx').on(t.verifyStatus),
   ]
 );

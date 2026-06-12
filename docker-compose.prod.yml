@@ -1,5 +1,8 @@
-version: '3.8'
-
+# ════════════════════════════════════════════════════════════════
+#  China-RU — production stack. Запуск:
+#    cp .env.prod.example .env.prod && заполнить секреты
+#    docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# ════════════════════════════════════════════════════════════════
 services:
   postgres:
     image: postgres:16-alpine
@@ -10,8 +13,7 @@ services:
       POSTGRES_DB: china_ru
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data
-    networks:
-      - china-ru-network-prod
+    networks: [china-ru-network-prod]
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-china_ru_user} -d china_ru']
       interval: 10s
@@ -24,8 +26,7 @@ services:
     container_name: china-ru-redis-prod
     volumes:
       - redis_data_prod:/data
-    networks:
-      - china-ru-network-prod
+    networks: [china-ru-network-prod]
     command: redis-server --appendonly yes
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
@@ -42,8 +43,7 @@ services:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
     volumes:
       - meilisearch_data_prod:/meili_data
-    networks:
-      - china-ru-network-prod
+    networks: [china-ru-network-prod]
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
       interval: 10s
@@ -59,8 +59,7 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data_prod:/minio_data
-    networks:
-      - china-ru-network-prod
+    networks: [china-ru-network-prod]
     command: server /minio_data --console-address ":9001"
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
@@ -76,24 +75,21 @@ services:
     container_name: china-ru-api
     environment:
       NODE_ENV: production
+      PORT: 3001
       DATABASE_URL: postgresql://${POSTGRES_USER:-china_ru_user}:${POSTGRES_PASSWORD}@postgres:5432/china_ru
       REDIS_URL: redis://redis:6379/0
-      MEILISEARCH_HOST: http://meilisearch:7700
-      S3_ENDPOINT: http://minio:9000
-      PORT: 3001
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china-ru.ru}
+      COOKIE_SECURE: 'true'
+      WEB_URL: ${WEB_URL:-https://china-ru.ru}
+      ADMIN_URL: ${ADMIN_URL:-https://admin.china-ru.ru}
+      BCRYPT_COST: '12'
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      meilisearch:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-    networks:
-      - china-ru-network-prod
-    expose:
-      - '3001'
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    networks: [china-ru-network-prod]
+    expose: ['3001']
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/health']
       interval: 10s
@@ -105,18 +101,39 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china-ru.ru}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://china-ru.ru}
     container_name: china-ru-web
-    environment:
-      NEXT_PUBLIC_API_URL: https://api.china-ru.ru
-    depends_on:
-      - api
-    networks:
-      - china-ru-network-prod
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on: [api]
+    networks: [china-ru-network-prod]
+    expose: ['3000']
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: .
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china-ru.ru}
+    container_name: china-ru-admin
+    depends_on: [api]
+    networks: [china-ru-network-prod]
+    expose: ['80']
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: china-ru-nginx
+    depends_on: [web, api, admin]
+    networks: [china-ru-network-prod]
     ports:
       - '80:80'
       - '443:443'
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot
     restart: unless-stopped
 
 volumes:
@@ -124,6 +141,7 @@ volumes:
   redis_data_prod:
   meilisearch_data_prod:
   minio_data_prod:
+  certbot_webroot:
 
 networks:
   china-ru-network-prod:

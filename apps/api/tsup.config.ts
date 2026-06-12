@@ -5,7 +5,7 @@ import { defineConfig } from 'tsup';
  * (исходники .ts) инлайнятся; npm-зависимости остаются внешними (ставятся в Docker).
  */
 export default defineConfig({
-  entry: ['src/server.ts'],
+  entry: ['src/server.ts', 'src/migrate.ts'],
   format: ['esm'],
   target: 'node22',
   platform: 'node',

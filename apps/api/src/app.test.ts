@@ -96,6 +96,33 @@ describe('health & openapi', () => {
   });
 });
 
+describe('csrf origin guard', () => {
+  it('rejects a state-changing request from a foreign Origin (403)', async () => {
+    const res = await request(server)
+      .post('/api/v1/auth/login')
+      .set('Origin', 'http://evil.example.com')
+      .send({ email: 'a@b.co', password: 'secret123' });
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('csrf');
+  });
+
+  it('allows a state-changing request from an allowed Origin', async () => {
+    const res = await request(server)
+      .post('/api/v1/auth/login')
+      .set('Origin', 'http://localhost:3000')
+      .send({ email: 'nobody@x.test', password: 'secret123' });
+    // Origin прошёл CSRF → доходит до логики (неверные креды), но не 403/csrf.
+    expect(res.body.error?.code).not.toBe('csrf');
+  });
+
+  it('allows safe (GET) requests from any Origin', async () => {
+    const res = await request(server)
+      .get('/api/v1/catalog/categories')
+      .set('Origin', 'http://evil.example.com');
+    expect(res.status).toBe(200);
+  });
+});
+
 describe('auth flow', () => {
   let agent: ReturnType<typeof request.agent>;
   beforeAll(() => {

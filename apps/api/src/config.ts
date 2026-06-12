@@ -34,6 +34,10 @@ const envSchema = z.object({
 
   BCRYPT_COST: z.coerce.number().int().min(8).max(15).default(12),
 
+  /** Redis для кеша. Пусто → кеш отключён (NoopCache). */
+  REDIS_URL: z.string().default(''),
+  CACHE_CATEGORIES_TTL: z.coerce.number().int().positive().default(3600),
+
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(900_000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(300),
   AUTH_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(20),
@@ -75,6 +79,7 @@ export interface AppConfig {
   };
   cookie: { domain: string | undefined; secure: boolean };
   bcrypt: { cost: number };
+  cache: { redisUrl: string; enabled: boolean; categoriesTtl: number };
   rateLimit: { windowMs: number; max: number; authMax: number };
   smtp: {
     host: string;
@@ -117,6 +122,11 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     cookie: { domain: e.COOKIE_DOMAIN, secure: e.COOKIE_SECURE },
     bcrypt: { cost: e.BCRYPT_COST },
+    cache: {
+      redisUrl: e.REDIS_URL,
+      enabled: e.REDIS_URL.length > 0,
+      categoriesTtl: e.CACHE_CATEGORIES_TTL,
+    },
     rateLimit: {
       windowMs: e.RATE_LIMIT_WINDOW_MS,
       max: e.RATE_LIMIT_MAX,

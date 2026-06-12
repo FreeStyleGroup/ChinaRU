@@ -6,3 +6,4 @@ export * from './product-image.repository';
 export * from './order.repository';
 export * from './review.repository';
 export * from './analytics.repository';
+export * from './audit.repository';

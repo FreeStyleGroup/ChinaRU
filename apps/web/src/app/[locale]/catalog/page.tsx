@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { ProductCard } from '@/components/product-card';
 import { Link } from '@/i18n/navigation';
 import { catalogApi } from '@/lib/api';
+import { localizedName } from '@/lib/localize';
 import { buildMetadata } from '@/lib/seo';
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -109,7 +110,7 @@ export default async function CatalogPage({
                   : 'border-line text-muted hover:text-ink'
               }`}
             >
-              {c.nameRu}
+              {localizedName(c, locale)}
             </Link>
           ))}
         </div>

@@ -5,6 +5,7 @@ import { toOrderDto, toProductDto, toReviewDto, toSellerProfileDto, toUserDto } 
 
 import type {
   AnalyticsRepository,
+  AuditRepository,
   OrderRepository,
   ProductImage,
   ProductImageRepository,
@@ -38,6 +39,13 @@ export interface AdminServiceDeps {
   orders: OrderRepository;
   reviews: ReviewRepository;
   analytics: AnalyticsRepository;
+  audit: AuditRepository;
+}
+
+/** Кто и откуда выполняет административное действие (для audit_log). */
+export interface ActorContext {
+  userId: string;
+  ip?: string | null;
 }
 
 export class AdminService {
@@ -70,12 +78,24 @@ export class AdminService {
     });
   }
 
-  async verifySeller(id: string, decision: SellerVerifyDecisionInput): Promise<SellerProfileDto> {
+  async verifySeller(
+    id: string,
+    decision: SellerVerifyDecisionInput,
+    actor: ActorContext
+  ): Promise<SellerProfileDto> {
     const updated = await this.deps.sellers.update(id, {
       verifyStatus: decision.status,
       verifiedAt: decision.status === 'verified' ? new Date() : null,
     });
     if (!updated) throw new NotFoundError('Продавец не найден', 'seller_not_found');
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'seller.verify',
+      entity: 'seller',
+      entityId: id,
+      meta: { status: decision.status },
+      ip: actor.ip ?? null,
+    });
     return toSellerProfileDto(updated);
   }
 
@@ -116,10 +136,19 @@ export class AdminService {
 
   async moderateReview(
     id: string,
-    input: ReviewModerationInput
+    input: ReviewModerationInput,
+    actor: ActorContext
   ): Promise<{ id: string; status: string }> {
     const updated = await this.deps.reviews.setStatus(id, input.status);
     if (!updated) throw new NotFoundError('Отзыв не найден', 'review_not_found');
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'review.moderate',
+      entity: 'review',
+      entityId: id,
+      meta: { status: input.status },
+      ip: actor.ip ?? null,
+    });
     return { id: updated.id, status: updated.status };
   }
 

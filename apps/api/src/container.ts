@@ -1,5 +1,6 @@
 import {
   AnalyticsRepository,
+  AuditRepository,
   CategoryRepository,
   OrderRepository,
   ProductImageRepository,
@@ -10,6 +11,7 @@ import {
   type Database,
 } from '@china-ru/db';
 
+import { NoopCache, RedisCache, type Cache } from './cache/cache';
 import { AdminService } from './domain/admin/admin.service';
 import { AuthService } from './domain/auth/auth.service';
 import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
@@ -63,6 +65,11 @@ export function createContainer(deps: ContainerDeps): Container {
   const orderRepo = new OrderRepository(db);
   const reviewRepo = new ReviewRepository(db);
   const analyticsRepo = new AnalyticsRepository(db);
+  const auditRepo = new AuditRepository(db);
+
+  const cache: Cache = config.cache.enabled
+    ? new RedisCache(config.cache.redisUrl, logger)
+    : new NoopCache();
 
   const passwords = new PasswordService(config.bcrypt.cost);
   const tokens = new TokenService(
@@ -85,7 +92,13 @@ export function createContainer(deps: ContainerDeps): Container {
     mailer,
     registrationOpen: config.features.registrationOpen,
   });
-  const catalog = new CatalogService(categoryRepo, productRepo, productImageRepo);
+  const catalog = new CatalogService(
+    categoryRepo,
+    productRepo,
+    productImageRepo,
+    cache,
+    config.cache.categoriesTtl
+  );
   const orders = new OrderService(orderRepo);
   const admin = new AdminService({
     users: userRepo,
@@ -95,6 +108,7 @@ export function createContainer(deps: ContainerDeps): Container {
     orders: orderRepo,
     reviews: reviewRepo,
     analytics: analyticsRepo,
+    audit: auditRepo,
   });
 
   return {

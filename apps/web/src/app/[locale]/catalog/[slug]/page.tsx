@@ -8,6 +8,7 @@ import type { Metadata } from 'next';
 import { OrderButton } from '@/components/order-button';
 import { ApiError, catalogApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
+import { localizedName, pickText } from '@/lib/localize';
 import { breadcrumbJsonLd, buildMetadata, productJsonLd } from '@/lib/seo';
 
 async function loadProduct(slug: string): Promise<ProductDto | null> {
@@ -28,10 +29,16 @@ export async function generateMetadata({
   const product = await loadProduct(slug);
   if (!product) return { title: 'Not found' };
 
-  const description = product.descriptionRu ?? `${product.nameRu} — China-RU`;
+  const name = localizedName(product, locale);
+  const localizedDesc = pickText(
+    locale,
+    product.descriptionRu,
+    product.descriptionEn,
+    product.descriptionZh
+  );
   return buildMetadata({
-    title: product.nameRu,
-    description: description.slice(0, 200),
+    title: name,
+    description: (localizedDesc ?? `${name} — China-RU`).slice(0, 200),
     path: `/${locale}/catalog/${product.slug}`,
     locale,
     images: product.images.map(i => i.url),
@@ -50,13 +57,20 @@ export default async function ProductPage({
   const product = await loadProduct(slug);
   if (!product) notFound();
 
+  const name = localizedName(product, locale);
+  const description = pickText(
+    locale,
+    product.descriptionRu,
+    product.descriptionEn,
+    product.descriptionZh
+  );
   const path = `/${locale}/catalog/${product.slug}`;
   const jsonLd = [
-    productJsonLd(product, path),
+    productJsonLd(product, path, { name, description }),
     breadcrumbJsonLd([
       { name: 'China-RU', path: `/${locale}` },
       { name: 'Catalog', path: `/${locale}/catalog` },
-      { name: product.nameRu, path },
+      { name, path },
     ]),
   ];
   const image = product.images[0];
@@ -70,10 +84,10 @@ export default async function ProductPage({
       <div className="grid gap-10 lg:grid-cols-2">
         <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-surface">
           {image ? (
-            <img src={image.url} alt={product.nameRu} className="h-full w-full object-cover" />
+            <img src={image.url} alt={name} className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full items-center justify-center text-6xl font-bold text-line">
-              {product.nameRu.slice(0, 1)}
+              {name.slice(0, 1)}
             </div>
           )}
         </div>
@@ -83,7 +97,7 @@ export default async function ProductPage({
             <Badge>
               {t('sku')}: {product.sku}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight text-ink">{product.nameRu}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-ink">{name}</h1>
           </div>
 
           <p className="text-3xl font-bold text-brand">
@@ -92,10 +106,10 @@ export default async function ProductPage({
 
           <OrderButton productId={product.id} />
 
-          {product.descriptionRu && (
+          {description && (
             <div className="space-y-2 border-t border-line pt-6">
               <h2 className="text-lg font-semibold text-ink">{t('description')}</h2>
-              <p className="whitespace-pre-line text-muted">{product.descriptionRu}</p>
+              <p className="whitespace-pre-line text-muted">{description}</p>
             </div>
           )}
         </div>

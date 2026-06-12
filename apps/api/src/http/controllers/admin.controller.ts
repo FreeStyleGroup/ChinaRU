@@ -11,9 +11,10 @@ import {
 } from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
+import { UnauthorizedError } from '../errors';
 
 import type { AdminService } from '../../domain/admin/admin.service';
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 
 export interface AdminController {
   stats: RequestHandler;
@@ -24,6 +25,11 @@ export interface AdminController {
   orders: RequestHandler;
   reviews: RequestHandler;
   moderateReview: RequestHandler;
+}
+
+function actorOf(req: Request): { userId: string; ip: string | null } {
+  if (!req.auth) throw new UnauthorizedError();
+  return { userId: req.auth.userId, ip: req.ip ?? null };
 }
 
 export function createAdminController(deps: { admin: AdminService }): AdminController {
@@ -45,7 +51,7 @@ export function createAdminController(deps: { admin: AdminService }): AdminContr
     verifySeller: asyncHandler(async (req, res) => {
       const id = idSchema.parse(req.params.id);
       const decision = sellerVerifyDecisionSchema.parse(req.body);
-      res.json(ok(await deps.admin.verifySeller(id, decision)));
+      res.json(ok(await deps.admin.verifySeller(id, decision, actorOf(req))));
     }),
 
     products: asyncHandler(async (req, res) => {
@@ -66,7 +72,7 @@ export function createAdminController(deps: { admin: AdminService }): AdminContr
     moderateReview: asyncHandler(async (req, res) => {
       const id = idSchema.parse(req.params.id);
       const input = reviewModerationSchema.parse(req.body);
-      res.json(ok(await deps.admin.moderateReview(id, input)));
+      res.json(ok(await deps.admin.moderateReview(id, input, actorOf(req))));
     }),
   };
 }

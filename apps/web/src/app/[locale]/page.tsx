@@ -7,7 +7,7 @@ import type { Metadata } from 'next';
 import { ProductCard } from '@/components/product-card';
 import { Link } from '@/i18n/navigation';
 import { catalogApi } from '@/lib/api';
-import { buildMetadata } from '@/lib/seo';
+import { buildMetadata, organizationJsonLd } from '@/lib/seo';
 
 export async function generateMetadata({
   params,
@@ -39,6 +39,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd()) }}
+      />
       <section className="border-b border-line bg-gradient-to-b from-surface to-white">
         <Container className="grid gap-8 py-16 lg:grid-cols-2 lg:items-center lg:py-24">
           <div className="space-y-6">

@@ -36,14 +36,20 @@ export function buildMetadata(input: PageMetaInput): Metadata {
   };
 }
 
-/** JSON-LD Schema.org Product. */
-export function productJsonLd(product: ProductDto, path: string): Record<string, unknown> {
+/** JSON-LD Schema.org Product. По умолчанию русские поля; можно передать локализованные. */
+export function productJsonLd(
+  product: ProductDto,
+  path: string,
+  override?: { name?: string; description?: string | null }
+): Record<string, unknown> {
+  const name = override?.name ?? product.nameRu;
+  const description = override?.description ?? product.descriptionRu;
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: product.nameRu,
+    name,
     sku: product.sku,
-    ...(product.descriptionRu ? { description: product.descriptionRu } : {}),
+    ...(description ? { description } : {}),
     ...(product.images.length > 0 ? { image: product.images.map(i => i.url) } : {}),
     offers: {
       '@type': 'Offer',
@@ -62,6 +68,17 @@ export function productJsonLd(product: ProductDto, path: string): Record<string,
           },
         }
       : {}),
+  };
+}
+
+/** JSON-LD Schema.org Organization (для главной). */
+export function organizationJsonLd(): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: 'Международный B2B-маркетплейс товаров из Китая.',
   };
 }
 

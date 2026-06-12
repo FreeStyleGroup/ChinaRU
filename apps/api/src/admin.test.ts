@@ -1,6 +1,7 @@
 import { createServer, type Server } from 'node:http';
 
 import {
+  AuditRepository,
   CategoryRepository,
   ProductRepository,
   ReviewRepository,
@@ -138,6 +139,11 @@ describe('admin endpoints', () => {
     expect(verify.status).toBe(200);
     expect(verify.body.data.verifyStatus).toBe('verified');
     expect(verify.body.data.verifiedAt).not.toBeNull();
+
+    // Действие записано в audit_log.
+    const entries = await new AuditRepository(db).listByEntity('seller', sellerProfileId);
+    expect(entries.length).toBeGreaterThanOrEqual(1);
+    expect(entries[0]?.action).toBe('seller.verify');
   });
 
   it('lists products and orders', async () => {

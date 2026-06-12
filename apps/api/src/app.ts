@@ -4,9 +4,11 @@ import cors from 'cors';
 import express, { type Express } from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import { pinoHttp } from 'pino-http';
 
 import { createContainer, type ContainerDeps } from './container';
 import { createErrorHandler } from './http/error-handler';
+import { createCsrfGuard } from './http/middleware/csrf';
 import { notFoundHandler } from './http/not-found';
 import { createV1Router, healthRouter } from './routes';
 
@@ -20,6 +22,8 @@ export function createApp(deps: ContainerDeps): Express {
   app.set('trust proxy', 1);
   app.disable('x-powered-by');
 
+  // Структурное логирование запросов с request-id (observability).
+  app.use(pinoHttp({ logger }));
   app.use(helmet());
 
   const allowedOrigins = new Set([
@@ -30,12 +34,10 @@ export function createApp(deps: ContainerDeps): Express {
   ]);
   app.use(
     cors({
+      // Чужой origin → просто не выставляем CORS-заголовки (браузер заблокирует чтение),
+      // без выброса 500. Реальную защиту изменяющих запросов делает csrfGuard ниже.
       origin: (origin, callback) => {
-        if (!origin || allowedOrigins.has(origin)) {
-          callback(null, true);
-          return;
-        }
-        callback(new Error(`CORS: origin ${origin} not allowed`));
+        callback(null, !origin || allowedOrigins.has(origin));
       },
       credentials: true,
     })
@@ -43,6 +45,8 @@ export function createApp(deps: ContainerDeps): Express {
 
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
+  // Защита от CSRF для cookie-сессий (после cookieParser, до маршрутов).
+  app.use('/api', createCsrfGuard(allowedOrigins));
 
   app.use(
     '/api',

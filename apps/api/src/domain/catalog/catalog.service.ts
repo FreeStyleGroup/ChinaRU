@@ -3,6 +3,7 @@ import { paginate } from '@china-ru/shared';
 import { NotFoundError } from '../../http/errors';
 import { toProductDto } from '../dto';
 
+import type { Cache } from '../../cache/cache';
 import type {
   Category,
   CategoryRepository,
@@ -12,6 +13,8 @@ import type {
   ProductSort as RepoProductSort,
 } from '@china-ru/db';
 import type { CategoryTreeNode, Paginated, ProductDto, ProductListQuery } from '@china-ru/shared';
+
+const CATEGORIES_CACHE_KEY = 'catalog:categories:tree';
 
 function toCategoryTree(cats: Category[]): CategoryTreeNode[] {
   const nodes = new Map<string, CategoryTreeNode>();
@@ -52,11 +55,18 @@ export class CatalogService {
   constructor(
     private readonly categories: CategoryRepository,
     private readonly products: ProductRepository,
-    private readonly images: ProductImageRepository
+    private readonly images: ProductImageRepository,
+    private readonly cache: Cache,
+    private readonly categoriesTtl: number
   ) {}
 
+  /** Дерево категорий с кешем (редко меняется). Промах кеша → читаем БД и кладём. */
   async categoryTree(): Promise<CategoryTreeNode[]> {
-    return toCategoryTree(await this.categories.listAll());
+    const cached = await this.cache.get<CategoryTreeNode[]>(CATEGORIES_CACHE_KEY);
+    if (cached) return cached;
+    const tree = toCategoryTree(await this.categories.listAll());
+    await this.cache.set(CATEGORIES_CACHE_KEY, tree, this.categoriesTtl);
+    return tree;
   }
 
   async listProducts(query: ProductListQuery): Promise<Paginated<ProductDto>> {

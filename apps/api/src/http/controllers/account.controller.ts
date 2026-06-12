@@ -10,6 +10,7 @@ import { asyncHandler } from '../async-handler';
 import { UnauthorizedError } from '../errors';
 
 import type { AccountService } from '../../domain/account/account.service';
+import type { HoroscopeService } from '../../domain/horoscope/horoscope.service';
 import type { RequestHandler } from 'express';
 
 export interface AccountController {
@@ -19,9 +20,13 @@ export interface AccountController {
   getSeller: RequestHandler;
   applySeller: RequestHandler;
   setSellerNickname: RequestHandler;
+  horoscope: RequestHandler;
 }
 
-export function createAccountController(deps: { account: AccountService }): AccountController {
+export function createAccountController(deps: {
+  account: AccountService;
+  horoscope: HoroscopeService;
+}): AccountController {
   return {
     updateProfile: asyncHandler(async (req, res) => {
       if (!req.auth) throw new UnauthorizedError();
@@ -56,6 +61,11 @@ export function createAccountController(deps: { account: AccountService }): Acco
       if (!req.auth) throw new UnauthorizedError();
       const input = setNicknameSchema.parse(req.body);
       res.json(ok(await deps.account.setSellerNickname(req.auth.userId, input)));
+    }),
+
+    horoscope: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      res.json(ok(await deps.horoscope.getDailyForecast(req.auth.userId)));
     }),
   };
 }

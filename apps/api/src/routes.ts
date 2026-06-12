@@ -55,6 +55,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
   router.get('/account/referral', requireAuth, referral.summary);
+  router.get('/account/horoscope', requireAuth, account.horoscope);
 
   // ───────── работа (резюме / вакансии / отклики) ─────────
   router.get('/account/resume', requireAuth, jobs.getResume);

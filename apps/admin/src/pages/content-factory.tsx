@@ -1,6 +1,7 @@
 import {
   ARTICLE_SECTION_LABELS,
   ARTICLE_STATUS_LABELS,
+  DEFAULT_CONTENT_AGENTS,
   type ArticleDto,
   type ArticleSection,
   type ContentAgentDto,
@@ -25,7 +26,15 @@ interface AgentDraft {
 const EMPTY_DRAFT: AgentDraft = { name: '', persona: '', model: '', topics: '', enabled: true };
 
 function draftFrom(agent: ContentAgentDto | undefined, section: ArticleSection): AgentDraft {
-  if (!agent) return { ...EMPTY_DRAFT, name: `Агент · ${ARTICLE_SECTION_LABELS[section].ru}` };
+  if (!agent) {
+    const preset = DEFAULT_CONTENT_AGENTS[section];
+    return {
+      ...EMPTY_DRAFT,
+      name: preset?.name ?? `Агент · ${ARTICLE_SECTION_LABELS[section].ru}`,
+      persona: preset?.persona ?? '',
+      topics: preset?.topics.join('\n') ?? '',
+    };
+  }
   return {
     name: agent.name,
     persona: agent.persona,

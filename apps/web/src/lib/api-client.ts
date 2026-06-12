@@ -6,6 +6,7 @@ import type {
   CreateJobListingInput,
   CreateOrderInput,
   CreateSellerProfileInput,
+  HoroscopeForecastDto,
   JobApplicationStatus,
   JobListingDto,
   LoginInput,
@@ -108,6 +109,10 @@ export const jobClient = {
 
 export const referralClient = {
   summary: () => call<ReferralSummaryDto>('/account/referral'),
+};
+
+export const horoscopeClient = {
+  forecast: () => call<HoroscopeForecastDto>('/account/horoscope'),
 };
 
 export const sellerJobClient = {

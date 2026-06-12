@@ -1,12 +1,15 @@
 'use client';
 
 /**
- * Гороскоп — определяет китайский знак зодиака по дате рождения из профиля.
- * Прогноз — демонстрационный (детерминированный по знаку); живой контент позже.
+ * Гороскоп в кабинете: знак китайского зодиака по дате рождения из профиля +
+ * дневной прогноз. Прогноз приходит из API (генерируется ИИ-провайдером; при
+ * отсутствии ключа — детерминированный демо-прогноз).
  */
-import { chineseZodiac } from '@china-ru/shared';
+import { chineseZodiac, type HoroscopeForecastDto } from '@china-ru/shared';
+import { useEffect, useState } from 'react';
 
 import { Link } from '@/i18n/navigation';
+import { horoscopeClient } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth-context';
 
 const FACETS = [
@@ -16,35 +19,34 @@ const FACETS = [
   { key: 'health', label: 'Здоровье', icon: '🌿' },
 ] as const;
 
-const FORECAST: Record<string, string[]> = {
-  love: [
-    'День располагает к откровенному разговору — он сблизит вас с близким человеком.',
-    'Прислушайтесь к интуиции в отношениях, она сегодня особенно точна.',
-  ],
-  career: [
-    'Хорошее время для инициативы: ваши идеи заметят и поддержат.',
-    'Сосредоточьтесь на одной задаче — многозадачность сегодня рассеивает силы.',
-  ],
-  finance: [
-    'Удачный день для планирования бюджета и взвешенных покупок.',
-    'Избегайте импульсивных трат — выгодное предложение появится позже.',
-  ],
-  health: [
-    'Энергии много — направьте её на активный отдых и прогулку.',
-    'Уделите внимание режиму сна, тело скажет спасибо.',
-  ],
-};
-
-/** Детерминированный выбор строки по знаку — стабилен при SSR/гидратации. */
-function pick(lines: string[], seed: number): string {
-  return lines[seed % lines.length] ?? lines[0] ?? '';
-}
-
 export default function HoroscopePage() {
   const { user } = useAuth();
-  const sign = chineseZodiac(user?.birthday);
+  const hasBirthday = Boolean(user?.birthday);
+  const localSign = chineseZodiac(user?.birthday);
+  const [forecast, setForecast] = useState<HoroscopeForecastDto | null>(null);
+  const [loading, setLoading] = useState(hasBirthday);
 
-  if (!sign) {
+  useEffect(() => {
+    if (!hasBirthday) return;
+    let cancelled = false;
+    setLoading(true);
+    void horoscopeClient
+      .forecast()
+      .then(f => {
+        if (!cancelled) setForecast(f);
+      })
+      .catch(() => {
+        /* знак покажем локально, прогноз пропустим */
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasBirthday]);
+
+  if (!hasBirthday || !localSign) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold text-ink">Гороскоп</h1>
@@ -63,40 +65,67 @@ export default function HoroscopePage() {
     );
   }
 
-  const seed = sign.key.length;
+  const sign = forecast?.sign ?? {
+    key: localSign.key,
+    ru: localSign.ru,
+    cn: '',
+    emoji: localSign.emoji,
+    element: localSign.element,
+  };
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-ink">Гороскоп</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-ink">Гороскоп</h1>
+        <Link href="/horoscope" className="text-sm text-brand hover:underline">
+          Раздел «Китайский гороскоп» →
+        </Link>
+      </div>
 
-      <div className="flex items-center gap-5 rounded-2xl bg-gradient-to-br from-brand to-accent p-6 text-white">
+      <Link
+        href={`/horoscope/${sign.key}`}
+        className="flex items-center gap-5 rounded-2xl bg-gradient-to-br from-brand to-accent p-6 text-white transition-opacity hover:opacity-95"
+      >
         <span className="text-6xl leading-none">{sign.emoji}</span>
         <div>
           <p className="text-sm text-white/70">Ваш знак китайского зодиака</p>
-          <p className="text-2xl font-bold">{sign.ru}</p>
+          <p className="text-2xl font-bold">
+            {sign.ru} {sign.cn && <span className="text-white/80">{sign.cn}</span>}
+          </p>
           <p className="mt-1 text-sm text-white/85">
-            Стихия: {sign.element} · {sign.traits}
+            Стихия года: {sign.element} · {localSign.traits}
           </p>
         </div>
-      </div>
+      </Link>
 
       <div>
-        <h2 className="mb-3 text-sm font-semibold text-muted">Прогноз на сегодня</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {FACETS.map((f, i) => (
-            <div key={f.key} className="rounded-2xl border border-line bg-white p-5">
-              <p className="flex items-center gap-2 font-medium text-ink">
-                <span>{f.icon}</span> {f.label}
-              </p>
-              <p className="mt-2 text-sm text-muted">{pick(FORECAST[f.key] ?? [], seed + i)}</p>
-            </div>
-          ))}
-        </div>
+        <h2 className="mb-3 text-sm font-semibold text-muted">
+          Прогноз на сегодня
+          {forecast?.date ? ` · ${new Date(forecast.date).toLocaleDateString('ru-RU')}` : ''}
+        </h2>
+        {loading ? (
+          <p className="text-muted">Составляем прогноз…</p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {FACETS.map(f => (
+              <div key={f.key} className="rounded-2xl border border-line bg-white p-5">
+                <p className="flex items-center gap-2 font-medium text-ink">
+                  <span>{f.icon}</span> {f.label}
+                </p>
+                <p className="mt-2 text-sm text-muted">
+                  {forecast?.facets[f.key] ?? 'Прогноз временно недоступен.'}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <p className="text-center text-xs text-muted">
-        Демонстрационный прогноз — ежедневный контент подключается позже.
-      </p>
+      {forecast && !forecast.generated && (
+        <p className="text-center text-xs text-muted">
+          Демонстрационный прогноз — персональный ИИ-прогноз подключается после настройки провайдера.
+        </p>
+      )}
     </div>
   );
 }

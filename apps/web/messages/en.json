@@ -2,6 +2,7 @@
   "nav": {
     "catalog": "Catalog",
     "jobs": "Jobs",
+    "horoscope": "Horoscope",
     "login": "Sign in",
     "register": "Sign up",
     "logout": "Sign out",

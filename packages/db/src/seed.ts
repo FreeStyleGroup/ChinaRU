@@ -1,5 +1,7 @@
+import { DEFAULT_CONTENT_AGENTS, slugify } from '@china-ru/shared';
+
 import { createDb } from './client';
-import { CategoryRepository } from './repositories';
+import { ArticleRepository, CategoryRepository, ContentAgentRepository } from './repositories';
 import { metroCities } from './schema';
 
 /**
@@ -36,6 +38,58 @@ try {
       { slug: 'shanghai', nameRu: 'Шанхай', nameZh: '上海', country: 'CN', sort: 20 },
     ])
     .onConflictDoNothing({ target: metroCities.slug });
+
+  // Контент-завод: агент гороскопа + несколько опубликованных статей для блока новостей.
+  const agents = new ContentAgentRepository(db);
+  const horoPreset = DEFAULT_CONTENT_AGENTS.horoscope;
+  if (horoPreset) {
+    const agent = await agents.upsert('horoscope', {
+      name: horoPreset.name,
+      persona: horoPreset.persona,
+      topics: horoPreset.topics,
+      enabled: true,
+    });
+    const articles = new ArticleRepository(db);
+    const samples = [
+      {
+        title: 'Год Лошади 2026: что ждать и к чему готовиться',
+        excerpt:
+          'Энергия года Лошади приносит движение и перемены. Разбираем, как использовать её на полную и каких ловушек избегать.',
+      },
+      {
+        title: 'Совместимость в браке: 5 пар, которые работают',
+        excerpt:
+          'Анализируем классические сочетания знаков китайского зодиака — кто кого дополняет, а кому лучше держаться подальше.',
+      },
+      {
+        title: 'Стихия Воды: характер и судьба людей-«водяных»',
+        excerpt:
+          'Что значит родиться в год Воды по китайской традиции — карьера, финансы, отношения и здоровье.',
+      },
+      {
+        title: 'Восточный календарь vs западный: где правда',
+        excerpt:
+          'Почему 12 знаков — это сложная астрономическая система с 60-летним циклом, а не просто «китайские знаки зодиака».',
+      },
+    ];
+    for (const s of samples) {
+      const slug = slugify(s.title);
+      if (!(await articles.slugExists(slug))) {
+        await articles.create({
+          section: 'horoscope',
+          agentId: agent.id,
+          slug,
+          title: s.title,
+          excerpt: s.excerpt,
+          body: `# ${s.title}\n\n${s.excerpt}\n\nЭто демонстрационная статья раздела «Гороскоп». Полноценные материалы пишет ИИ-агент Контент-завода.`,
+          status: 'published',
+          source: 'manual',
+          authorName: horoPreset.name,
+          publishedAt: new Date(),
+        });
+      }
+    }
+  }
 
   process.stdout.write('✓ seed complete\n');
 } catch (error) {

@@ -27,6 +27,9 @@ export function Header() {
           <Link href="/jobs" className="text-muted transition-colors hover:text-ink">
             {t('jobs')}
           </Link>
+          <Link href="/horoscope" className="text-muted transition-colors hover:text-ink">
+            {t('horoscope')}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

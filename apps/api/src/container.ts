@@ -27,6 +27,7 @@ import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
 import { ContentService } from './domain/content/content.service';
+import { HoroscopeService } from './domain/horoscope/horoscope.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
@@ -139,6 +140,7 @@ export function createContainer(deps: ContainerDeps): Container {
   );
   const orders = new OrderService(orderRepo, referrals);
   const account = new AccountService(userRepo, sellerRepo);
+  const horoscope = new HoroscopeService(userRepo, ai, cache);
   const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo, jobApplicationRepo);
   const content = new ContentService(contentAgentRepo, articleRepo, ai);
   const admin = new AdminService({
@@ -161,7 +163,7 @@ export function createContainer(deps: ContainerDeps): Container {
       catalog: createCatalogController({ catalog }),
       orders: createOrdersController({ orders }),
       admin: createAdminController({ admin }),
-      account: createAccountController({ account }),
+      account: createAccountController({ account, horoscope }),
       jobs: createJobController({ jobs }),
       referral: createReferralController({ referrals }),
       content: createContentController({ content }),

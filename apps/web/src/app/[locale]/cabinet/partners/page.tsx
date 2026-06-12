@@ -1,7 +1,14 @@
+'use client';
+
 /**
- * Мои партнёры — реферальная программа (демо-данные; начисления/структура подключаются позже).
- * Структура по референсу Битрикс: баннер программы + KPI + дерево сети.
+ * Мои партнёры — многоуровневая (MLM) реферальная программа: баллы/доход, партнёры и
+ * подпартнёры по уровням, персональная реф-ссылка у каждого пользователя.
+ * Дерево/KPI — демо; начисления и уровни подключаются с MLM-движком позже.
  */
+import { useState } from 'react';
+
+import { useAuth } from '@/lib/auth-context';
+
 const KPI = [
   { label: 'Заработано всего', value: '284 500 ₽', accent: true },
   { label: 'Доход за месяц', value: '45 200 ₽' },
@@ -94,6 +101,22 @@ const NETWORK: PartnerRow[] = [
 ];
 
 export default function PartnersPage() {
+  const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
+
+  const refId = user?.publicId ?? 100001;
+  const promo = `CN-${String(refId).padStart(6, '0')}`;
+  const refLink = `https://china.ru/register?ref=${refId}`;
+
+  const copy = (): void => {
+    void navigator.clipboard?.writeText(refLink).then(() => {
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    });
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-ink">Мои партнёры</h1>
@@ -102,8 +125,8 @@ export default function PartnersPage() {
         <div>
           <h2 className="text-lg font-bold">Ваша реферальная программа</h2>
           <p className="mt-1 max-w-md text-sm text-white/85">
-            Делитесь ссылкой или промокодом и получайте до 15% с каждой успешной сделки
-            приглашённых.
+            Делитесь ссылкой или промокодом и получайте баллы и доход с нескольких уровней
+            приглашённых партнёров.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <span className="rounded-md bg-white/20 px-2 py-1">Уровень 1: 15%</span>
@@ -114,18 +137,17 @@ export default function PartnersPage() {
         <div className="rounded-xl bg-white p-4 text-ink">
           <p className="text-xs text-muted">Ваша ссылка:</p>
           <div className="mt-1 flex items-center gap-2">
-            <code className="rounded bg-surface px-2 py-1 text-xs">
-              https://china.ru/register?ref=…
-            </code>
+            <code className="truncate rounded bg-surface px-2 py-1 text-xs">{refLink}</code>
             <button
               type="button"
-              className="rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-white"
+              onClick={copy}
+              className="shrink-0 rounded-lg bg-ink px-3 py-1.5 text-xs font-medium text-white"
             >
-              Копировать
+              {copied ? 'Скопировано' : 'Копировать'}
             </button>
           </div>
           <p className="mt-2 text-xs text-muted">
-            Ваш промокод: <span className="font-semibold text-ink">CN-000001</span>
+            Ваш промокод: <span className="font-semibold text-ink">{promo}</span>
           </p>
         </div>
       </div>

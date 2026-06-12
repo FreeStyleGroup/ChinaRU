@@ -5,6 +5,7 @@ import { Button } from '@china-ru/ui';
 import { useState } from 'react';
 
 
+import { NotificationSettings } from '@/components/cabinet/notification-settings';
 import { Link, useRouter } from '@/i18n/navigation';
 import { accountClient, authClient, ClientApiError } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth-context';
@@ -262,6 +263,8 @@ export default function ProfilePage() {
       </form>
 
       {user && <NicknameBlock user={user} onSaved={setUser} />}
+
+      <NotificationSettings />
 
       <form
         className="space-y-4 rounded-2xl border border-line bg-white p-6"

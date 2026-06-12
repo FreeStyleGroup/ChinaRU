@@ -58,7 +58,7 @@ export const CABINET_SECTIONS = [
   { key: 'jobs', titleRu: 'Работа', group: 'services', pinned: false },
   { key: 'education', titleRu: 'Обучение', group: 'services', pinned: false },
   { key: 'horoscope', titleRu: 'Гороскоп', group: 'services', pinned: false },
-  { key: 'promos', titleRu: 'Акции', group: 'services', pinned: false },
+  { key: 'stocks', titleRu: 'Акции', group: 'services', pinned: false },
 ] as const satisfies readonly CabinetSection[];
 
 export type CabinetSectionKey = (typeof CABINET_SECTIONS)[number]['key'];

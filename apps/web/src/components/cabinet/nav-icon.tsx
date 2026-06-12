@@ -18,7 +18,7 @@ const PATHS: Record<string, string> = {
   jobs: 'M4 8h16v11H4V8zM9 8V6a1 1 0 011-1h4a1 1 0 011 1v2M4 13h16',
   education: 'M12 5L2 9l10 4 10-4-10-4zM6 11v5c0 1 3 2 6 2s6-1 6-2v-5',
   horoscope: 'M12 3a9 9 0 100 18 9 9 0 000-18zM12 7v5l3 3',
-  promos: 'M3 13l3-3 4 4 5-6 6 6',
+  stocks: 'M3 17l5-5 4 4 8-8M21 8h-4M21 8v4',
 };
 
 export function NavIcon({ section }: { section: string }) {

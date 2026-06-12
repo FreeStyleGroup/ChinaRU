@@ -1,0 +1,84 @@
+import { z } from 'zod';
+
+/**
+ * Переиспользуемые примитивы валидации и преобразование ошибок Zod в формат
+ * `ApiErr.fields` (см. api-response.ts). Используется во всех доменных схемах
+ * и в контроллерах API (R3).
+ */
+
+/** UUID-идентификатор сущности. */
+export const idSchema = z.uuid({ error: 'Некорректный идентификатор' });
+
+/** ISO-8601 datetime со смещением `Z` (то, что отдаёт `Date.toISOString()`). */
+export const isoDateTime = z.iso.datetime();
+
+/** Дата без времени, `YYYY-MM-DD`. */
+export const isoDate = z.iso.date();
+
+/** Общие временные поля DTO. Раскрывается в shape объекта: `{ ...timestampsShape }`. */
+export const timestampsShape = {
+  createdAt: isoDateTime,
+  updatedAt: isoDateTime,
+} as const;
+
+/** URL-совместимый slug: строчная латиница, цифры, дефис-разделитель. */
+export const slugSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(160)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    error: 'Slug: только строчные латинские буквы, цифры и дефис',
+  });
+
+/** Денежная сумма как строка `numeric(п,2)` — без потерь точности (никаких float). */
+export const moneyString = z.string().regex(/^\d{1,12}(\.\d{1,2})?$/, {
+  error: 'Некорректная сумма',
+});
+
+/** Email: тримминг + нижний регистр на входе, затем валидация формата. */
+export const emailSchema = z
+  .string()
+  .trim()
+  .max(254)
+  .toLowerCase()
+  .pipe(z.email({ error: 'Некорректный email' }));
+
+/** Пароль: 8–128 символов, минимум одна буква и одна цифра. */
+export const passwordSchema = z
+  .string()
+  .min(8, { error: 'Пароль не короче 8 символов' })
+  .max(128, { error: 'Пароль не длиннее 128 символов' })
+  .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, {
+    error: 'Пароль должен содержать буквы и цифры',
+  });
+
+/** Телефон в свободном международном формате. */
+export const phoneSchema = z
+  .string()
+  .trim()
+  .regex(/^\+?[0-9 ()-]{6,20}$/, { error: 'Некорректный телефон' });
+
+/** Оценка отзыва 1–5. */
+export const ratingValueSchema = z.number().int().min(1).max(5);
+
+/** Уровень HSK 1–6. */
+export const hskLevelSchema = z.number().int().min(1).max(6);
+
+/** Непустой токен из письма / ссылки сброса (hex/base64url). */
+export const opaqueTokenSchema = z.string().min(16).max(512);
+
+/**
+ * Преобразует `ZodError` в плоскую карту `поле → первое сообщение`,
+ * пригодную для `ApiErr.fields`. Берёт по одному (первому) сообщению на путь;
+ * корневые ошибки кладёт под ключ `_`. Опирается только на `error.issues`
+ * (стабильно в Zod 3 и 4).
+ */
+export function fieldErrors(error: z.ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const key = issue.path.length > 0 ? issue.path.map(String).join('.') : '_';
+    if (!(key in out)) out[key] = issue.message;
+  }
+  return out;
+}

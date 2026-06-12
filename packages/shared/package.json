@@ -10,5 +10,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }

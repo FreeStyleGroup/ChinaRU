@@ -1,49 +1,39 @@
+import {
+  BOOKING_STATUSES,
+  CURRENCIES,
+  DEVICE_PLATFORMS,
+  JOB_APPLICATION_STATUSES,
+  JOB_STATUSES,
+  JOB_WORK_TYPES,
+  LOCALES,
+  NOTIFICATION_TYPES,
+  OAUTH_PROVIDERS,
+  ORDER_STATUSES,
+  PRODUCT_STATUSES,
+  REVIEW_STATUSES,
+  SELLER_VERIFY_STATUSES,
+  USER_ROLES,
+  USER_STATUSES,
+} from '@china-ru/shared';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
-/** Перечисления домена. Значения синхронизированы с Zod-enum в packages/shared (фаза R2). */
+/**
+ * pgEnum строятся из канонических кортежей `@china-ru/shared`, поэтому значения БД
+ * и значения Zod-валидации не могут разойтись (см. enums.sync.test.ts).
+ */
 
-export const userRole = pgEnum('user_role', ['buyer', 'seller', 'admin']);
-export const userStatus = pgEnum('user_status', ['active', 'banned', 'pending_verify']);
-export const localeEnum = pgEnum('locale', ['ru', 'en', 'zh']);
-export const currency = pgEnum('currency', ['rub', 'cny', 'usd', 'eur']);
-export const oauthProvider = pgEnum('oauth_provider', ['google', 'yandex', 'vk', 'wechat']);
-
-export const sellerVerifyStatus = pgEnum('seller_verify_status', [
-  'unverified',
-  'pending',
-  'verified',
-  'rejected',
-]);
-
-export const productStatus = pgEnum('product_status', ['draft', 'active', 'paused', 'banned']);
-
-export const orderStatus = pgEnum('order_status', [
-  'pending',
-  'paid',
-  'shipped',
-  'delivered',
-  'cancelled',
-  'refunded',
-]);
-
-export const reviewStatus = pgEnum('review_status', ['pending', 'approved', 'rejected']);
-
-export const jobWorkType = pgEnum('job_work_type', [
-  'full_time',
-  'part_time',
-  'remote',
-  'contract',
-  'internship',
-]);
-
-export const jobStatus = pgEnum('job_status', ['draft', 'active', 'closed']);
-export const jobApplicationStatus = pgEnum('job_application_status', [
-  'submitted',
-  'reviewed',
-  'accepted',
-  'rejected',
-]);
-
-export const bookingStatus = pgEnum('booking_status', ['pending', 'confirmed', 'cancelled']);
-export const notificationType = pgEnum('notification_type', ['order', 'review', 'chat', 'system']);
-export const devicePlatform = pgEnum('device_platform', ['ios', 'android']);
+export const userRole = pgEnum('user_role', USER_ROLES);
+export const userStatus = pgEnum('user_status', USER_STATUSES);
+export const localeEnum = pgEnum('locale', LOCALES);
+export const currency = pgEnum('currency', CURRENCIES);
+export const oauthProvider = pgEnum('oauth_provider', OAUTH_PROVIDERS);
+export const sellerVerifyStatus = pgEnum('seller_verify_status', SELLER_VERIFY_STATUSES);
+export const productStatus = pgEnum('product_status', PRODUCT_STATUSES);
+export const orderStatus = pgEnum('order_status', ORDER_STATUSES);
+export const reviewStatus = pgEnum('review_status', REVIEW_STATUSES);
+export const jobWorkType = pgEnum('job_work_type', JOB_WORK_TYPES);
+export const jobStatus = pgEnum('job_status', JOB_STATUSES);
+export const jobApplicationStatus = pgEnum('job_application_status', JOB_APPLICATION_STATUSES);
+export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
+export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
+export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);

@@ -60,7 +60,27 @@ const envSchema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform(v => v === 'true'),
+
+  /**
+   * ИИ-провайдер для Контент-завода и прогнозов. Провайдеро-агностично: сейчас
+   * AITunnel (OpenAI-совместимый, RU-friendly), но можно переключить на ГигаЧат
+   * или любую другую модель сменой AI_PROVIDER (+ base/model). Пустой ключ →
+   * stub-режим (шаблонные ответы), чтобы флоу работал без живого ИИ.
+   */
+  AI_PROVIDER: z.enum(['aitunnel', 'openai', 'gigachat', 'custom']).default('aitunnel'),
+  AI_API_KEY: z.string().default(''),
+  AI_BASE_URL: z.string().default(''),
+  AI_MODEL: z.string().default(''),
+  AI_IMAGE_MODEL: z.string().default(''),
 });
+
+/** Дефолтные base URL и модель по провайдеру (если не заданы явно). */
+const AI_DEFAULTS: Record<Env['AI_PROVIDER'], { baseUrl: string; model: string }> = {
+  aitunnel: { baseUrl: 'https://api.aitunnel.ru/v1', model: 'gpt-4o-mini' },
+  openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  gigachat: { baseUrl: 'https://gigachat.devices.sberbank.ru/api/v1', model: 'GigaChat' },
+  custom: { baseUrl: '', model: '' },
+};
 
 export type Env = z.infer<typeof envSchema>;
 
@@ -91,6 +111,14 @@ export interface AppConfig {
     enabled: boolean;
   };
   features: { registrationOpen: boolean; sellerRegistrationOpen: boolean };
+  ai: {
+    provider: Env['AI_PROVIDER'];
+    apiKey: string;
+    baseUrl: string;
+    model: string;
+    imageModel: string;
+    enabled: boolean;
+  };
 }
 
 /** Ошибка валидации окружения — точка входа печатает её и завершает процесс. */
@@ -144,6 +172,14 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     features: {
       registrationOpen: e.REGISTRATION_OPEN,
       sellerRegistrationOpen: e.SELLER_REGISTRATION_OPEN,
+    },
+    ai: {
+      provider: e.AI_PROVIDER,
+      apiKey: e.AI_API_KEY,
+      baseUrl: e.AI_BASE_URL || AI_DEFAULTS[e.AI_PROVIDER].baseUrl,
+      model: e.AI_MODEL || AI_DEFAULTS[e.AI_PROVIDER].model,
+      imageModel: e.AI_IMAGE_MODEL,
+      enabled: e.AI_API_KEY.length > 0,
     },
   };
 }

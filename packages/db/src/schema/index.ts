@@ -6,4 +6,5 @@ export * from './chat';
 export * from './travel';
 export * from './jobs';
 export * from './metro';
+export * from './content';
 export * from './audit';

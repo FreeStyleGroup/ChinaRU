@@ -1,4 +1,6 @@
 import {
+  ARTICLE_SECTIONS,
+  ARTICLE_STATUSES,
   BOOKING_STATUSES,
   CURRENCIES,
   DEVICE_PLATFORMS,
@@ -48,6 +50,8 @@ describe('db enums ↔ shared tuples', () => {
     [e.notificationType, NOTIFICATION_TYPES],
     [e.devicePlatform, DEVICE_PLATFORMS],
     [e.referralEvent, REFERRAL_EVENTS],
+    [e.articleSection, ARTICLE_SECTIONS],
+    [e.articleStatus, ARTICLE_STATUSES],
   ])('%s pgEnum matches its shared tuple', (pgEnum, tuple) => {
     expect(pgEnum.enumValues).toEqual([...tuple]);
   });

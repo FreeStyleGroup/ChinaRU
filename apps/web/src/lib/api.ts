@@ -1,5 +1,8 @@
 import type {
   ApiResponse,
+  ArticleCardDto,
+  ArticlePublicDto,
+  ArticleSection,
   CategoryTreeNode,
   JobCategoryCount,
   JobListingPublicDto,
@@ -97,4 +100,20 @@ export const jobsApi = {
     }),
   resume: (id: string) =>
     apiGet<ResumePublicDto>(`/jobs/resumes/${encodeURIComponent(id)}`, { revalidate: 120 }),
+};
+
+/** Контент-завод: статьи разделов (блок новостей + список + деталь). */
+export const contentApi = {
+  articles: (params: { section?: ArticleSection; limit?: number; page?: number } = {}) => {
+    const sp = new URLSearchParams();
+    if (params.section) sp.set('section', params.section);
+    if (params.limit) sp.set('limit', String(params.limit));
+    if (params.page) sp.set('page', String(params.page));
+    const qs = sp.toString();
+    return apiGet<Paginated<ArticleCardDto>>(`/content/articles${qs ? `?${qs}` : ''}`, {
+      revalidate: 120,
+    });
+  },
+  article: (slug: string) =>
+    apiGet<ArticlePublicDto>(`/content/articles/${encodeURIComponent(slug)}`, { revalidate: 120 }),
 };

@@ -62,6 +62,25 @@ export const NOTIFICATION_TYPES = ['order', 'review', 'chat', 'system'] as const
 export const DEVICE_PLATFORMS = ['ios', 'android'] as const;
 /** Событие реферального начисления (MLM). */
 export const REFERRAL_EVENTS = ['order', 'subscription', 'first_deal'] as const;
+/**
+ * Тематические разделы контента. У каждого большого публичного раздела свой блок
+ * новостей внизу и свой ИИ-агент «Контент завода», который пишет статьи только по
+ * этой теме. Любое добавление раздела начинается ЗДЕСЬ.
+ */
+export const ARTICLE_SECTIONS = [
+  'horoscope',
+  'auto',
+  'stocks',
+  'travel',
+  'jobs',
+  'tenders',
+  'freight',
+  'education',
+  'metro',
+  'general',
+] as const;
+/** Статус статьи: черновик (сгенерирован ИИ/создан) → опубликован → в архиве. */
+export const ARTICLE_STATUSES = ['draft', 'published', 'archived'] as const;
 
 export const localeSchema = z.enum(LOCALES);
 export const userRoleSchema = z.enum(USER_ROLES);
@@ -82,6 +101,8 @@ export const bookingStatusSchema = z.enum(BOOKING_STATUSES);
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 export const devicePlatformSchema = z.enum(DEVICE_PLATFORMS);
 export const referralEventSchema = z.enum(REFERRAL_EVENTS);
+export const articleSectionSchema = z.enum(ARTICLE_SECTIONS);
+export const articleStatusSchema = z.enum(ARTICLE_STATUSES);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -101,6 +122,8 @@ export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;
 export type ReferralEvent = z.infer<typeof referralEventSchema>;
+export type ArticleSection = z.infer<typeof articleSectionSchema>;
+export type ArticleStatus = z.infer<typeof articleStatusSchema>;
 
 /** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 10%, 2 → 5%, 3 → 2%. */
 export const REFERRAL_LEVEL_RATES = [0.1, 0.05, 0.02] as const;

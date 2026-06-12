@@ -11,7 +11,8 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs, referral } = container.controllers;
+  const { auth, catalog, orders, admin, account, jobs, referral, content } =
+    container.controllers;
   const { requireAuth } = container.authMiddleware;
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -41,6 +42,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/catalog/categories', catalog.categoryTree);
   router.get('/catalog/products', catalog.listProducts);
   router.get('/catalog/products/:slug', catalog.getProduct);
+
+  // ───────── контент (публичное чтение): блок новостей + статьи разделов ─────────
+  router.get('/content/articles', content.listArticles);
+  router.get('/content/articles/:slug', content.getArticle);
 
   // ───────── account (кабинет) ─────────
   router.patch('/account/profile', requireAuth, account.updateProfile);
@@ -87,6 +92,18 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/admin/resumes/:id/moderate', onlyAdmin, admin.moderateResume);
   router.get('/admin/vacancies', onlyAdmin, admin.vacancies);
   router.post('/admin/vacancies/:id/moderate', onlyAdmin, admin.moderateVacancy);
+
+  // ───────── admin: Контент завод (агенты + статьи) ─────────
+  router.get('/admin/content/agents', onlyAdmin, content.listAgents);
+  router.put('/admin/content/agents/:section', onlyAdmin, content.upsertAgent);
+  router.post('/admin/content/agents/:section/generate', onlyAdmin, content.generate);
+  router.get('/admin/content/articles', onlyAdmin, content.adminListArticles);
+  router.get('/admin/content/articles/:id', onlyAdmin, content.adminGetArticle);
+  router.post('/admin/content/articles', onlyAdmin, content.createArticle);
+  router.patch('/admin/content/articles/:id', onlyAdmin, content.updateArticle);
+  router.post('/admin/content/articles/:id/publish', onlyAdmin, content.publishArticle);
+  router.post('/admin/content/articles/:id/archive', onlyAdmin, content.archiveArticle);
+  router.delete('/admin/content/articles/:id', onlyAdmin, content.deleteArticle);
 
   return router;
 }

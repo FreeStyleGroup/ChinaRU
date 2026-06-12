@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 
 import { AdminLayout } from '@/components/layout';
 import { useAuth } from '@/lib/auth';
+import { ContentFactoryPage } from '@/pages/content-factory';
 import { DashboardPage } from '@/pages/dashboard';
 import { LoginPage } from '@/pages/login';
 import { OrdersPage } from '@/pages/orders';
@@ -41,6 +42,7 @@ export const router = createBrowserRouter([
           { path: 'reviews', element: <ReviewsPage /> },
           { path: 'resumes', element: <ResumesPage /> },
           { path: 'vacancies', element: <VacanciesPage /> },
+          { path: 'content', element: <ContentFactoryPage /> },
         ],
       },
     ],

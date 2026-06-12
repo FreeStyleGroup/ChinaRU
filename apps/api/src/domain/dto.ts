@@ -1,6 +1,8 @@
 import type {
   ApplicationWithApplicant,
   ApplicationWithVacancy,
+  Article,
+  ContentAgent,
   JobListing,
   JobListingWithCompany,
   Order,
@@ -15,6 +17,10 @@ import type {
 } from '@china-ru/db';
 import type {
   ApplicantDto,
+  ArticleCardDto,
+  ArticleDto,
+  ArticlePublicDto,
+  ContentAgentDto,
   JobListingDto,
   JobListingPublicDto,
   MyApplicationDto,
@@ -187,6 +193,57 @@ export function toResumePublicDto(r: ResumeWithUser): ResumePublicDto {
     candidateNickname: r.candidateNickname,
     candidateVerified: r.candidateVerified,
   };
+}
+
+export function toContentAgentDto(a: ContentAgent): ContentAgentDto {
+  return {
+    id: a.id,
+    section: a.section,
+    name: a.name,
+    persona: a.persona,
+    model: a.model,
+    topics: a.topics,
+    enabled: a.enabled,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+  };
+}
+
+export function toArticleDto(a: Article): ArticleDto {
+  return {
+    id: a.id,
+    section: a.section,
+    agentId: a.agentId,
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt,
+    body: a.body,
+    coverImageUrl: a.coverImageUrl,
+    imagePrompt: a.imagePrompt,
+    status: a.status,
+    source: a.source,
+    authorName: a.authorName,
+    publishedAt: a.publishedAt ? a.publishedAt.toISOString() : null,
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+  };
+}
+
+export function toArticleCardDto(a: Article): ArticleCardDto {
+  return {
+    id: a.id,
+    section: a.section,
+    slug: a.slug,
+    title: a.title,
+    excerpt: a.excerpt,
+    coverImageUrl: a.coverImageUrl,
+    authorName: a.authorName,
+    publishedAt: a.publishedAt ? a.publishedAt.toISOString() : null,
+  };
+}
+
+export function toArticlePublicDto(a: Article): ArticlePublicDto {
+  return { ...toArticleCardDto(a), body: a.body };
 }
 
 export function toJobListingDto(j: JobListing): JobListingDto {

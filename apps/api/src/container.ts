@@ -1,7 +1,9 @@
 import {
   AnalyticsRepository,
+  ArticleRepository,
   AuditRepository,
   CategoryRepository,
+  ContentAgentRepository,
   JobApplicationRepository,
   JobListingRepository,
   OrderRepository,
@@ -15,6 +17,7 @@ import {
   type Database,
 } from '@china-ru/db';
 
+import { createAiProvider } from './ai/factory';
 import { NoopCache, RedisCache, type Cache } from './cache/cache';
 import { AccountService } from './domain/account/account.service';
 import { AdminService } from './domain/admin/admin.service';
@@ -23,6 +26,7 @@ import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
 import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
+import { ContentService } from './domain/content/content.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
@@ -36,6 +40,10 @@ import {
   createCatalogController,
   type CatalogController,
 } from './http/controllers/catalog.controller';
+import {
+  createContentController,
+  type ContentController,
+} from './http/controllers/content.controller';
 import { createJobController, type JobController } from './http/controllers/job.controller';
 import {
   createOrdersController,
@@ -68,6 +76,7 @@ export interface Container {
     account: AccountController;
     jobs: JobController;
     referral: ReferralController;
+    content: ContentController;
   };
 }
 
@@ -89,6 +98,10 @@ export function createContainer(deps: ContainerDeps): Container {
   const referralRepo = new ReferralRepository(db);
   const analyticsRepo = new AnalyticsRepository(db);
   const auditRepo = new AuditRepository(db);
+  const contentAgentRepo = new ContentAgentRepository(db);
+  const articleRepo = new ArticleRepository(db);
+
+  const ai = createAiProvider(config, logger);
 
   const cache: Cache = config.cache.enabled
     ? new RedisCache(config.cache.redisUrl, logger)
@@ -127,6 +140,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const orders = new OrderService(orderRepo, referrals);
   const account = new AccountService(userRepo, sellerRepo);
   const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo, jobApplicationRepo);
+  const content = new ContentService(contentAgentRepo, articleRepo, ai);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -150,6 +164,7 @@ export function createContainer(deps: ContainerDeps): Container {
       account: createAccountController({ account }),
       jobs: createJobController({ jobs }),
       referral: createReferralController({ referrals }),
+      content: createContentController({ content }),
     },
   };
 }

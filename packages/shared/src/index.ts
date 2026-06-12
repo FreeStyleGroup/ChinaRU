@@ -33,3 +33,4 @@ export * from './schemas/notification';
 export * from './schemas/admin';
 export * from './schemas/cabinet';
 export * from './schemas/referral';
+export * from './schemas/content';

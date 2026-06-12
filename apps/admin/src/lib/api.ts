@@ -1,7 +1,10 @@
 import type {
   AdminStats,
   ApiResponse,
+  ArticleDto,
+  ContentAgentDto,
   ContentModerationInput,
+  GenerateArticleInput,
   JobListingDto,
   LoginInput,
   OrderDto,
@@ -12,6 +15,7 @@ import type {
   ReviewModerationInput,
   SellerProfileDto,
   SellerVerifyDecisionInput,
+  UpsertContentAgentInput,
   UserDto,
 } from '@china-ru/shared';
 
@@ -55,6 +59,7 @@ export interface ListParams {
   role?: string;
   verifyStatus?: string;
   search?: string;
+  section?: string;
 }
 
 export const api = {
@@ -91,4 +96,24 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+
+  // ── Контент завод ──
+  contentAgents: () => call<ContentAgentDto[]>('/admin/content/agents'),
+  upsertAgent: (section: string, input: UpsertContentAgentInput) =>
+    call<ContentAgentDto>(`/admin/content/agents/${section}`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  generateArticle: (section: string, input: GenerateArticleInput) =>
+    call<ArticleDto>(`/admin/content/agents/${section}/generate`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  articles: (p: ListParams) => call<Paginated<ArticleDto>>(`/admin/content/articles${qs({ ...p })}`),
+  publishArticle: (id: string) =>
+    call<ArticleDto>(`/admin/content/articles/${id}/publish`, { method: 'POST' }),
+  archiveArticle: (id: string) =>
+    call<ArticleDto>(`/admin/content/articles/${id}/archive`, { method: 'POST' }),
+  deleteArticle: (id: string) =>
+    call<{ deleted: boolean }>(`/admin/content/articles/${id}`, { method: 'DELETE' }),
 };

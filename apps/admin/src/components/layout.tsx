@@ -12,6 +12,7 @@ const NAV = [
   { to: '/reviews', label: 'Отзывы', end: false },
   { to: '/resumes', label: 'Резюме', end: false },
   { to: '/vacancies', label: 'Вакансии', end: false },
+  { to: '/content', label: 'Контент завод', end: false },
 ];
 
 export function AdminLayout() {

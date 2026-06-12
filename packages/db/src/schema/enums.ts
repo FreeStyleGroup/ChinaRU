@@ -1,4 +1,6 @@
 import {
+  ARTICLE_SECTIONS,
+  ARTICLE_STATUSES,
   BOOKING_STATUSES,
   CURRENCIES,
   DEVICE_PLATFORMS,
@@ -45,3 +47,5 @@ export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
 export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);
 export const referralEvent = pgEnum('referral_event', REFERRAL_EVENTS);
+export const articleSection = pgEnum('article_section', ARTICLE_SECTIONS);
+export const articleStatus = pgEnum('article_status', ARTICLE_STATUSES);

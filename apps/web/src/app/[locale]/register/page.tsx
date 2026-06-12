@@ -1,16 +1,29 @@
 'use client';
 
 import { Button, Container } from '@china-ru/ui';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth-context';
 
+/** Обёртка с Suspense — `useSearchParams` требует границы при статической генерации. */
 export default function RegisterPage() {
+  return (
+    <Suspense fallback={<Container className="py-16" />}>
+      <RegisterForm />
+    </Suspense>
+  );
+}
+
+function RegisterForm() {
   const t = useTranslations('auth');
   const { register } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refParam = searchParams.get('ref');
+  const ref = refParam && /^\d+$/.test(refParam) ? Number(refParam) : undefined;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +34,7 @@ export default function RegisterPage() {
     setLoading(true);
     setError(false);
     try {
-      await register({ email, password, ...(name ? { name } : {}) });
+      await register({ email, password, ...(name ? { name } : {}), ...(ref ? { ref } : {}) });
       router.push('/');
     } catch {
       setError(true);
@@ -34,6 +47,11 @@ export default function RegisterPage() {
     <Container className="py-16">
       <div className="mx-auto max-w-sm space-y-6">
         <h1 className="text-2xl font-bold text-ink">{t('registerTitle')}</h1>
+        {ref && (
+          <p className="rounded-lg bg-brand/5 px-3 py-2 text-sm text-brand">
+            Регистрация по приглашению партнёра #{ref}
+          </p>
+        )}
         <form
           className="space-y-4"
           onSubmit={e => {

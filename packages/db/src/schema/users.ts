@@ -8,6 +8,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from 'drizzle-orm/pg-core';
 
 import { softDelete, timestamps } from './columns';
@@ -15,6 +16,7 @@ import {
   devicePlatform,
   localeEnum,
   oauthProvider,
+  referralEvent,
   sellerVerifyStatus,
   userRole,
   userStatus,
@@ -42,6 +44,16 @@ export const users = pgTable(
     /** Дата рождения в формате YYYY-MM-DD; используется разделом «Гороскоп». */
     birthday: text('birthday'),
     avatarUrl: text('avatar_url'),
+    /** Кто пригласил (реферальная программа MLM). */
+    referredBy: uuid('referred_by').references((): AnyPgColumn => users.id, {
+      onDelete: 'set null',
+    }),
+    /** Баллы лояльности (в т.ч. реферальные). */
+    points: integer('points').notNull().default(0),
+    /** Реферальный доход (₽), тратится на портале. */
+    referralBalance: numeric('referral_balance', { precision: 14, scale: 2 })
+      .notNull()
+      .default('0'),
     /** Включённые опциональные разделы кабинета (ключи из CABINET_SECTIONS). */
     menuSections: text('menu_sections')
       .array()
@@ -56,6 +68,34 @@ export const users = pgTable(
     uniqueIndex('users_nickname_uidx').on(t.nickname),
     index('users_role_idx').on(t.role),
     index('users_status_idx').on(t.status),
+    index('users_referred_by_idx').on(t.referredBy),
+  ]
+);
+
+/**
+ * Леджер реферальных начислений (MLM). Каждая запись — вознаграждение `beneficiary`
+ * за событие `source` на определённом уровне (1–3): деньги (₽) и/или баллы.
+ */
+export const referralEarnings = pgTable(
+  'referral_earnings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    beneficiaryId: uuid('beneficiary_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    sourceId: uuid('source_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    level: integer('level').notNull(),
+    event: referralEvent('event').notNull(),
+    orderId: uuid('order_id'),
+    money: numeric('money', { precision: 14, scale: 2 }).notNull().default('0'),
+    points: integer('points').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  t => [
+    index('referral_earnings_beneficiary_idx').on(t.beneficiaryId),
+    index('referral_earnings_source_idx').on(t.sourceId),
   ]
 );
 

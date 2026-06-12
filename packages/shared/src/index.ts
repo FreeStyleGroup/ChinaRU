@@ -32,3 +32,4 @@ export * from './schemas/device';
 export * from './schemas/notification';
 export * from './schemas/admin';
 export * from './schemas/cabinet';
+export * from './schemas/referral';

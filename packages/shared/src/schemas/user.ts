@@ -44,6 +44,10 @@ export const userDtoSchema = z.object({
   /** Дата рождения YYYY-MM-DD (для раздела «Гороскоп»). */
   birthday: z.string().nullable(),
   avatarUrl: z.string().nullable(),
+  /** Баллы лояльности (в т.ч. реферальные). */
+  points: z.number().int(),
+  /** Реферальный денежный баланс (₽, строкой; тратится на портале). */
+  referralBalance: z.string(),
   /** Включённые опциональные разделы кабинета. */
   menuSections: z.array(z.string()),
   ...timestampsShape,

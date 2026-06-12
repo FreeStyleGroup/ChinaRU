@@ -6,6 +6,7 @@ import type {
   CreateSellerProfileInput,
   LoginInput,
   OrderDto,
+  ReferralSummaryDto,
   RegisterInput,
   ResumeDto,
   SellerProfileDto,
@@ -92,4 +93,8 @@ export const jobClient = {
   getResume: () => call<ResumeDto | null>('/account/resume'),
   upsertResume: (input: UpsertResumeInput) =>
     call<ResumeDto>('/account/resume', { method: 'PUT', body: JSON.stringify(input) }),
+};
+
+export const referralClient = {
+  summary: () => call<ReferralSummaryDto>('/account/referral'),
 };

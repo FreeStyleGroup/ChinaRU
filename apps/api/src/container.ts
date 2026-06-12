@@ -6,6 +6,7 @@ import {
   OrderRepository,
   ProductImageRepository,
   ProductRepository,
+  ReferralRepository,
   ResumeRepository,
   ReviewRepository,
   SellerRepository,
@@ -23,6 +24,7 @@ import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
+import { ReferralService } from './domain/referral/referral.service';
 import {
   createAccountController,
   type AccountController,
@@ -38,6 +40,10 @@ import {
   createOrdersController,
   type OrdersController,
 } from './http/controllers/orders.controller';
+import {
+  createReferralController,
+  type ReferralController,
+} from './http/controllers/referral.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 
 import type { AppConfig } from './config';
@@ -60,6 +66,7 @@ export interface Container {
     admin: AdminController;
     account: AccountController;
     jobs: JobController;
+    referral: ReferralController;
   };
 }
 
@@ -77,6 +84,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const reviewRepo = new ReviewRepository(db);
   const resumeRepo = new ResumeRepository(db);
   const jobListingRepo = new JobListingRepository(db);
+  const referralRepo = new ReferralRepository(db);
   const analyticsRepo = new AnalyticsRepository(db);
   const auditRepo = new AuditRepository(db);
 
@@ -104,7 +112,9 @@ export function createContainer(deps: ContainerDeps): Container {
     passwords,
     mailer,
     registrationOpen: config.features.registrationOpen,
+    referrals: referralRepo,
   });
+  const referrals = new ReferralService(referralRepo, userRepo);
   const catalog = new CatalogService(
     categoryRepo,
     productRepo,
@@ -112,7 +122,7 @@ export function createContainer(deps: ContainerDeps): Container {
     cache,
     config.cache.categoriesTtl
   );
-  const orders = new OrderService(orderRepo);
+  const orders = new OrderService(orderRepo, referrals);
   const account = new AccountService(userRepo, sellerRepo);
   const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo);
   const admin = new AdminService({
@@ -137,6 +147,7 @@ export function createContainer(deps: ContainerDeps): Container {
       admin: createAdminController({ admin }),
       account: createAccountController({ account }),
       jobs: createJobController({ jobs }),
+      referral: createReferralController({ referrals }),
     },
   };
 }

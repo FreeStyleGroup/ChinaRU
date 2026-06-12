@@ -1,4 +1,10 @@
-import { schema, type Database, type User, type UserRepository } from '@china-ru/db';
+import {
+  schema,
+  type Database,
+  type ReferralRepository,
+  type User,
+  type UserRepository,
+} from '@china-ru/db';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import {
@@ -27,6 +33,8 @@ export interface AuthServiceDeps {
   passwords: PasswordService;
   mailer: Mailer;
   registrationOpen: boolean;
+  /** Привязка пригласившего при регистрации по реф-ссылке (MLM). */
+  referrals?: ReferralRepository;
 }
 
 /** Контекст запроса (для аудита refresh-токенов и выбора TTL). */
@@ -58,6 +66,11 @@ export class AuthService {
       name: input.name ?? null,
       locale: input.locale ?? 'ru',
     });
+
+    if (input.ref !== undefined && this.deps.referrals) {
+      const referrer = await this.deps.referrals.findByPublicId(input.ref);
+      if (referrer) await this.deps.referrals.linkReferrer(created.id, referrer.id);
+    }
 
     await this.sendVerificationEmail(created);
     const tokens = await this.issueFor(created, ctx);

@@ -11,7 +11,7 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs } = container.controllers;
+  const { auth, catalog, orders, admin, account, jobs, referral } = container.controllers;
   const { requireAuth } = container.authMiddleware;
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -49,6 +49,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/account/seller', requireAuth, account.getSeller);
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
+  router.get('/account/referral', requireAuth, referral.summary);
 
   // ───────── работа (резюме / вакансии) ─────────
   router.get('/account/resume', requireAuth, jobs.getResume);

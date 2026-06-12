@@ -9,6 +9,8 @@ export const registerSchema = z.object({
   password: passwordSchema,
   name: z.string().trim().min(1).max(120).optional(),
   locale: localeSchema.optional(),
+  /** Числовой publicId пригласившего (реферальная программа MLM). */
+  ref: z.coerce.number().int().positive().optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

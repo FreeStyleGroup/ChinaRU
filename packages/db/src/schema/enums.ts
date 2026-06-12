@@ -12,6 +12,7 @@ import {
   OAUTH_PROVIDERS,
   ORDER_STATUSES,
   PRODUCT_STATUSES,
+  REFERRAL_EVENTS,
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
@@ -43,3 +44,4 @@ export const jobCategory = pgEnum('job_category', JOB_CATEGORIES);
 export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
 export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);
+export const referralEvent = pgEnum('referral_event', REFERRAL_EVENTS);

@@ -1,121 +1,61 @@
 'use client';
 
 /**
- * Мои партнёры — многоуровневая (MLM) реферальная программа: баллы/доход, партнёры и
- * подпартнёры по уровням, персональная реф-ссылка у каждого пользователя.
- * Дерево/KPI — демо; начисления и уровни подключаются с MLM-движком позже.
+ * Мои партнёры — многоуровневая (MLM) реферальная программа на реальном API:
+ * персональная ссылка/промокод (по publicId), баланс (баллы + деньги), агрегаты,
+ * партнёры по уровням 1–3. Начисления — движок ReferralService (15/5/2% + баллы).
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { useAuth } from '@/lib/auth-context';
+import { referralClient } from '@/lib/api-client';
 
-const KPI = [
-  { label: 'Заработано всего', value: '284 500 ₽', accent: true },
-  { label: 'Доход за месяц', value: '45 200 ₽' },
-  { label: 'Всего партнёров', value: '124' },
-  { label: 'Конверсия в сделки', value: '12.5%' },
-];
+import type { ReferralSummaryDto } from '@china-ru/shared';
 
-interface PartnerRow {
-  name: string;
-  id: string;
-  date: string;
-  level: number;
-  turnover: string;
-  income: string;
-  active: boolean;
-  depth: number;
+
+function money(v: string): string {
+  return `${Number(v).toLocaleString('ru-RU')} ₽`;
 }
 
-const NETWORK: PartnerRow[] = [
-  {
-    name: 'Алексей Смирнов',
-    id: '10154',
-    date: '10.02.2025',
-    level: 1,
-    turnover: '450 000 ₽',
-    income: '+67 500 ₽',
-    active: true,
-    depth: 0,
-  },
-  {
-    name: 'Иван П.',
-    id: '20112',
-    date: '15.02.2025',
-    level: 2,
-    turnover: '120 000 ₽',
-    income: '+6 000 ₽',
-    active: true,
-    depth: 1,
-  },
-  {
-    name: 'Елена В.',
-    id: '20245',
-    date: '20.02.2025',
-    level: 2,
-    turnover: '0 ₽',
-    income: '+0 ₽',
-    active: false,
-    depth: 1,
-  },
-  {
-    name: 'ООО «ВЭД Эксперт»',
-    id: '10299',
-    date: '05.01.2025',
-    level: 1,
-    turnover: '1 200 000 ₽',
-    income: '+180 000 ₽',
-    active: true,
-    depth: 0,
-  },
-  {
-    name: 'Михаил Д.',
-    id: '20388',
-    date: '18.01.2025',
-    level: 2,
-    turnover: '350 000 ₽',
-    income: '+17 500 ₽',
-    active: true,
-    depth: 1,
-  },
-  {
-    name: 'Анна К.',
-    id: '30101',
-    date: '01.02.2025',
-    level: 3,
-    turnover: '50 000 ₽',
-    income: '+1 000 ₽',
-    active: true,
-    depth: 2,
-  },
-  {
-    name: 'Денис Р.',
-    id: '10321',
-    date: '28.02.2025',
-    level: 1,
-    turnover: '80 000 ₽',
-    income: '+12 000 ₽',
-    active: true,
-    depth: 0,
-  },
-];
-
 export default function PartnersPage() {
-  const { user } = useAuth();
+  const [data, setData] = useState<ReferralSummaryDto | null>(null);
+  const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const refId = user?.publicId ?? 100001;
-  const promo = `CN-${String(refId).padStart(6, '0')}`;
-  const refLink = `https://china.ru/register?ref=${refId}`;
+  useEffect(() => {
+    let cancelled = false;
+    void referralClient
+      .summary()
+      .then(d => {
+        if (!cancelled) setData(d);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const copy = (): void => {
-    void navigator.clipboard?.writeText(refLink).then(() => {
+    if (!data) return;
+    void navigator.clipboard?.writeText(data.refLink).then(() => {
       setCopied(true);
       setTimeout(() => {
         setCopied(false);
       }, 1500);
     });
   };
+
+  if (loading) return <p className="text-muted">Загрузка…</p>;
+  if (!data) return <p className="text-muted">Не удалось загрузить данные партнёрской программы.</p>;
+
+  const kpi = [
+    { label: 'Заработано всего', value: money(data.totalEarned), accent: true },
+    { label: 'Баланс', value: money(data.balance) },
+    { label: 'Баллы', value: data.points.toLocaleString('ru-RU') },
+    { label: 'Всего партнёров', value: String(data.totalPartners) },
+  ];
 
   return (
     <div className="space-y-6">
@@ -129,15 +69,17 @@ export default function PartnersPage() {
             приглашённых партнёров.
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-md bg-white/20 px-2 py-1">Уровень 1: 15%</span>
-            <span className="rounded-md bg-white/20 px-2 py-1">Уровень 2: 5%</span>
-            <span className="rounded-md bg-white/20 px-2 py-1">Уровень 3: 2%</span>
+            {data.levels.map(l => (
+              <span key={l.level} className="rounded-md bg-white/20 px-2 py-1">
+                Уровень {l.level}: {l.percent}%
+              </span>
+            ))}
           </div>
         </div>
         <div className="rounded-xl bg-white p-4 text-ink">
           <p className="text-xs text-muted">Ваша ссылка:</p>
           <div className="mt-1 flex items-center gap-2">
-            <code className="truncate rounded bg-surface px-2 py-1 text-xs">{refLink}</code>
+            <code className="truncate rounded bg-surface px-2 py-1 text-xs">{data.refLink}</code>
             <button
               type="button"
               onClick={copy}
@@ -147,13 +89,13 @@ export default function PartnersPage() {
             </button>
           </div>
           <p className="mt-2 text-xs text-muted">
-            Ваш промокод: <span className="font-semibold text-ink">{promo}</span>
+            Ваш промокод: <span className="font-semibold text-ink">{data.refCode}</span>
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {KPI.map(k => (
+        {kpi.map(k => (
           <div key={k.label} className="rounded-xl border border-line bg-white p-5">
             <p className="text-sm text-muted">{k.label}</p>
             <p className={`mt-1 text-xl font-bold ${k.accent ? 'text-green-600' : 'text-ink'}`}>
@@ -164,49 +106,49 @@ export default function PartnersPage() {
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-5">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <h2 className="font-semibold text-ink">Структура сети</h2>
-          <input
-            placeholder="Поиск партнёра по ID или имени…"
-            className="h-9 w-64 max-w-full rounded-lg border border-line px-3 text-sm outline-none focus:border-brand"
-          />
-        </div>
-        <div className="divide-y divide-line">
-          {NETWORK.map(p => (
-            <div
-              key={p.id}
-              className="flex items-center gap-3 py-3"
-              style={{ paddingLeft: `${p.depth * 24}px` }}
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-sm font-semibold text-brand">
-                {p.name.slice(0, 1)}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{p.name}</p>
-                <p className="text-xs text-muted">
-                  ID: {p.id} · Рег: {p.date} · Уровень {p.level}
-                </p>
-              </div>
-              <div className="hidden text-right sm:block">
-                <p className="text-xs text-muted">Оборот</p>
-                <p className="text-sm text-ink">{p.turnover}</p>
-              </div>
-              <div className="hidden text-right sm:block">
-                <p className="text-xs text-muted">Ваш доход</p>
-                <p className="text-sm font-medium text-green-600">{p.income}</p>
-              </div>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs ${p.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}
+        <h2 className="mb-4 font-semibold text-ink">Структура сети</h2>
+        {data.partners.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted">
+            У вас пока нет партнёров. Поделитесь ссылкой, чтобы пригласить первых.
+          </p>
+        ) : (
+          <div className="divide-y divide-line">
+            {data.partners.map(p => (
+              <div
+                key={p.publicId}
+                className="flex items-center gap-3 py-3"
+                style={{ paddingLeft: `${(p.level - 1) * 24}px` }}
               >
-                {p.active ? 'Активен' : 'Неактивен'}
-              </span>
-            </div>
-          ))}
-        </div>
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-sm font-semibold text-brand">
+                  {(p.name ?? '#').slice(0, 1)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-ink">
+                    {p.name ?? `Партнёр #${p.publicId}`}
+                  </p>
+                  <p className="text-xs text-muted">
+                    ID: {p.publicId} · Уровень {p.level} · с{' '}
+                    {new Date(p.joinedAt).toLocaleDateString('ru-RU')}
+                  </p>
+                </div>
+                <div className="hidden text-right sm:block">
+                  <p className="text-xs text-muted">Ваш доход</p>
+                  <p className="text-sm font-medium text-green-600">{money(p.income)}</p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs ${p.active ? 'bg-green-100 text-green-700' : 'bg-surface text-muted'}`}
+                >
+                  {p.active ? 'Активен' : 'Неактивен'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <p className="text-center text-xs text-muted">
-        Демонстрационные данные — начисления и структура сети подключаются позже.
+        Доход и баллы тратятся на портале. Начисления идут автоматически с заказов
+        приглашённых (15/5/2% по уровням) и за первую сделку реферала.
       </p>
     </div>
   );

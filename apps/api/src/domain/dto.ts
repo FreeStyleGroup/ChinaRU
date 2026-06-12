@@ -39,6 +39,8 @@ export function toUserDto(u: User): UserDto {
     phone: u.phone,
     birthday: u.birthday,
     avatarUrl: u.avatarUrl,
+    points: u.points,
+    referralBalance: u.referralBalance,
     menuSections: u.menuSections,
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),

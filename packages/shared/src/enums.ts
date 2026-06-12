@@ -60,6 +60,8 @@ export const JOB_CATEGORIES = [
 export const BOOKING_STATUSES = ['pending', 'confirmed', 'cancelled'] as const;
 export const NOTIFICATION_TYPES = ['order', 'review', 'chat', 'system'] as const;
 export const DEVICE_PLATFORMS = ['ios', 'android'] as const;
+/** Событие реферального начисления (MLM). */
+export const REFERRAL_EVENTS = ['order', 'subscription', 'first_deal'] as const;
 
 export const localeSchema = z.enum(LOCALES);
 export const userRoleSchema = z.enum(USER_ROLES);
@@ -79,6 +81,7 @@ export const jobCategorySchema = z.enum(JOB_CATEGORIES);
 export const bookingStatusSchema = z.enum(BOOKING_STATUSES);
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 export const devicePlatformSchema = z.enum(DEVICE_PLATFORMS);
+export const referralEventSchema = z.enum(REFERRAL_EVENTS);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -97,3 +100,11 @@ export type JobCategory = z.infer<typeof jobCategorySchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;
+export type ReferralEvent = z.infer<typeof referralEventSchema>;
+
+/** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 15%, 2 → 5%, 3 → 2%. */
+export const REFERRAL_LEVEL_RATES = [0.15, 0.05, 0.02] as const;
+/** Баллы лояльности за уровни (на каждые 100 ₽ оборота реферала). */
+export const REFERRAL_LEVEL_POINTS = [10, 3, 1] as const;
+/** Разовый бонус (баллы) пригласившему за первую сделку реферала. */
+export const REFERRAL_FIRST_DEAL_BONUS = 500;

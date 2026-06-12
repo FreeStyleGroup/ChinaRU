@@ -1,11 +1,15 @@
 import { NotFoundError } from '../../http/errors';
 import { toOrderDto } from '../dto';
 
+import type { ReferralService } from '../referral/referral.service';
 import type { OrderRepository } from '@china-ru/db';
 import type { CreateOrderInput, OrderDto } from '@china-ru/shared';
 
 export class OrderService {
-  constructor(private readonly orders: OrderRepository) {}
+  constructor(
+    private readonly orders: OrderRepository,
+    private readonly referrals?: ReferralService
+  ) {}
 
   async create(buyerId: string, input: CreateOrderInput): Promise<OrderDto> {
     const order = await this.orders.createWithItems({
@@ -14,6 +18,19 @@ export class OrderService {
       ...(input.currency ? { currency: input.currency } : {}),
     });
     const items = await this.orders.listItems(order.id);
+
+    // Реферальные начисления вверх по цепочке (MLM). Первый заказ → бонус за первую сделку.
+    if (this.referrals) {
+      const buyerOrders = await this.orders.listByBuyer(buyerId);
+      await this.referrals.accrue(
+        'order',
+        buyerId,
+        Number(order.totalAmount),
+        order.id,
+        buyerOrders.length === 1
+      );
+    }
+
     return toOrderDto(order, items);
   }
 

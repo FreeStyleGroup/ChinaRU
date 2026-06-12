@@ -12,6 +12,7 @@ import {
   OAUTH_PROVIDERS,
   ORDER_STATUSES,
   PRODUCT_STATUSES,
+  REFERRAL_EVENTS,
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
@@ -46,6 +47,7 @@ describe('db enums ↔ shared tuples', () => {
     [e.bookingStatus, BOOKING_STATUSES],
     [e.notificationType, NOTIFICATION_TYPES],
     [e.devicePlatform, DEVICE_PLATFORMS],
+    [e.referralEvent, REFERRAL_EVENTS],
   ])('%s pgEnum matches its shared tuple', (pgEnum, tuple) => {
     expect(pgEnum.enumValues).toEqual([...tuple]);
   });

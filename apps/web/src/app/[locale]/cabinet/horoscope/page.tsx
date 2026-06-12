@@ -5,7 +5,7 @@
  * дневной прогноз. Прогноз приходит из API (генерируется ИИ-провайдером; при
  * отсутствии ключа — детерминированный демо-прогноз).
  */
-import { chineseZodiac, type HoroscopeForecastDto } from '@china-ru/shared';
+import { chineseZodiac, zodiacImage, type HoroscopeForecastDto, type ZodiacKey } from '@china-ru/shared';
 import { useEffect, useState } from 'react';
 
 import { Link } from '@/i18n/navigation';
@@ -84,9 +84,13 @@ export default function HoroscopePage() {
 
       <Link
         href={`/horoscope/${sign.key}`}
-        className="flex items-center gap-5 rounded-2xl bg-gradient-to-br from-brand to-accent p-6 text-white transition-opacity hover:opacity-95"
+        className="flex items-center gap-5 overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-accent p-6 text-white transition-opacity hover:opacity-95"
       >
-        <span className="text-6xl leading-none">{sign.emoji}</span>
+        <img
+          src={zodiacImage(sign.key as ZodiacKey)}
+          alt={sign.ru}
+          className="h-20 w-20 shrink-0 rounded-xl object-cover"
+        />
         <div>
           <p className="text-sm text-white/70">Ваш знак китайского зодиака</p>
           <p className="text-2xl font-bold">

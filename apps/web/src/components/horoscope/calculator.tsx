@@ -1,6 +1,6 @@
 'use client';
 
-import { signByDate, type ZodiacSign } from '@china-ru/shared';
+import { signByDate, zodiacImage, type ZodiacSign } from '@china-ru/shared';
 import { useState } from 'react';
 
 import { Link } from '@/i18n/navigation';
@@ -99,9 +99,13 @@ export function HoroscopeCalculator() {
       {result && (
         <Link
           href={`/horoscope/${result.key}`}
-          className="mt-5 flex items-center gap-5 rounded-2xl bg-gradient-to-br from-brand to-accent p-5 text-white transition-opacity hover:opacity-95"
+          className="mt-5 flex items-center gap-5 overflow-hidden rounded-2xl bg-gradient-to-br from-brand to-accent p-5 text-white transition-opacity hover:opacity-95"
         >
-          <span className="text-6xl leading-none">{result.emoji}</span>
+          <img
+            src={zodiacImage(result.key)}
+            alt={result.ru}
+            className="h-20 w-20 shrink-0 rounded-xl object-cover"
+          />
           <div>
             <p className="text-sm text-white/70">Ваш знак — нажмите, чтобы узнать больше</p>
             <p className="text-2xl font-bold">

@@ -1,4 +1,4 @@
-import { DEFAULT_CONTENT_AGENTS, slugify } from '@china-ru/shared';
+import { DEFAULT_CONTENT_AGENTS, HOROSCOPE_HERO_IMAGE, slugify, zodiacImage } from '@china-ru/shared';
 
 import { createDb } from './client';
 import { ArticleRepository, CategoryRepository, ContentAgentRepository } from './repositories';
@@ -55,21 +55,25 @@ try {
         title: 'Год Лошади 2026: что ждать и к чему готовиться',
         excerpt:
           'Энергия года Лошади приносит движение и перемены. Разбираем, как использовать её на полную и каких ловушек избегать.',
+        cover: zodiacImage('horse'),
       },
       {
         title: 'Совместимость в браке: 5 пар, которые работают',
         excerpt:
           'Анализируем классические сочетания знаков китайского зодиака — кто кого дополняет, а кому лучше держаться подальше.',
+        cover: HOROSCOPE_HERO_IMAGE,
       },
       {
         title: 'Стихия Воды: характер и судьба людей-«водяных»',
         excerpt:
           'Что значит родиться в год Воды по китайской традиции — карьера, финансы, отношения и здоровье.',
+        cover: zodiacImage('rat'),
       },
       {
         title: 'Восточный календарь vs западный: где правда',
         excerpt:
           'Почему 12 знаков — это сложная астрономическая система с 60-летним циклом, а не просто «китайские знаки зодиака».',
+        cover: HOROSCOPE_HERO_IMAGE,
       },
     ];
     for (const s of samples) {
@@ -81,6 +85,7 @@ try {
           slug,
           title: s.title,
           excerpt: s.excerpt,
+          coverImageUrl: s.cover,
           body: `# ${s.title}\n\n${s.excerpt}\n\nЭто демонстрационная статья раздела «Гороскоп». Полноценные материалы пишет ИИ-агент Контент-завода.`,
           status: 'published',
           source: 'manual',

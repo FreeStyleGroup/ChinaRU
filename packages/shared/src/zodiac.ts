@@ -308,6 +308,32 @@ const NEW_YEAR_DATES: Record<number, string> = {
   2030: '02-03', 2031: '01-23',
 };
 
+/** Коды файлов изображений знаков на боевом сайте (/upload/horoscope/<code>.jpg). */
+const IMAGE_CODES: Record<ZodiacKey, string> = {
+  rat: 'krysa',
+  ox: 'byk',
+  tiger: 'tigr',
+  rabbit: 'krolik',
+  dragon: 'drakon',
+  snake: 'zmeya',
+  horse: 'loshad',
+  goat: 'koza',
+  monkey: 'obezyana',
+  rooster: 'petuh',
+  dog: 'sobaka',
+  pig: 'svinya',
+};
+
+const HOROSCOPE_IMAGE_BASE = 'https://china-ru.ru/upload/horoscope';
+
+/** Hero-баннер раздела «Гороскоп» (с боевого сайта). */
+export const HOROSCOPE_HERO_IMAGE = `${HOROSCOPE_IMAGE_BASE}/banner_main.jpg`;
+
+/** URL изображения знака зодиака (с боевого сайта). */
+export function zodiacImage(key: ZodiacKey): string {
+  return `${HOROSCOPE_IMAGE_BASE}/${IMAGE_CODES[key]}.jpg`;
+}
+
 const BY_KEY: Record<ZodiacKey, ZodiacSign> = Object.fromEntries(
   ZODIAC_SIGNS.map(s => [s.key, s])
 ) as Record<ZodiacKey, ZodiacSign>;

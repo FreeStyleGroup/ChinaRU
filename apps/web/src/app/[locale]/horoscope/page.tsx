@@ -1,4 +1,10 @@
-import { FIVE_ELEMENTS, ZODIAC_SIGNS, type ElementName } from '@china-ru/shared';
+import {
+  FIVE_ELEMENTS,
+  HOROSCOPE_HERO_IMAGE,
+  zodiacImage,
+  ZODIAC_SIGNS,
+  type ElementName,
+} from '@china-ru/shared';
 import { Container } from '@china-ru/ui';
 
 import { NewsBlock } from '@/components/content/news-block';
@@ -27,15 +33,23 @@ export default function HoroscopePage() {
   return (
     <Container className="py-8">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#5b1414] via-[#7a1c1c] to-[#2a0d0d] p-8 text-white sm:p-14">
-        <span className="pointer-events-none absolute right-6 top-4 text-[120px] font-black leading-none text-white/10">
-          生肖
-        </span>
-        <h1 className="text-4xl font-black tracking-tight sm:text-6xl">КИТАЙСКИЙ ГОРОСКОП</h1>
-        <p className="mt-4 max-w-xl text-sm text-white/85 sm:text-base">
-          Откройте древние секреты восточной мудрости. Узнайте, как год вашего рождения влияет на
-          характер, карьеру и личные отношения.
-        </p>
+      <section className="relative overflow-hidden rounded-3xl p-8 text-white sm:p-14">
+        <img
+          src={HOROSCOPE_HERO_IMAGE}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a0808]/95 via-[#3a1010]/80 to-[#3a1010]/20" />
+        <div className="relative">
+          <span className="pointer-events-none text-5xl font-black leading-none text-amber-300/70">
+            生肖
+          </span>
+          <h1 className="mt-2 text-4xl font-black tracking-tight sm:text-6xl">КИТАЙСКИЙ ГОРОСКОП</h1>
+          <p className="mt-4 max-w-xl text-sm text-white/90 sm:text-base">
+            Откройте древние секреты восточной мудрости. Узнайте, как год вашего рождения влияет на
+            характер, карьеру и личные отношения.
+          </p>
+        </div>
       </section>
 
       {/* Калькулятор */}
@@ -51,17 +65,26 @@ export default function HoroscopePage() {
             <Link
               key={s.key}
               href={`/horoscope/${s.key}`}
-              className="group overflow-hidden rounded-2xl bg-gradient-to-br from-[#3a1010] to-[#1a0808] p-5 text-white transition-transform hover:-translate-y-1"
+              className="group overflow-hidden rounded-2xl bg-[#1a0808] text-white transition-transform hover:-translate-y-1"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-4xl">{s.emoji}</span>
-                <span className="text-3xl font-black text-amber-300/80">{s.cn}</span>
+              <div className="relative h-40 overflow-hidden">
+                <img
+                  src={zodiacImage(s.key)}
+                  alt={`Год ${s.ru}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                />
+                <span className="absolute right-3 top-2 text-3xl font-black text-amber-300 drop-shadow-lg">
+                  {s.cn}
+                </span>
               </div>
-              <p className="mt-3 text-lg font-bold">Год {s.ru}</p>
-              <p className="mt-1 line-clamp-4 text-xs text-white/70">{s.short}</p>
-              <p className="mt-3 text-[11px] font-medium text-amber-300/90">
-                {s.years.slice(-6).join(' · ')}
-              </p>
+              <div className="p-5">
+                <p className="text-lg font-bold">Год {s.ru}</p>
+                <p className="mt-1 line-clamp-3 text-xs text-white/70">{s.short}</p>
+                <p className="mt-3 text-[11px] font-medium text-amber-300/90">
+                  {s.years.slice(-6).join(' · ')}
+                </p>
+              </div>
             </Link>
           ))}
         </div>

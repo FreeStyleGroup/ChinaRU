@@ -1,6 +1,7 @@
 import {
   elementByYear,
   zodiacByKey,
+  zodiacImage,
   ZODIAC_SIGNS,
   type ZodiacKey,
 } from '@china-ru/shared';
@@ -44,19 +45,27 @@ export default async function SignPage({ params }: { params: Promise<{ sign: str
         ← Все знаки
       </Link>
 
-      <section className="mt-4 overflow-hidden rounded-3xl bg-gradient-to-br from-[#3a1010] to-[#1a0808] p-8 text-white sm:p-12">
-        <div className="flex items-center gap-6">
-          <span className="text-7xl leading-none">{s.emoji}</span>
-          <div>
-            <p className="text-sm uppercase tracking-wider text-amber-300/80">
-              {s.pinyin} · {s.element}
-            </p>
-            <h1 className="text-4xl font-black sm:text-5xl">
-              Год {s.ru} <span className="text-amber-300/80">{s.cn}</span>
-            </h1>
+      <section className="relative mt-4 overflow-hidden rounded-3xl text-white">
+        <img
+          src={zodiacImage(s.key)}
+          alt={`Год ${s.ru}`}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a0808]/95 via-[#3a1010]/85 to-[#3a1010]/30" />
+        <div className="relative p-8 sm:p-12">
+          <div className="flex items-center gap-6">
+            <span className="text-7xl leading-none drop-shadow-lg">{s.emoji}</span>
+            <div>
+              <p className="text-sm uppercase tracking-wider text-amber-300/90">
+                {s.pinyin} · {s.element}
+              </p>
+              <h1 className="text-4xl font-black sm:text-5xl">
+                Год {s.ru} <span className="text-amber-300/90">{s.cn}</span>
+              </h1>
+            </div>
           </div>
+          <p className="mt-4 max-w-2xl text-white/90">{s.short}</p>
         </div>
-        <p className="mt-4 max-w-2xl text-white/85">{s.short}</p>
       </section>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">

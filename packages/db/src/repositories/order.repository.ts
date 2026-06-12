@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, sql, type SQL } from 'drizzle-orm';
 
 import { orderItems, orders, products } from '../schema';
 
@@ -135,5 +135,35 @@ export class OrderRepository {
       .from(orders)
       .where(and(eq(orders.buyerId, buyerId), isNull(orders.deletedAt)))
       .orderBy(desc(orders.createdAt));
+  }
+
+  /** Все заказы (админка), с опциональным фильтром по статусу. */
+  async listAll(
+    f: { page?: number; limit?: number; status?: Order['status'] } = {}
+  ): Promise<{ rows: Order[]; total: number }> {
+    const page = Math.max(1, f.page ?? 1);
+    const limit = Math.min(100, Math.max(1, f.limit ?? 20));
+    const conditions: SQL[] = [isNull(orders.deletedAt)];
+    if (f.status) conditions.push(eq(orders.status, f.status));
+    const where = and(...conditions);
+
+    const rows = await this.db
+      .select()
+      .from(orders)
+      .where(where)
+      .orderBy(desc(orders.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const [agg] = await this.db.select({ value: count() }).from(orders).where(where);
+    return { rows, total: agg?.value ?? 0 };
+  }
+
+  async updateStatus(id: string, status: Order['status']): Promise<Order | null> {
+    const [row] = await this.db
+      .update(orders)
+      .set({ status })
+      .where(and(eq(orders.id, id), isNull(orders.deletedAt)))
+      .returning();
+    return row ?? null;
   }
 }

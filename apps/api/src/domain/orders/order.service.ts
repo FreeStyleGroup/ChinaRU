@@ -1,33 +1,8 @@
 import { NotFoundError } from '../../http/errors';
+import { toOrderDto } from '../dto';
 
-import type { Order, OrderItem, OrderRepository } from '@china-ru/db';
-import type { CreateOrderInput, OrderDto, OrderItemDto } from '@china-ru/shared';
-
-function toOrderItemDto(i: OrderItem): OrderItemDto {
-  return {
-    id: i.id,
-    orderId: i.orderId,
-    productId: i.productId,
-    sellerId: i.sellerId,
-    qty: i.qty,
-    price: i.price,
-    nameSnapshot: i.nameSnapshot,
-    createdAt: i.createdAt.toISOString(),
-  };
-}
-
-function toOrderDto(order: Order, items: OrderItem[]): OrderDto {
-  return {
-    id: order.id,
-    buyerId: order.buyerId,
-    status: order.status,
-    totalAmount: order.totalAmount,
-    currency: order.currency,
-    items: items.map(toOrderItemDto),
-    createdAt: order.createdAt.toISOString(),
-    updatedAt: order.updatedAt.toISOString(),
-  };
-}
+import type { OrderRepository } from '@china-ru/db';
+import type { CreateOrderInput, OrderDto } from '@china-ru/shared';
 
 export class OrderService {
   constructor(private readonly orders: OrderRepository) {}

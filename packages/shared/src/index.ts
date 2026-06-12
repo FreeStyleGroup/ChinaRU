@@ -27,3 +27,4 @@ export * from './schemas/jobs';
 export * from './schemas/metro';
 export * from './schemas/device';
 export * from './schemas/notification';
+export * from './schemas/admin';

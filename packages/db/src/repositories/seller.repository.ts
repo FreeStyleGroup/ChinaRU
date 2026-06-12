@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, count, desc, eq, isNull, type SQL } from 'drizzle-orm';
 
 import { sellerProfiles } from '../schema';
 
@@ -9,6 +9,12 @@ export type NewSellerProfile = typeof sellerProfiles.$inferInsert;
 export type SellerProfileUpdate = Partial<
   Omit<NewSellerProfile, 'id' | 'userId' | 'createdAt' | 'updatedAt'>
 >;
+
+export interface SellerListFilters {
+  page?: number;
+  limit?: number;
+  verifyStatus?: SellerProfile['verifyStatus'];
+}
 
 export class SellerRepository {
   constructor(private readonly db: Database) {}
@@ -44,5 +50,23 @@ export class SellerRepository {
       .where(and(eq(sellerProfiles.id, id), isNull(sellerProfiles.deletedAt)))
       .returning();
     return row ?? null;
+  }
+
+  async list(f: SellerListFilters = {}): Promise<{ rows: SellerProfile[]; total: number }> {
+    const page = Math.max(1, f.page ?? 1);
+    const limit = Math.min(100, Math.max(1, f.limit ?? 20));
+    const conditions: SQL[] = [isNull(sellerProfiles.deletedAt)];
+    if (f.verifyStatus) conditions.push(eq(sellerProfiles.verifyStatus, f.verifyStatus));
+    const where = and(...conditions);
+
+    const rows = await this.db
+      .select()
+      .from(sellerProfiles)
+      .where(where)
+      .orderBy(desc(sellerProfiles.createdAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const [agg] = await this.db.select({ value: count() }).from(sellerProfiles).where(where);
+    return { rows, total: agg?.value ?? 0 };
   }
 }

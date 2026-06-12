@@ -8,6 +8,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from '../../http/errors';
+import { toUserDto } from '../dto';
 
 import type { Mailer } from './mailer';
 import type { PasswordService } from './password.service';
@@ -33,22 +34,6 @@ export interface RequestContext {
   userAgent?: string | null;
   ip?: string | null;
   mobile?: boolean;
-}
-
-export function toUserDto(u: User): UserDto {
-  return {
-    id: u.id,
-    email: u.email,
-    emailVerified: u.emailVerifiedAt !== null,
-    role: u.role,
-    status: u.status,
-    locale: u.locale,
-    name: u.name,
-    phone: u.phone,
-    avatarUrl: u.avatarUrl,
-    createdAt: u.createdAt.toISOString(),
-    updatedAt: u.updatedAt.toISOString(),
-  };
 }
 
 export class AuthService {

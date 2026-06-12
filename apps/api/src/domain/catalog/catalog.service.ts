@@ -1,53 +1,17 @@
 import { paginate } from '@china-ru/shared';
 
 import { NotFoundError } from '../../http/errors';
+import { toProductDto } from '../dto';
 
 import type {
   Category,
   CategoryRepository,
-  Product,
   ProductImage,
   ProductImageRepository,
   ProductRepository,
   ProductSort as RepoProductSort,
 } from '@china-ru/db';
-import type {
-  CategoryTreeNode,
-  Paginated,
-  ProductDto,
-  ProductImageDto,
-  ProductListQuery,
-} from '@china-ru/shared';
-
-function toProductImageDto(img: ProductImage): ProductImageDto {
-  return { id: img.id, url: img.url, sort: img.sort, isPrimary: img.isPrimary };
-}
-
-function toProductDto(p: Product, images: ProductImage[]): ProductDto {
-  return {
-    id: p.id,
-    sellerId: p.sellerId,
-    categoryId: p.categoryId,
-    slug: p.slug,
-    sku: p.sku,
-    nameRu: p.nameRu,
-    nameEn: p.nameEn,
-    nameZh: p.nameZh,
-    descriptionRu: p.descriptionRu,
-    descriptionEn: p.descriptionEn,
-    descriptionZh: p.descriptionZh,
-    price: p.price,
-    currency: p.currency,
-    stock: p.stock,
-    status: p.status,
-    rating: p.rating,
-    reviewCount: p.reviewCount,
-    tags: p.tags,
-    images: images.map(toProductImageDto),
-    createdAt: p.createdAt.toISOString(),
-    updatedAt: p.updatedAt.toISOString(),
-  };
-}
+import type { CategoryTreeNode, Paginated, ProductDto, ProductListQuery } from '@china-ru/shared';
 
 function toCategoryTree(cats: Category[]): CategoryTreeNode[] {
   const nodes = new Map<string, CategoryTreeNode>();

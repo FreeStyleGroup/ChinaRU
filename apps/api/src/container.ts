@@ -1,18 +1,23 @@
 import {
+  AnalyticsRepository,
   CategoryRepository,
   OrderRepository,
   ProductImageRepository,
   ProductRepository,
+  ReviewRepository,
+  SellerRepository,
   UserRepository,
   type Database,
 } from '@china-ru/db';
 
+import { AdminService } from './domain/admin/admin.service';
 import { AuthService } from './domain/auth/auth.service';
 import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
 import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
 import { OrderService } from './domain/orders/order.service';
+import { createAdminController, type AdminController } from './http/controllers/admin.controller';
 import { createAuthController, type AuthController } from './http/controllers/auth.controller';
 import {
   createCatalogController,
@@ -41,6 +46,7 @@ export interface Container {
     auth: AuthController;
     catalog: CatalogController;
     orders: OrdersController;
+    admin: AdminController;
   };
 }
 
@@ -50,10 +56,13 @@ export function createContainer(deps: ContainerDeps): Container {
   const mailer = deps.mailer ?? new ConsoleMailer(logger);
 
   const userRepo = new UserRepository(db);
+  const sellerRepo = new SellerRepository(db);
   const categoryRepo = new CategoryRepository(db);
   const productRepo = new ProductRepository(db);
   const productImageRepo = new ProductImageRepository(db);
   const orderRepo = new OrderRepository(db);
+  const reviewRepo = new ReviewRepository(db);
+  const analyticsRepo = new AnalyticsRepository(db);
 
   const passwords = new PasswordService(config.bcrypt.cost);
   const tokens = new TokenService(
@@ -78,6 +87,15 @@ export function createContainer(deps: ContainerDeps): Container {
   });
   const catalog = new CatalogService(categoryRepo, productRepo, productImageRepo);
   const orders = new OrderService(orderRepo);
+  const admin = new AdminService({
+    users: userRepo,
+    sellers: sellerRepo,
+    products: productRepo,
+    productImages: productImageRepo,
+    orders: orderRepo,
+    reviews: reviewRepo,
+    analytics: analyticsRepo,
+  });
 
   return {
     authMiddleware: createAuthMiddleware({ tokens, auth }),
@@ -85,6 +103,7 @@ export function createContainer(deps: ContainerDeps): Container {
       auth: createAuthController({ auth, tokens, config }),
       catalog: createCatalogController({ catalog }),
       orders: createOrdersController({ orders }),
+      admin: createAdminController({ admin }),
     },
   };
 }

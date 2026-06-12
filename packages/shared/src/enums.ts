@@ -102,8 +102,8 @@ export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;
 export type ReferralEvent = z.infer<typeof referralEventSchema>;
 
-/** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 15%, 2 → 5%, 3 → 2%. */
-export const REFERRAL_LEVEL_RATES = [0.15, 0.05, 0.02] as const;
+/** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 10%, 2 → 5%, 3 → 2%. */
+export const REFERRAL_LEVEL_RATES = [0.1, 0.05, 0.02] as const;
 /** Баллы лояльности за уровни (на каждые 100 ₽ оборота реферала). */
 export const REFERRAL_LEVEL_POINTS = [10, 3, 1] as const;
 /** Разовый бонус (баллы) пригласившему за первую сделку реферала. */

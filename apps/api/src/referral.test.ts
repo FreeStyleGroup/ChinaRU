@@ -75,10 +75,10 @@ describe('referral MLM', () => {
     const order = await referee.post('/api/v1/orders').send({ items: [{ productId, qty: 1 }] });
     expect(order.status).toBe(201);
 
-    // Сводка пригласившего: доход 15% (15.00) + баллы (10 за оборот + 500 за первую сделку).
+    // Сводка пригласившего: доход 10% (10.00) + баллы (10 за оборот + 500 за первую сделку).
     const summary = await referrer.get('/api/v1/account/referral');
     expect(summary.status).toBe(200);
-    expect(Number(summary.body.data.totalEarned)).toBeCloseTo(15, 2);
+    expect(Number(summary.body.data.totalEarned)).toBeCloseTo(10, 2);
     expect(summary.body.data.points).toBe(510);
     expect(summary.body.data.totalPartners).toBe(1);
     expect(summary.body.data.partners[0].level).toBe(1);

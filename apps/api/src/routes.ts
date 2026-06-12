@@ -51,12 +51,18 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
   router.get('/account/referral', requireAuth, referral.summary);
 
-  // ───────── работа (резюме / вакансии) ─────────
+  // ───────── работа (резюме / вакансии / отклики) ─────────
   router.get('/account/resume', requireAuth, jobs.getResume);
   router.put('/account/resume', requireAuth, jobs.upsertResume);
+  router.get('/account/applications', requireAuth, jobs.myApplications);
   router.get('/jobs', jobs.listVacancies);
+  router.get('/jobs/categories', jobs.categoryCounts);
+  router.get('/jobs/:id', jobs.getVacancy);
+  router.post('/jobs/:id/apply', requireAuth, jobs.apply);
   router.get('/seller/vacancies', requireAuth, jobs.myVacancies);
   router.post('/seller/vacancies', requireAuth, jobs.createVacancy);
+  router.get('/seller/vacancies/:id/applicants', requireAuth, jobs.listingApplicants);
+  router.put('/seller/applications/:id', requireAuth, jobs.setApplicationStatus);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);

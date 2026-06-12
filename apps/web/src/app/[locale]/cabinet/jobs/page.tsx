@@ -6,9 +6,11 @@
  * модерации (на проверке → опубликовано в «Вакансии» / отклонено). Отклики — позже.
  */
 import {
+  JOB_APPLICATION_STATUS_LABELS,
   JOB_CATEGORY_LABELS,
   RESUME_EXPERIENCE_LABELS,
   type JobCategory,
+  type MyApplicationDto,
   type ResumeDto,
   type ResumeExperience,
   type UpsertResumeInput,
@@ -17,6 +19,7 @@ import { Button } from '@china-ru/ui';
 import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/cabinet/tabs';
+import { Link } from '@/i18n/navigation';
 import { jobClient } from '@/lib/api-client';
 import { useAuth } from '@/lib/auth-context';
 
@@ -68,6 +71,7 @@ function completeness(d: Draft): number {
 export default function JobsPage() {
   const { user } = useAuth();
   const [resume, setResume] = useState<ResumeDto | null>(null);
+  const [applications, setApplications] = useState<MyApplicationDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
@@ -75,14 +79,16 @@ export default function JobsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void jobClient
-      .getResume()
-      .then(r => {
+    void Promise.all([
+      jobClient.getResume().catch(() => null),
+      jobClient.myApplications().catch(() => []),
+    ])
+      .then(([r, apps]) => {
         if (cancelled) return;
         setResume(r);
         if (r) setDraft(fromDto(r));
+        setApplications(apps);
       })
-      .catch(() => undefined)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -123,7 +129,15 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-ink">Работа</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-ink">Работа</h1>
+        <Link
+          href="/jobs"
+          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          Найти вакансии
+        </Link>
+      </div>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -358,14 +372,35 @@ export default function JobsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-ink">Отклики</h2>
-        <EmptyState
-          title={
-            resume
-              ? 'Откликов пока нет. Работодатели смогут откликнуться на ваше резюме.'
-              : 'Откликов пока нет. Создайте резюме, чтобы получать отклики.'
-          }
-        />
+        <h2 className="text-lg font-semibold text-ink">Мои отклики</h2>
+        {applications.length === 0 ? (
+          <EmptyState
+            title="Вы пока не откликались на вакансии."
+            action={{ label: 'Найти вакансии', href: '/jobs' }}
+          />
+        ) : (
+          <div className="space-y-2">
+            {applications.map(a => (
+              <Link
+                key={a.id}
+                href={`/jobs/${a.listingId}`}
+                className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 transition-colors hover:border-brand"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-ink">{a.vacancyTitle}</p>
+                  <p className="text-xs text-muted">
+                    {a.companyName}
+                    {a.vacancyCity ? ` · ${a.vacancyCity}` : ''} ·{' '}
+                    {new Date(a.createdAt).toLocaleDateString('ru-RU')}
+                  </p>
+                </div>
+                <span className="rounded-full bg-surface px-2.5 py-0.5 text-xs text-muted">
+                  {JOB_APPLICATION_STATUS_LABELS[a.status] ?? a.status}
+                </span>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

@@ -1,5 +1,8 @@
 import type {
+  ApplicationWithApplicant,
+  ApplicationWithVacancy,
   JobListing,
+  JobListingWithCompany,
   Order,
   OrderItem,
   Product,
@@ -10,7 +13,10 @@ import type {
   User,
 } from '@china-ru/db';
 import type {
+  ApplicantDto,
   JobListingDto,
+  JobListingPublicDto,
+  MyApplicationDto,
   OrderDto,
   OrderItemDto,
   ProductDto,
@@ -181,5 +187,39 @@ export function toJobListingDto(j: JobListing): JobListingDto {
     expiresAt: j.expiresAt ? j.expiresAt.toISOString() : null,
     createdAt: j.createdAt.toISOString(),
     updatedAt: j.updatedAt.toISOString(),
+  };
+}
+
+export function toJobListingPublicDto(j: JobListingWithCompany): JobListingPublicDto {
+  return {
+    ...toJobListingDto(j),
+    companyName: j.companyName,
+    companyPublicId: j.companyPublicId,
+    companyVerified: j.companyVerified,
+    companyRating: j.companyRating,
+  };
+}
+
+export function toMyApplicationDto(a: ApplicationWithVacancy): MyApplicationDto {
+  return {
+    id: a.id,
+    listingId: a.listingId,
+    status: a.status,
+    coverLetter: a.coverLetter,
+    createdAt: a.createdAt.toISOString(),
+    vacancyTitle: a.vacancyTitle,
+    vacancyCity: a.vacancyCity,
+    companyName: a.companyName,
+  };
+}
+
+export function toApplicantDto(a: ApplicationWithApplicant): ApplicantDto {
+  return {
+    id: a.id,
+    status: a.status,
+    coverLetter: a.coverLetter,
+    createdAt: a.createdAt.toISOString(),
+    applicantPublicId: a.applicantPublicId,
+    applicantName: a.applicantName,
   };
 }

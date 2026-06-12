@@ -7,6 +7,7 @@ export * from './order.repository';
 export * from './review.repository';
 export * from './resume.repository';
 export * from './job-listing.repository';
+export * from './job-application.repository';
 export * from './referral.repository';
 export * from './analytics.repository';
 export * from './audit.repository';

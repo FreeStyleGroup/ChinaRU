@@ -9,6 +9,7 @@ import { Button } from '@china-ru/ui';
 import { useState } from 'react';
 
 
+import { CompanyVacancies } from '@/components/cabinet/company-vacancies';
 import { useSellerProfile } from '@/components/cabinet/seller-context';
 import { accountClient, ClientApiError } from '@/lib/api-client';
 
@@ -331,6 +332,8 @@ function SellerDashboard({
           ))}
         </div>
       </div>
+
+      <CompanyVacancies />
 
       <NicknamePanel profile={profile} onSaved={onProfile} />
 

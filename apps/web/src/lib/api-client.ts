@@ -2,9 +2,14 @@ import type {
   ApiResponse,
   AuthTokens,
   ChangePasswordInput,
+  ApplicantDto,
+  CreateJobListingInput,
   CreateOrderInput,
   CreateSellerProfileInput,
+  JobApplicationStatus,
+  JobListingDto,
   LoginInput,
+  MyApplicationDto,
   OrderDto,
   ReferralSummaryDto,
   RegisterInput,
@@ -93,8 +98,27 @@ export const jobClient = {
   getResume: () => call<ResumeDto | null>('/account/resume'),
   upsertResume: (input: UpsertResumeInput) =>
     call<ResumeDto>('/account/resume', { method: 'PUT', body: JSON.stringify(input) }),
+  apply: (vacancyId: string, coverLetter?: string) =>
+    call<{ id: string }>(`/jobs/${vacancyId}/apply`, {
+      method: 'POST',
+      body: JSON.stringify(coverLetter ? { coverLetter } : {}),
+    }),
+  myApplications: () => call<MyApplicationDto[]>('/account/applications'),
 };
 
 export const referralClient = {
   summary: () => call<ReferralSummaryDto>('/account/referral'),
+};
+
+export const sellerJobClient = {
+  myVacancies: () => call<JobListingDto[]>('/seller/vacancies'),
+  createVacancy: (input: CreateJobListingInput) =>
+    call<JobListingDto>('/seller/vacancies', { method: 'POST', body: JSON.stringify(input) }),
+  applicants: (vacancyId: string) =>
+    call<ApplicantDto[]>(`/seller/vacancies/${vacancyId}/applicants`),
+  setApplicationStatus: (applicationId: string, status: JobApplicationStatus) =>
+    call<{ id: string; status: string }>(`/seller/applications/${applicationId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
 };

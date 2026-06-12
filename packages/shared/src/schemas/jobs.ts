@@ -37,6 +37,21 @@ export const RESUME_EXPERIENCE_LABELS: Record<ResumeExperience, string> = {
   gt_6: 'Более 6 лет',
 };
 
+export const JOB_WORK_TYPE_LABELS: Record<string, string> = {
+  full_time: 'Полная занятость',
+  part_time: 'Частичная занятость',
+  remote: 'Удалённо',
+  contract: 'Контракт',
+  internship: 'Стажировка',
+};
+
+export const JOB_APPLICATION_STATUS_LABELS: Record<string, string> = {
+  submitted: 'Отправлен',
+  reviewed: 'Просмотрен',
+  accepted: 'Принят',
+  rejected: 'Отклонён',
+};
+
 /* ─────────────────────────── Вакансии ─────────────────────────── */
 
 export const createJobListingSchema = z
@@ -83,6 +98,7 @@ export type UpdateJobListingInput = z.infer<typeof updateJobListingSchema>;
 
 /** Листинг вакансий с фильтрами (query-string → coerce). */
 export const jobListQuerySchema = paginationQuerySchema.extend({
+  category: jobCategorySchema.optional(),
   workType: jobWorkTypeSchema.optional(),
   hskLevel: z.coerce.number().int().min(1).max(6).optional(),
   city: z.string().trim().min(1).max(120).optional(),
@@ -111,6 +127,22 @@ export const jobListingDtoSchema = z.object({
 });
 export type JobListingDto = z.infer<typeof jobListingDtoSchema>;
 
+/** Публичная карточка вакансии (витрина): вакансия + данные компании. */
+export const jobListingPublicDtoSchema = jobListingDtoSchema.extend({
+  companyName: z.string(),
+  companyPublicId: z.number().int(),
+  companyVerified: z.boolean(),
+  companyRating: z.string(),
+});
+export type JobListingPublicDto = z.infer<typeof jobListingPublicDtoSchema>;
+
+/** Счётчик вакансий по категории (для витрины «Категории вакансий»). */
+export const jobCategoryCountSchema = z.object({
+  category: jobCategorySchema,
+  count: z.number().int(),
+});
+export type JobCategoryCount = z.infer<typeof jobCategoryCountSchema>;
+
 /* ─────────────────────────── Отклики ─────────────────────────── */
 
 export const applyToJobSchema = z.object({
@@ -132,6 +164,30 @@ export const jobApplicationDtoSchema = z.object({
   ...timestampsShape,
 });
 export type JobApplicationDto = z.infer<typeof jobApplicationDtoSchema>;
+
+/** Отклик соискателя с краткими данными вакансии («Мои отклики» в кабинете). */
+export const myApplicationDtoSchema = z.object({
+  id: idSchema,
+  listingId: idSchema,
+  status: jobApplicationStatusSchema,
+  coverLetter: z.string().nullable(),
+  createdAt: isoDateTime,
+  vacancyTitle: z.string(),
+  vacancyCity: z.string().nullable(),
+  companyName: z.string(),
+});
+export type MyApplicationDto = z.infer<typeof myApplicationDtoSchema>;
+
+/** Отклик с краткими данными соискателя (для работодателя). */
+export const applicantDtoSchema = z.object({
+  id: idSchema,
+  status: jobApplicationStatusSchema,
+  coverLetter: z.string().nullable(),
+  createdAt: isoDateTime,
+  applicantPublicId: z.number().int(),
+  applicantName: z.string().nullable(),
+});
+export type ApplicantDto = z.infer<typeof applicantDtoSchema>;
 
 /* ─────────────────────────── Резюме ─────────────────────────── */
 

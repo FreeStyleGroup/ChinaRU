@@ -2,6 +2,7 @@ import {
   AnalyticsRepository,
   AuditRepository,
   CategoryRepository,
+  JobApplicationRepository,
   JobListingRepository,
   OrderRepository,
   ProductImageRepository,
@@ -84,6 +85,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const reviewRepo = new ReviewRepository(db);
   const resumeRepo = new ResumeRepository(db);
   const jobListingRepo = new JobListingRepository(db);
+  const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
   const analyticsRepo = new AnalyticsRepository(db);
   const auditRepo = new AuditRepository(db);
@@ -124,7 +126,7 @@ export function createContainer(deps: ContainerDeps): Container {
   );
   const orders = new OrderService(orderRepo, referrals);
   const account = new AccountService(userRepo, sellerRepo);
-  const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo);
+  const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo, jobApplicationRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,

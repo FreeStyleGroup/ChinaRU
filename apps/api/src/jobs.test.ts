@@ -119,5 +119,56 @@ describe('vacancy moderation', () => {
     const after = await request(server).get('/api/v1/jobs');
     expect(after.body.data.total).toBe(1);
     expect(after.body.data.items[0].title).toBe('Frontend Developer');
+    expect(after.body.data.items[0].companyName).toBe('Verified Co');
+  });
+});
+
+describe('job applications', () => {
+  it('seeker applies once, company sees applicant and accepts; seeker sees it', async () => {
+    // Компания публикует вакансию.
+    const seller = await makeAgent('seller-app@x.test', 'seller');
+    const create = await seller.post('/api/v1/seller/vacancies').send({
+      title: 'ML Engineer',
+      description: 'PyTorch',
+      workType: 'remote',
+      category: 'it',
+    });
+    const vacancyId = create.body.data.id as string;
+    const admin = await makeAgent('admin-app@x.test', 'admin');
+    await admin.post(`/api/v1/admin/vacancies/${vacancyId}/moderate`).send({ status: 'published' });
+
+    // Соискатель откликается.
+    const seeker = await makeAgent('seeker-app@x.test', null);
+    const apply = await seeker
+      .post(`/api/v1/jobs/${vacancyId}/apply`)
+      .send({ coverLetter: 'Готов приступить' });
+    expect(apply.status).toBe(201);
+
+    // Повторный отклик запрещён.
+    const again = await seeker.post(`/api/v1/jobs/${vacancyId}/apply`).send({});
+    expect(again.status).toBe(409);
+
+    // У соискателя отклик виден.
+    const mine = await seeker.get('/api/v1/account/applications');
+    expect(mine.body.data).toHaveLength(1);
+    expect(mine.body.data[0].vacancyTitle).toBe('ML Engineer');
+    expect(mine.body.data[0].companyName).toBe('Verified Co');
+
+    // Компания видит отклик и принимает его.
+    const applicants = await seller.get(`/api/v1/seller/vacancies/${vacancyId}/applicants`);
+    expect(applicants.body.data).toHaveLength(1);
+    const appId = applicants.body.data[0].id as string;
+    expect(applicants.body.data[0].coverLetter).toBe('Готов приступить');
+
+    const decide = await seller
+      .put(`/api/v1/seller/applications/${appId}`)
+      .send({ status: 'accepted' });
+    expect(decide.status).toBe(200);
+    expect(decide.body.data.status).toBe('accepted');
+
+    // Чужой не может смотреть отклики на эту вакансию.
+    const intruder = await makeAgent('intruder-app@x.test', 'seller');
+    const denied = await intruder.get(`/api/v1/seller/vacancies/${vacancyId}/applicants`);
+    expect(denied.status).toBe(403);
   });
 });

@@ -1,6 +1,9 @@
 import type {
   ApiResponse,
   CategoryTreeNode,
+  JobCategoryCount,
+  JobListingPublicDto,
+  JobListQuery,
   Paginated,
   ProductDto,
   ProductListQuery,
@@ -57,4 +60,22 @@ export const catalogApi = {
     }),
   product: (slug: string) =>
     apiGet<ProductDto>(`/catalog/products/${encodeURIComponent(slug)}`, { revalidate: 300 }),
+};
+
+function buildJobQuery(query: Partial<JobListQuery>): string {
+  const params = new URLSearchParams();
+  if (query.page) params.set('page', String(query.page));
+  if (query.category) params.set('category', query.category);
+  if (query.city) params.set('city', query.city);
+  if (query.search) params.set('search', query.search);
+  const qs = params.toString();
+  return qs ? `?${qs}` : '';
+}
+
+export const jobsApi = {
+  vacancies: (query: Partial<JobListQuery> = {}) =>
+    apiGet<Paginated<JobListingPublicDto>>(`/jobs${buildJobQuery(query)}`, { revalidate: 120 }),
+  vacancy: (id: string) =>
+    apiGet<JobListingPublicDto>(`/jobs/${encodeURIComponent(id)}`, { revalidate: 120 }),
+  categoryCounts: () => apiGet<JobCategoryCount[]>('/jobs/categories', { revalidate: 300 }),
 };

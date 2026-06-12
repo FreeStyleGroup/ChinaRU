@@ -1,6 +1,6 @@
 import { and, count, desc, eq, ilike, isNull, type SQL } from 'drizzle-orm';
 
-import { jobListings } from '../schema';
+import { jobListings, sellerProfiles } from '../schema';
 
 import type { Database } from '../client';
 
@@ -9,6 +9,14 @@ export type NewJobListing = typeof jobListings.$inferInsert;
 export type JobListingUpdate = Partial<
   Omit<NewJobListing, 'id' | 'sellerId' | 'createdAt' | 'updatedAt'>
 >;
+
+/** Вакансия + публичные данные компании (для витрины/детали). */
+export type JobListingWithCompany = JobListing & {
+  companyName: string;
+  companyPublicId: number;
+  companyVerified: boolean;
+  companyRating: string;
+};
 
 export interface JobListingFilters {
   page?: number;
@@ -62,6 +70,83 @@ export class JobListingRepository {
     if (f.sellerId) c.push(eq(jobListings.sellerId, f.sellerId));
     if (f.search) c.push(ilike(jobListings.title, `%${f.search}%`));
     return c;
+  }
+
+  private withCompany() {
+    return this.db
+      .select({
+        listing: jobListings,
+        companyName: sellerProfiles.companyName,
+        companyPublicId: sellerProfiles.publicId,
+        companyVerifyStatus: sellerProfiles.verifyStatus,
+        companyRating: sellerProfiles.rating,
+      })
+      .from(jobListings)
+      .innerJoin(sellerProfiles, eq(jobListings.sellerId, sellerProfiles.id));
+  }
+
+  private mapCompany(r: {
+    listing: JobListing;
+    companyName: string;
+    companyPublicId: number;
+    companyVerifyStatus: string;
+    companyRating: string;
+  }): JobListingWithCompany {
+    return {
+      ...r.listing,
+      companyName: r.companyName,
+      companyPublicId: r.companyPublicId,
+      companyVerified: r.companyVerifyStatus === 'verified',
+      companyRating: r.companyRating,
+    };
+  }
+
+  /** Публичная витрина — только опубликованные вакансии, с данными компании. */
+  async listPublic(
+    f: JobListingFilters = {}
+  ): Promise<{ rows: JobListingWithCompany[]; total: number }> {
+    const page = Math.max(1, f.page ?? 1);
+    const limit = Math.min(100, Math.max(1, f.limit ?? 20));
+    const conditions: SQL[] = [
+      isNull(jobListings.deletedAt),
+      eq(jobListings.moderationStatus, 'published'),
+    ];
+    if (f.category) conditions.push(eq(jobListings.category, f.category));
+    if (f.workType) conditions.push(eq(jobListings.workType, f.workType));
+    if (f.city) conditions.push(eq(jobListings.city, f.city));
+    if (f.search) conditions.push(ilike(jobListings.title, `%${f.search}%`));
+    const where = and(...conditions);
+
+    const rows = await this.withCompany()
+      .where(where)
+      .orderBy(desc(jobListings.publishedAt))
+      .limit(limit)
+      .offset((page - 1) * limit);
+    const [agg] = await this.db.select({ value: count() }).from(jobListings).where(where);
+    return { rows: rows.map(r => this.mapCompany(r)), total: agg?.value ?? 0 };
+  }
+
+  async findPublicById(id: string): Promise<JobListingWithCompany | null> {
+    const [row] = await this.withCompany()
+      .where(
+        and(
+          eq(jobListings.id, id),
+          isNull(jobListings.deletedAt),
+          eq(jobListings.moderationStatus, 'published')
+        )
+      )
+      .limit(1);
+    return row ? this.mapCompany(row) : null;
+  }
+
+  /** Кол-во опубликованных вакансий по каждой категории (для витрины). */
+  async countByCategory(): Promise<{ category: string | null; count: number }[]> {
+    const rows = await this.db
+      .select({ category: jobListings.category, value: count() })
+      .from(jobListings)
+      .where(and(isNull(jobListings.deletedAt), eq(jobListings.moderationStatus, 'published')))
+      .groupBy(jobListings.category);
+    return rows.map(r => ({ category: r.category, count: r.value }));
   }
 
   async list(f: JobListingFilters = {}): Promise<{ rows: JobListing[]; total: number }> {

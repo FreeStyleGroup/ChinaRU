@@ -16,6 +16,7 @@ build/
 .next/
 .vercel/
 out/
+*.tsbuildinfo
 
 # IDE
 .vscode/

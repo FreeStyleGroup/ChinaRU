@@ -29,8 +29,8 @@
 5. **Auth: JWT access + rotating refresh.** Refresh хранится sha256-хешем в БД,
    ротация с детектом повторного использования (рвёт всю цепочку токенов).
    httpOnly-cookies для веба (refresh — на узком пути `/api/v1/auth`), `Bearer`
-   + refresh в теле для мобильных (TTL 90 дней). bcrypt cost ≥ 12. RBAC —
-   `requireRole`. Анти-энумерация на login/reset.
+   - refresh в теле для мобильных (TTL 90 дней). bcrypt cost ≥ 12. RBAC —
+     `requireRole`. Анти-энумерация на login/reset.
 6. **Безопасность по умолчанию:** helmet, CORS allowlist с credentials,
    глобальный rate-limit + усиленный на auth-маршрутах, `trust proxy`.
 7. **OpenAPI 3.1** отдаётся на `/api/v1/openapi.json` — контракт для Swagger UI и

@@ -1,0 +1,54 @@
+{
+  "nav": {
+    "catalog": "目录",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出",
+    "account": "账户"
+  },
+  "home": {
+    "heroTitle": "中国商品 B2B 采购平台",
+    "heroSubtitle": "来自认证制造商的直接供应。目录、订单与物流一站式管理。",
+    "heroCta": "浏览目录",
+    "featured": "热门商品",
+    "categories": "分类"
+  },
+  "catalog": {
+    "title": "目录",
+    "empty": "未找到商品",
+    "sort": "排序",
+    "sortNewest": "最新优先",
+    "sortPriceAsc": "价格从低到高",
+    "sortPriceDesc": "价格从高到低",
+    "sortRating": "评分最高",
+    "inStock": "有货",
+    "outOfStock": "可定制",
+    "prev": "上一页",
+    "next": "下一页",
+    "page": "第 {page} 页，共 {total} 页"
+  },
+  "product": {
+    "order": "下单",
+    "sku": "货号",
+    "description": "描述",
+    "reviews": "评价",
+    "ordered": "订单已提交",
+    "loginToOrder": "登录后下单"
+  },
+  "auth": {
+    "loginTitle": "登录",
+    "registerTitle": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "name": "姓名",
+    "submitLogin": "登录",
+    "submitRegister": "创建账户",
+    "haveAccount": "已有账户？",
+    "noAccount": "还没有账户？",
+    "error": "请求失败，请检查您的信息。"
+  },
+  "footer": {
+    "tagline": "China-RU — 国际 B2B 采购平台。",
+    "rights": "版权所有。"
+  }
+}

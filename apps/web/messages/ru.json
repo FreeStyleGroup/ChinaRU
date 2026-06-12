@@ -1,0 +1,54 @@
+{
+  "nav": {
+    "catalog": "Каталог",
+    "login": "Войти",
+    "register": "Регистрация",
+    "logout": "Выйти",
+    "account": "Кабинет"
+  },
+  "home": {
+    "heroTitle": "B2B-маркетплейс товаров из Китая",
+    "heroSubtitle": "Прямые поставки от проверенных производителей. Каталог, заказы и логистика в одном окне.",
+    "heroCta": "Перейти в каталог",
+    "featured": "Популярные товары",
+    "categories": "Категории"
+  },
+  "catalog": {
+    "title": "Каталог",
+    "empty": "Товары не найдены",
+    "sort": "Сортировка",
+    "sortNewest": "Сначала новые",
+    "sortPriceAsc": "Сначала дешевле",
+    "sortPriceDesc": "Сначала дороже",
+    "sortRating": "По рейтингу",
+    "inStock": "В наличии",
+    "outOfStock": "Под заказ",
+    "prev": "Назад",
+    "next": "Вперёд",
+    "page": "Страница {page} из {total}"
+  },
+  "product": {
+    "order": "Заказать",
+    "sku": "Артикул",
+    "description": "Описание",
+    "reviews": "Отзывы",
+    "ordered": "Заказ оформлен",
+    "loginToOrder": "Войдите, чтобы заказать"
+  },
+  "auth": {
+    "loginTitle": "Вход",
+    "registerTitle": "Регистрация",
+    "email": "Email",
+    "password": "Пароль",
+    "name": "Имя",
+    "submitLogin": "Войти",
+    "submitRegister": "Создать аккаунт",
+    "haveAccount": "Уже есть аккаунт?",
+    "noAccount": "Нет аккаунта?",
+    "error": "Не удалось выполнить запрос. Проверьте данные."
+  },
+  "footer": {
+    "tagline": "China-RU — международный B2B-маркетплейс.",
+    "rights": "Все права защищены."
+  }
+}

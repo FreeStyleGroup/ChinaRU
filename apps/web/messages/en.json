@@ -1,0 +1,54 @@
+{
+  "nav": {
+    "catalog": "Catalog",
+    "login": "Sign in",
+    "register": "Sign up",
+    "logout": "Sign out",
+    "account": "Account"
+  },
+  "home": {
+    "heroTitle": "B2B marketplace for goods from China",
+    "heroSubtitle": "Direct supply from verified manufacturers. Catalog, orders and logistics in one place.",
+    "heroCta": "Browse catalog",
+    "featured": "Featured products",
+    "categories": "Categories"
+  },
+  "catalog": {
+    "title": "Catalog",
+    "empty": "No products found",
+    "sort": "Sort",
+    "sortNewest": "Newest first",
+    "sortPriceAsc": "Price: low to high",
+    "sortPriceDesc": "Price: high to low",
+    "sortRating": "Top rated",
+    "inStock": "In stock",
+    "outOfStock": "Made to order",
+    "prev": "Previous",
+    "next": "Next",
+    "page": "Page {page} of {total}"
+  },
+  "product": {
+    "order": "Order",
+    "sku": "SKU",
+    "description": "Description",
+    "reviews": "Reviews",
+    "ordered": "Order placed",
+    "loginToOrder": "Sign in to order"
+  },
+  "auth": {
+    "loginTitle": "Sign in",
+    "registerTitle": "Sign up",
+    "email": "Email",
+    "password": "Password",
+    "name": "Name",
+    "submitLogin": "Sign in",
+    "submitRegister": "Create account",
+    "haveAccount": "Already have an account?",
+    "noAccount": "No account yet?",
+    "error": "Request failed. Please check your details."
+  },
+  "footer": {
+    "tagline": "China-RU — international B2B marketplace.",
+    "rights": "All rights reserved."
+  }
+}

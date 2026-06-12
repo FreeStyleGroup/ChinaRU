@@ -1,11 +1,12 @@
 import { Badge, Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { SellerProfileDto, SellerVerifyDecisionInput } from '@china-ru/shared';
 
 import { DataTable, type Column } from '@/components/data-table';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
+
+import type { SellerProfileDto, SellerVerifyDecisionInput } from '@china-ru/shared';
 
 export function SellersPage() {
   const queryClient = useQueryClient();

@@ -1,11 +1,12 @@
 import { Badge } from '@china-ru/ui';
 import { useQuery } from '@tanstack/react-query';
 
-import type { OrderDto } from '@china-ru/shared';
 
 import { DataTable, type Column } from '@/components/data-table';
 import { api } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
+
+import type { OrderDto } from '@china-ru/shared';
 
 const columns: Column<OrderDto>[] = [
   { header: 'ID', cell: o => <span className="font-mono text-xs">{o.id.slice(0, 8)}</span> },

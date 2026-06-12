@@ -1,11 +1,12 @@
 import { Badge } from '@china-ru/ui';
 import { useQuery } from '@tanstack/react-query';
 
-import type { ProductDto } from '@china-ru/shared';
 
 import { DataTable, type Column } from '@/components/data-table';
 import { api } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
+
+import type { ProductDto } from '@china-ru/shared';
 
 const columns: Column<ProductDto>[] = [
   { header: 'Название', cell: p => p.nameRu },

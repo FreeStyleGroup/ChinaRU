@@ -6,9 +6,11 @@ import { DashboardPage } from '@/pages/dashboard';
 import { LoginPage } from '@/pages/login';
 import { OrdersPage } from '@/pages/orders';
 import { ProductsPage } from '@/pages/products';
+import { ResumesPage } from '@/pages/resumes';
 import { ReviewsPage } from '@/pages/reviews';
 import { SellersPage } from '@/pages/sellers';
 import { UsersPage } from '@/pages/users';
+import { VacanciesPage } from '@/pages/vacancies';
 
 /** Гард: пускает только аутентифицированного администратора. */
 function RequireAdmin() {
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
           { path: 'products', element: <ProductsPage /> },
           { path: 'orders', element: <OrdersPage /> },
           { path: 'reviews', element: <ReviewsPage /> },
+          { path: 'resumes', element: <ResumesPage /> },
+          { path: 'vacancies', element: <VacanciesPage /> },
         ],
       },
     ],

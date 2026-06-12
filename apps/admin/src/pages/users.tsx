@@ -1,11 +1,12 @@
 import { Badge } from '@china-ru/ui';
 import { useQuery } from '@tanstack/react-query';
 
-import type { UserDto } from '@china-ru/shared';
 
 import { DataTable, type Column } from '@/components/data-table';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
+
+import type { UserDto } from '@china-ru/shared';
 
 const columns: Column<UserDto>[] = [
   { header: 'Email', cell: u => u.email },

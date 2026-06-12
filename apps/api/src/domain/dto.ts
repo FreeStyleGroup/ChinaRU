@@ -1,17 +1,21 @@
 import type {
+  JobListing,
   Order,
   OrderItem,
   Product,
   ProductImage,
+  Resume,
   ReviewWithAuthor,
   SellerProfile,
   User,
 } from '@china-ru/db';
 import type {
+  JobListingDto,
   OrderDto,
   OrderItemDto,
   ProductDto,
   ProductImageDto,
+  ResumeDto,
   ReviewDto,
   SellerProfileDto,
   UserDto,
@@ -131,5 +135,49 @@ export function toReviewDto(r: ReviewWithAuthor): ReviewDto {
     author: { id: r.authorId, name: r.authorName, avatarUrl: r.authorAvatar },
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
+  };
+}
+
+export function toResumeDto(r: Resume): ResumeDto {
+  return {
+    id: r.id,
+    userId: r.userId,
+    position: r.position,
+    category: r.category,
+    salary: r.salary,
+    experience: r.experience,
+    skills: r.skills,
+    about: r.about,
+    hskLevel: r.hskLevel,
+    rating: r.rating,
+    reviewCount: r.reviewCount,
+    moderationStatus: r.moderationStatus,
+    rejectionReason: r.rejectionReason,
+    publishedAt: r.publishedAt ? r.publishedAt.toISOString() : null,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  };
+}
+
+export function toJobListingDto(j: JobListing): JobListingDto {
+  return {
+    id: j.id,
+    sellerId: j.sellerId,
+    title: j.title,
+    category: j.category,
+    description: j.description,
+    salaryMin: j.salaryMin,
+    salaryMax: j.salaryMax,
+    currency: j.currency,
+    hskLevel: j.hskLevel,
+    workType: j.workType,
+    city: j.city,
+    status: j.status,
+    moderationStatus: j.moderationStatus,
+    rejectionReason: j.rejectionReason,
+    publishedAt: j.publishedAt ? j.publishedAt.toISOString() : null,
+    expiresAt: j.expiresAt ? j.expiresAt.toISOString() : null,
+    createdAt: j.createdAt.toISOString(),
+    updatedAt: j.updatedAt.toISOString(),
   };
 }

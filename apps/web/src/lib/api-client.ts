@@ -7,8 +7,10 @@ import type {
   LoginInput,
   OrderDto,
   RegisterInput,
+  ResumeDto,
   SellerProfileDto,
   UpdateProfileInput,
+  UpsertResumeInput,
   UserDto,
 } from '@china-ru/shared';
 
@@ -84,4 +86,10 @@ export const accountClient = {
       method: 'PUT',
       body: JSON.stringify({ nickname }),
     }),
+};
+
+export const jobClient = {
+  getResume: () => call<ResumeDto | null>('/account/resume'),
+  upsertResume: (input: UpsertResumeInput) =>
+    call<ResumeDto>('/account/resume', { method: 'PUT', body: JSON.stringify(input) }),
 };

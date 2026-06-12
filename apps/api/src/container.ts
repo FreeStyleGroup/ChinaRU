@@ -2,9 +2,11 @@ import {
   AnalyticsRepository,
   AuditRepository,
   CategoryRepository,
+  JobListingRepository,
   OrderRepository,
   ProductImageRepository,
   ProductRepository,
+  ResumeRepository,
   ReviewRepository,
   SellerRepository,
   UserRepository,
@@ -19,6 +21,7 @@ import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
 import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
+import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import {
   createAccountController,
@@ -30,6 +33,7 @@ import {
   createCatalogController,
   type CatalogController,
 } from './http/controllers/catalog.controller';
+import { createJobController, type JobController } from './http/controllers/job.controller';
 import {
   createOrdersController,
   type OrdersController,
@@ -55,6 +59,7 @@ export interface Container {
     orders: OrdersController;
     admin: AdminController;
     account: AccountController;
+    jobs: JobController;
   };
 }
 
@@ -70,6 +75,8 @@ export function createContainer(deps: ContainerDeps): Container {
   const productImageRepo = new ProductImageRepository(db);
   const orderRepo = new OrderRepository(db);
   const reviewRepo = new ReviewRepository(db);
+  const resumeRepo = new ResumeRepository(db);
+  const jobListingRepo = new JobListingRepository(db);
   const analyticsRepo = new AnalyticsRepository(db);
   const auditRepo = new AuditRepository(db);
 
@@ -107,6 +114,7 @@ export function createContainer(deps: ContainerDeps): Container {
   );
   const orders = new OrderService(orderRepo);
   const account = new AccountService(userRepo, sellerRepo);
+  const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -114,6 +122,8 @@ export function createContainer(deps: ContainerDeps): Container {
     productImages: productImageRepo,
     orders: orderRepo,
     reviews: reviewRepo,
+    resumes: resumeRepo,
+    listings: jobListingRepo,
     analytics: analyticsRepo,
     audit: auditRepo,
   });
@@ -126,6 +136,7 @@ export function createContainer(deps: ContainerDeps): Container {
       orders: createOrdersController({ orders }),
       admin: createAdminController({ admin }),
       account: createAccountController({ account }),
+      jobs: createJobController({ jobs }),
     },
   };
 }

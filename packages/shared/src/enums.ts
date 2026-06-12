@@ -34,6 +34,29 @@ export const JOB_WORK_TYPES = [
 ] as const;
 export const JOB_STATUSES = ['draft', 'active', 'closed'] as const;
 export const JOB_APPLICATION_STATUSES = ['submitted', 'reviewed', 'accepted', 'rejected'] as const;
+/** Модерация пользовательского контента (резюме, вакансии): на проверке → опубликовано/отклонено. */
+export const MODERATION_STATUSES = ['pending', 'published', 'rejected'] as const;
+/** Опыт работы в резюме. */
+export const RESUME_EXPERIENCES = [
+  'none',
+  'lt_1',
+  '1_3',
+  '3_6',
+  'gt_6',
+] as const;
+/** Отрасли (сферы деятельности) для вакансий и резюме. */
+export const JOB_CATEGORIES = [
+  'it',
+  'trade',
+  'teaching',
+  'marketing',
+  'manufacturing',
+  'logistics',
+  'finance',
+  'engineering',
+  'translation',
+  'management',
+] as const;
 export const BOOKING_STATUSES = ['pending', 'confirmed', 'cancelled'] as const;
 export const NOTIFICATION_TYPES = ['order', 'review', 'chat', 'system'] as const;
 export const DEVICE_PLATFORMS = ['ios', 'android'] as const;
@@ -50,6 +73,9 @@ export const reviewStatusSchema = z.enum(REVIEW_STATUSES);
 export const jobWorkTypeSchema = z.enum(JOB_WORK_TYPES);
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 export const jobApplicationStatusSchema = z.enum(JOB_APPLICATION_STATUSES);
+export const moderationStatusSchema = z.enum(MODERATION_STATUSES);
+export const resumeExperienceSchema = z.enum(RESUME_EXPERIENCES);
+export const jobCategorySchema = z.enum(JOB_CATEGORIES);
 export const bookingStatusSchema = z.enum(BOOKING_STATUSES);
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 export const devicePlatformSchema = z.enum(DEVICE_PLATFORMS);
@@ -65,6 +91,9 @@ export type ReviewStatus = z.infer<typeof reviewStatusSchema>;
 export type JobWorkType = z.infer<typeof jobWorkTypeSchema>;
 export type JobStatus = z.infer<typeof jobStatusSchema>;
 export type JobApplicationStatus = z.infer<typeof jobApplicationStatusSchema>;
+export type ModerationStatus = z.infer<typeof moderationStatusSchema>;
+export type ResumeExperience = z.infer<typeof resumeExperienceSchema>;
+export type JobCategory = z.infer<typeof jobCategorySchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;

@@ -1,15 +1,25 @@
 import { paginate } from '@china-ru/shared';
 
 import { NotFoundError } from '../../http/errors';
-import { toOrderDto, toProductDto, toReviewDto, toSellerProfileDto, toUserDto } from '../dto';
+import {
+  toJobListingDto,
+  toOrderDto,
+  toProductDto,
+  toResumeDto,
+  toReviewDto,
+  toSellerProfileDto,
+  toUserDto,
+} from '../dto';
 
 import type {
   AnalyticsRepository,
   AuditRepository,
+  JobListingRepository,
   OrderRepository,
   ProductImage,
   ProductImageRepository,
   ProductRepository,
+  ResumeRepository,
   ReviewRepository,
   SellerRepository,
   UserRepository,
@@ -20,10 +30,14 @@ import type {
   AdminSellerListQuery,
   AdminStats,
   AdminUserListQuery,
+  ContentModerationInput,
+  JobListingDto,
+  ModerationListQuery,
   OrderDto,
   Paginated,
   ProductDto,
   ProductListQuery,
+  ResumeDto,
   ReviewDto,
   ReviewModerationInput,
   SellerProfileDto,
@@ -39,6 +53,8 @@ export interface AdminServiceDeps {
   productImages: ProductImageRepository;
   orders: OrderRepository;
   reviews: ReviewRepository;
+  resumes: ResumeRepository;
+  listings: JobListingRepository;
   analytics: AnalyticsRepository;
   audit: AuditRepository;
 }
@@ -176,6 +192,73 @@ export class AdminService {
       ip: actor.ip ?? null,
     });
     return { id: updated.id, status: updated.status };
+  }
+
+  async listResumes(query: ModerationListQuery): Promise<Paginated<ResumeDto>> {
+    const { rows, total } = await this.deps.resumes.list({
+      page: query.page,
+      limit: query.pageSize,
+      ...(query.status ? { moderationStatus: query.status } : {}),
+    });
+    return paginate(rows.map(toResumeDto), total, { page: query.page, pageSize: query.pageSize });
+  }
+
+  async moderateResume(
+    id: string,
+    input: ContentModerationInput,
+    actor: ActorContext
+  ): Promise<ResumeDto> {
+    const updated = await this.deps.resumes.setModeration(
+      id,
+      input.status,
+      input.status === 'rejected' ? (input.reason ?? null) : null,
+      input.status === 'published' ? new Date() : null
+    );
+    if (!updated) throw new NotFoundError('Резюме не найдено', 'resume_not_found');
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'resume.moderate',
+      entity: 'resume',
+      entityId: id,
+      meta: { status: input.status },
+      ip: actor.ip ?? null,
+    });
+    return toResumeDto(updated);
+  }
+
+  async listVacancies(query: ModerationListQuery): Promise<Paginated<JobListingDto>> {
+    const { rows, total } = await this.deps.listings.list({
+      page: query.page,
+      limit: query.pageSize,
+      ...(query.status ? { moderationStatus: query.status } : {}),
+    });
+    return paginate(rows.map(toJobListingDto), total, {
+      page: query.page,
+      pageSize: query.pageSize,
+    });
+  }
+
+  async moderateVacancy(
+    id: string,
+    input: ContentModerationInput,
+    actor: ActorContext
+  ): Promise<JobListingDto> {
+    const updated = await this.deps.listings.setModeration(
+      id,
+      input.status,
+      input.status === 'rejected' ? (input.reason ?? null) : null,
+      input.status === 'published' ? new Date() : null
+    );
+    if (!updated) throw new NotFoundError('Вакансия не найдена', 'vacancy_not_found');
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'vacancy.moderate',
+      entity: 'vacancy',
+      entityId: id,
+      meta: { status: input.status },
+      ip: actor.ip ?? null,
+    });
+    return toJobListingDto(updated);
   }
 
   private async groupImages(ids: string[]): Promise<Map<string, ProductImage[]>> {

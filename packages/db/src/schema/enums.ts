@@ -5,11 +5,14 @@ import {
   JOB_APPLICATION_STATUSES,
   JOB_STATUSES,
   JOB_WORK_TYPES,
+  JOB_CATEGORIES,
   LOCALES,
+  MODERATION_STATUSES,
   NOTIFICATION_TYPES,
   OAUTH_PROVIDERS,
   ORDER_STATUSES,
   PRODUCT_STATUSES,
+  RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
   USER_ROLES,
@@ -34,6 +37,9 @@ export const reviewStatus = pgEnum('review_status', REVIEW_STATUSES);
 export const jobWorkType = pgEnum('job_work_type', JOB_WORK_TYPES);
 export const jobStatus = pgEnum('job_status', JOB_STATUSES);
 export const jobApplicationStatus = pgEnum('job_application_status', JOB_APPLICATION_STATUSES);
+export const moderationStatus = pgEnum('moderation_status', MODERATION_STATUSES);
+export const resumeExperience = pgEnum('resume_experience', RESUME_EXPERIENCES);
+export const jobCategory = pgEnum('job_category', JOB_CATEGORIES);
 export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
 export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);

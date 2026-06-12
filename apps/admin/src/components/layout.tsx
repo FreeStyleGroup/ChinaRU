@@ -10,6 +10,8 @@ const NAV = [
   { to: '/products', label: 'Товары', end: false },
   { to: '/orders', label: 'Заказы', end: false },
   { to: '/reviews', label: 'Отзывы', end: false },
+  { to: '/resumes', label: 'Резюме', end: false },
+  { to: '/vacancies', label: 'Вакансии', end: false },
 ];
 
 export function AdminLayout() {

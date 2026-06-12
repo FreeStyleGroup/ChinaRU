@@ -11,7 +11,7 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account } = container.controllers;
+  const { auth, catalog, orders, admin, account, jobs } = container.controllers;
   const { requireAuth } = container.authMiddleware;
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -50,6 +50,13 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
 
+  // ───────── работа (резюме / вакансии) ─────────
+  router.get('/account/resume', requireAuth, jobs.getResume);
+  router.put('/account/resume', requireAuth, jobs.upsertResume);
+  router.get('/jobs', jobs.listVacancies);
+  router.get('/seller/vacancies', requireAuth, jobs.myVacancies);
+  router.post('/seller/vacancies', requireAuth, jobs.createVacancy);
+
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);
   router.post('/orders', requireAuth, orders.create);
@@ -66,6 +73,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/admin/orders', onlyAdmin, admin.orders);
   router.get('/admin/reviews', onlyAdmin, admin.reviews);
   router.post('/admin/reviews/:id/moderate', onlyAdmin, admin.moderateReview);
+  router.get('/admin/resumes', onlyAdmin, admin.resumes);
+  router.post('/admin/resumes/:id/moderate', onlyAdmin, admin.moderateResume);
+  router.get('/admin/vacancies', onlyAdmin, admin.vacancies);
+  router.post('/admin/vacancies/:id/moderate', onlyAdmin, admin.moderateVacancy);
 
   return router;
 }

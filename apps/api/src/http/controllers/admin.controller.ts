@@ -3,7 +3,9 @@ import {
   adminReviewListQuerySchema,
   adminSellerListQuerySchema,
   adminUserListQuerySchema,
+  contentModerationSchema,
   idSchema,
+  moderationListQuerySchema,
   ok,
   productListQuerySchema,
   reviewModerationSchema,
@@ -27,6 +29,10 @@ export interface AdminController {
   orders: RequestHandler;
   reviews: RequestHandler;
   moderateReview: RequestHandler;
+  resumes: RequestHandler;
+  moderateResume: RequestHandler;
+  vacancies: RequestHandler;
+  moderateVacancy: RequestHandler;
 }
 
 function actorOf(req: Request): { userId: string; ip: string | null } {
@@ -81,6 +87,28 @@ export function createAdminController(deps: { admin: AdminService }): AdminContr
       const id = idSchema.parse(req.params.id);
       const input = reviewModerationSchema.parse(req.body);
       res.json(ok(await deps.admin.moderateReview(id, input, actorOf(req))));
+    }),
+
+    resumes: asyncHandler(async (req, res) => {
+      const query = moderationListQuerySchema.parse(req.query);
+      res.json(ok(await deps.admin.listResumes(query)));
+    }),
+
+    moderateResume: asyncHandler(async (req, res) => {
+      const id = idSchema.parse(req.params.id);
+      const input = contentModerationSchema.parse(req.body);
+      res.json(ok(await deps.admin.moderateResume(id, input, actorOf(req))));
+    }),
+
+    vacancies: asyncHandler(async (req, res) => {
+      const query = moderationListQuerySchema.parse(req.query);
+      res.json(ok(await deps.admin.listVacancies(query)));
+    }),
+
+    moderateVacancy: asyncHandler(async (req, res) => {
+      const id = idSchema.parse(req.params.id);
+      const input = contentModerationSchema.parse(req.body);
+      res.json(ok(await deps.admin.moderateVacancy(id, input, actorOf(req))));
     }),
   };
 }

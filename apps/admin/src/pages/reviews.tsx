@@ -1,10 +1,11 @@
 import { Badge, Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { ReviewDto, ReviewModerationInput } from '@china-ru/shared';
 
 import { DataTable, type Column } from '@/components/data-table';
 import { api } from '@/lib/api';
+
+import type { ReviewDto, ReviewModerationInput } from '@china-ru/shared';
 
 export function ReviewsPage() {
   const queryClient = useQueryClient();

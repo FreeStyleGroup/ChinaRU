@@ -1,10 +1,13 @@
 import type {
   AdminStats,
   ApiResponse,
+  ContentModerationInput,
+  JobListingDto,
   LoginInput,
   OrderDto,
   Paginated,
   ProductDto,
+  ResumeDto,
   ReviewDto,
   ReviewModerationInput,
   SellerProfileDto,
@@ -73,6 +76,18 @@ export const api = {
   reviews: (p: ListParams) => call<Paginated<ReviewDto>>(`/admin/reviews${qs({ ...p })}`),
   moderateReview: (id: string, input: ReviewModerationInput) =>
     call<{ id: string; status: string }>(`/admin/reviews/${id}/moderate`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  resumes: (p: ListParams) => call<Paginated<ResumeDto>>(`/admin/resumes${qs({ ...p })}`),
+  moderateResume: (id: string, input: ContentModerationInput) =>
+    call<ResumeDto>(`/admin/resumes/${id}/moderate`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  vacancies: (p: ListParams) => call<Paginated<JobListingDto>>(`/admin/vacancies${qs({ ...p })}`),
+  moderateVacancy: (id: string, input: ContentModerationInput) =>
+    call<JobListingDto>(`/admin/vacancies/${id}/moderate`, {
       method: 'POST',
       body: JSON.stringify(input),
     }),

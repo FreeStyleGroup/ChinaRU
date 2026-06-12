@@ -5,5 +5,7 @@ export * from './product.repository';
 export * from './product-image.repository';
 export * from './order.repository';
 export * from './review.repository';
+export * from './resume.repository';
+export * from './job-listing.repository';
 export * from './analytics.repository';
 export * from './audit.repository';

@@ -1,4 +1,4 @@
-# Деплой China-RU
+# Деплой China.ru
 
 Стек контейнеризован: PostgreSQL, Redis, Meilisearch, MinIO, API (Node), Web
 (Next.js standalone), Admin (статика за nginx) и пограничный nginx с TLS.
@@ -16,7 +16,7 @@ prod-образе API при старте).
 
 ## Production
 
-Требуется Docker + домены `china-ru.ru`, `api.china-ru.ru`, `admin.china-ru.ru`,
+Требуется Docker + домены `china.ru`, `api.china.ru`, `admin.china.ru`,
 указывающие на сервер, и выпущенные сертификаты Let's Encrypt в `/etc/letsencrypt`.
 
 ```bash
@@ -31,8 +31,8 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 - **web** — Next.js standalone на `:3000` (внутренний). `NEXT_PUBLIC_*` вшиваются на
   этапе сборки (build args).
 - **admin** — собранный Vite-SPA за nginx (`:80`, внутренний).
-- **nginx** — TLS на `80/443`, маршрутизация: `china-ru.ru`→web, `api.china-ru.ru`→api,
-  `admin.china-ru.ru`→admin. ACME-challenge через volume `certbot_webroot`.
+- **nginx** — TLS на `80/443`, маршрутизация: `china.ru`→web, `api.china.ru`→api,
+  `admin.china.ru`→admin. ACME-challenge через volume `certbot_webroot`.
 
 ### Первичный выпуск сертификата
 
@@ -40,7 +40,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 docker run --rm -v /etc/letsencrypt:/etc/letsencrypt \
   -v china-ru_certbot_webroot:/var/www/certbot certbot/certbot certonly \
   --webroot -w /var/www/certbot \
-  -d china-ru.ru -d www.china-ru.ru -d api.china-ru.ru -d admin.china-ru.ru
+  -d china.ru -d www.china.ru -d api.china.ru -d admin.china.ru
 ```
 
 ## CI/CD

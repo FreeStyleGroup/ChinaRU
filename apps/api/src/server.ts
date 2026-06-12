@@ -27,7 +27,7 @@ function start(): void {
 
   const app = createApp({ db, config, logger });
   const server = app.listen(config.port, () => {
-    logger.info({ port: config.port, env: config.nodeEnv }, 'China-RU API запущен');
+    logger.info({ port: config.port, env: config.nodeEnv }, 'China.ru API запущен');
   });
 
   const shutdown = (signal: string): void => {

@@ -5,6 +5,7 @@ import type {
   LoginInput,
   OrderDto,
   RegisterInput,
+  UpdateProfileInput,
   UserDto,
 } from '@china-ru/shared';
 
@@ -53,4 +54,12 @@ export const authClient = {
 export const orderClient = {
   create: (input: CreateOrderInput) =>
     call<OrderDto>('/orders', { method: 'POST', body: JSON.stringify(input) }),
+  list: () => call<OrderDto[]>('/orders'),
+};
+
+export const accountClient = {
+  updateProfile: (input: UpdateProfileInput) =>
+    call<UserDto>('/account/profile', { method: 'PATCH', body: JSON.stringify(input) }),
+  updateMenu: (sections: string[]) =>
+    call<UserDto>('/account/menu', { method: 'PUT', body: JSON.stringify({ sections }) }),
 };

@@ -11,7 +11,7 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin } = container.controllers;
+  const { auth, catalog, orders, admin, account } = container.controllers;
   const { requireAuth } = container.authMiddleware;
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -41,6 +41,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/catalog/categories', catalog.categoryTree);
   router.get('/catalog/products', catalog.listProducts);
   router.get('/catalog/products/:slug', catalog.getProduct);
+
+  // ───────── account (кабинет) ─────────
+  router.patch('/account/profile', requireAuth, account.updateProfile);
+  router.put('/account/menu', requireAuth, account.updateMenu);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);

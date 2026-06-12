@@ -1,5 +1,5 @@
 # ════════════════════════════════════════════════════════════════
-#  China-RU — production stack. Запуск:
+#  China.ru — production stack. Запуск:
 #    cp .env.prod.example .env.prod && заполнить секреты
 #    docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 # ════════════════════════════════════════════════════════════════
@@ -80,10 +80,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china-ru.ru}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china.ru}
       COOKIE_SECURE: 'true'
-      WEB_URL: ${WEB_URL:-https://china-ru.ru}
-      ADMIN_URL: ${ADMIN_URL:-https://admin.china-ru.ru}
+      WEB_URL: ${WEB_URL:-https://china.ru}
+      ADMIN_URL: ${ADMIN_URL:-https://admin.china.ru}
       BCRYPT_COST: '12'
     depends_on:
       postgres: { condition: service_healthy }
@@ -102,8 +102,8 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china-ru.ru}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://china-ru.ru}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china.ru}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://china.ru}
     container_name: china-ru-web
     depends_on: [api]
     networks: [china-ru-network-prod]
@@ -115,7 +115,7 @@ services:
       context: .
       dockerfile: apps/admin/Dockerfile
       args:
-        VITE_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china-ru.ru}
+        VITE_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china.ru}
     container_name: china-ru-admin
     depends_on: [api]
     networks: [china-ru-network-prod]

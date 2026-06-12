@@ -12,6 +12,7 @@ import {
 } from '@china-ru/db';
 
 import { NoopCache, RedisCache, type Cache } from './cache/cache';
+import { AccountService } from './domain/account/account.service';
 import { AdminService } from './domain/admin/admin.service';
 import { AuthService } from './domain/auth/auth.service';
 import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
@@ -19,6 +20,10 @@ import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CatalogService } from './domain/catalog/catalog.service';
 import { OrderService } from './domain/orders/order.service';
+import {
+  createAccountController,
+  type AccountController,
+} from './http/controllers/account.controller';
 import { createAdminController, type AdminController } from './http/controllers/admin.controller';
 import { createAuthController, type AuthController } from './http/controllers/auth.controller';
 import {
@@ -49,6 +54,7 @@ export interface Container {
     catalog: CatalogController;
     orders: OrdersController;
     admin: AdminController;
+    account: AccountController;
   };
 }
 
@@ -100,6 +106,7 @@ export function createContainer(deps: ContainerDeps): Container {
     config.cache.categoriesTtl
   );
   const orders = new OrderService(orderRepo);
+  const account = new AccountService(userRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -118,6 +125,7 @@ export function createContainer(deps: ContainerDeps): Container {
       catalog: createCatalogController({ catalog }),
       orders: createOrdersController({ orders }),
       admin: createAdminController({ admin }),
+      account: createAccountController({ account }),
     },
   };
 }

@@ -6,7 +6,7 @@ import { DEFAULT_LOCALE } from '@china-ru/shared';
 
 import type { Locale } from '@china-ru/shared';
 
-export const SITE_NAME = 'China-RU';
+export const SITE_NAME = 'China.ru';
 
 export function resolveLocale(
   input: string | undefined,

@@ -50,7 +50,7 @@ const envSchema = z.object({
     .transform(v => v === 'true'),
   SMTP_USER: z.string().default(''),
   SMTP_PASSWORD: z.string().default(''),
-  MAIL_FROM: z.string().default('China-RU <no-reply@china-ru.ru>'),
+  MAIL_FROM: z.string().default('China.ru <no-reply@china.ru>'),
 
   REGISTRATION_OPEN: z
     .enum(['true', 'false'])

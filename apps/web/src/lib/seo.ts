@@ -1,8 +1,8 @@
 import type { ProductDto } from '@china-ru/shared';
 import type { Metadata } from 'next';
 
-export const SITE_NAME = 'China-RU';
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://china-ru.ru';
+export const SITE_NAME = 'China.ru';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://china.ru';
 
 /** Абсолютный URL для каноникал/OG. */
 export function absoluteUrl(path: string): string {

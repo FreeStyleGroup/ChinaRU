@@ -34,9 +34,9 @@ const apiResponseEnvelope = {
 export const openApiDocument = {
   openapi: OPENAPI_VERSION,
   info: {
-    title: 'China-RU API',
+    title: 'China.ru API',
     version: '1.0.0',
-    description: 'B2B-маркетплейс и портал China-RU. Все ответы — конверт ApiResponse.',
+    description: 'B2B-маркетплейс и портал China.ru. Все ответы — конверт ApiResponse.',
   },
   servers: [{ url: '/api/v1' }],
   components: {

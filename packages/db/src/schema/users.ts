@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   index,
   integer,
@@ -32,6 +33,11 @@ export const users = pgTable(
     name: text('name'),
     phone: text('phone'),
     avatarUrl: text('avatar_url'),
+    /** Включённые опциональные разделы кабинета (ключи из CABINET_SECTIONS). */
+    menuSections: text('menu_sections')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     ...timestamps,
     ...softDelete,
   },

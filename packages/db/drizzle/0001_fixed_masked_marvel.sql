@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "menu_sections" text[] DEFAULT '{}'::text[] NOT NULL;

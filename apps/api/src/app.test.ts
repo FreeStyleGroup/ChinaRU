@@ -170,6 +170,37 @@ describe('auth flow', () => {
   });
 });
 
+describe('account (cabinet)', () => {
+  let agent: ReturnType<typeof request.agent>;
+  beforeAll(async () => {
+    agent = request.agent(server);
+    await agent
+      .post('/api/v1/auth/register')
+      .send({ email: 'acc@china.test', password: 'secret123' });
+  });
+
+  it('updates profile fields', async () => {
+    const res = await agent.patch('/api/v1/account/profile').send({ name: 'Иван', locale: 'zh' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe('Иван');
+    expect(res.body.data.locale).toBe('zh');
+  });
+
+  it('saves enabled optional menu sections (filtering unknown keys)', async () => {
+    const res = await agent
+      .put('/api/v1/account/menu')
+      .send({ sections: ['tenders', 'horoscope', 'not-a-section', 'profile'] });
+    expect(res.status).toBe(200);
+    // profile (pinned) и неизвестные ключи отфильтрованы.
+    expect(res.body.data.menuSections).toEqual(['tenders', 'horoscope']);
+  });
+
+  it('rejects profile update without auth', async () => {
+    const res = await request(server).patch('/api/v1/account/profile').send({ name: 'X' });
+    expect(res.status).toBe(401);
+  });
+});
+
 describe('catalog', () => {
   it('lists products with the seeded item', async () => {
     const res = await request(server).get('/api/v1/catalog/products');

@@ -25,6 +25,8 @@ export const userDtoSchema = z.object({
   name: z.string().nullable(),
   phone: z.string().nullable(),
   avatarUrl: z.string().nullable(),
+  /** Включённые опциональные разделы кабинета. */
+  menuSections: z.array(z.string()),
   ...timestampsShape,
 });
 export type UserDto = z.infer<typeof userDtoSchema>;

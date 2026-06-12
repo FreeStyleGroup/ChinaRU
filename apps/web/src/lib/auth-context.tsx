@@ -13,6 +13,8 @@ interface AuthContextValue {
   login: (input: LoginInput) => Promise<void>;
   register: (input: RegisterInput) => Promise<void>;
   logout: () => Promise<void>;
+  /** Обновить пользователя локально после правок профиля/меню. */
+  setUser: (user: UserDto) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -58,6 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           setUser(null);
         }
+      },
+      setUser: (next: UserDto) => {
+        setUser(next);
       },
     }),
     [user, isHydrated]

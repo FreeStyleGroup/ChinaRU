@@ -16,7 +16,7 @@ import '../globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
-  description: 'China-RU — международный B2B-маркетплейс товаров из Китая.',
+  description: 'China.ru — международный B2B-маркетплейс товаров из Китая.',
 };
 
 export function generateStaticParams(): { locale: string }[] {

@@ -20,7 +20,7 @@ export function AdminLayout() {
     <div className="flex min-h-screen bg-surface text-ink">
       <aside className="flex w-60 flex-col border-r border-line bg-white">
         <div className="border-b border-line px-5 py-4 text-lg font-bold">
-          China<span className="text-brand">-RU</span>
+          China<span className="text-brand">.ru</span>
           <span className="ml-1 text-xs font-normal text-muted">admin</span>
         </div>
         <nav className="flex-1 space-y-1 p-3">

@@ -39,7 +39,7 @@ export function LoginPage() {
         }}
       >
         <h1 className="text-xl font-bold text-ink">
-          China<span className="text-brand">-RU</span> · вход в админку
+          China<span className="text-brand">.ru</span> · вход в админку
         </h1>
         <input
           type="email"

@@ -16,7 +16,7 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-line bg-white/90 backdrop-blur">
       <Container className="flex h-16 items-center justify-between gap-6">
         <Link href="/" className="text-lg font-bold tracking-tight text-ink">
-          China<span className="text-brand">-RU</span>
+          China<span className="text-brand">.ru</span>
         </Link>
 
         <nav className="flex items-center gap-6 text-sm">
@@ -29,9 +29,12 @@ export function Header() {
           <LocaleSwitcher />
           {isAuthenticated ? (
             <>
-              <span className="hidden text-sm text-muted sm:inline">
-                {user?.name ?? user?.email}
-              </span>
+              <Link
+                href="/cabinet"
+                className="hidden text-sm text-muted transition-colors hover:text-ink sm:inline"
+              >
+                {user?.name ?? t('account')}
+              </Link>
               <Button
                 variant="outline"
                 size="sm"

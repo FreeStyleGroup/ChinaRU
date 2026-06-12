@@ -38,7 +38,7 @@ export async function generateMetadata({
   );
   return buildMetadata({
     title: name,
-    description: (localizedDesc ?? `${name} — China-RU`).slice(0, 200),
+    description: (localizedDesc ?? `${name} — China.ru`).slice(0, 200),
     path: `/${locale}/catalog/${product.slug}`,
     locale,
     images: product.images.map(i => i.url),
@@ -68,7 +68,7 @@ export default async function ProductPage({
   const jsonLd = [
     productJsonLd(product, path, { name, description }),
     breadcrumbJsonLd([
-      { name: 'China-RU', path: `/${locale}` },
+      { name: 'China.ru', path: `/${locale}` },
       { name: 'Catalog', path: `/${locale}/catalog` },
       { name, path },
     ]),

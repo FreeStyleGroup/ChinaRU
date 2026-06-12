@@ -4,7 +4,7 @@ import { SITE_NAME, resolveLocale } from './site';
 
 describe('web/site', () => {
   it('exposes the site name', () => {
-    expect(SITE_NAME).toBe('China-RU');
+    expect(SITE_NAME).toBe('China.ru');
   });
 
   it('resolves known locales and falls back to ru', () => {

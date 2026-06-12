@@ -30,6 +30,7 @@ export function toUserDto(u: User): UserDto {
     name: u.name,
     phone: u.phone,
     avatarUrl: u.avatarUrl,
+    menuSections: u.menuSections,
     createdAt: u.createdAt.toISOString(),
     updatedAt: u.updatedAt.toISOString(),
   };

@@ -57,6 +57,13 @@
       "when": 1781293113204,
       "tag": "0007_fuzzy_betty_brant",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1781823269489,
+      "tag": "0008_rare_kylun",
+      "breakpoints": true
     }
   ]
 }

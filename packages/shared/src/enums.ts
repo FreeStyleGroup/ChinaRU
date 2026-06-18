@@ -36,6 +36,14 @@ export const JOB_STATUSES = ['draft', 'active', 'closed'] as const;
 export const JOB_APPLICATION_STATUSES = ['submitted', 'reviewed', 'accepted', 'rejected'] as const;
 /** Модерация пользовательского контента (резюме, вакансии): на проверке → опубликовано/отклонено. */
 export const MODERATION_STATUSES = ['pending', 'published', 'rejected'] as const;
+/** Тип прикреплённого к резюме документа (подтверждённые повышают рейтинг соискателя). */
+export const RESUME_DOCUMENT_TYPES = [
+  'diploma',
+  'certificate',
+  'hsk_certificate',
+  'reference',
+  'other',
+] as const;
 /** Опыт работы в резюме. */
 export const RESUME_EXPERIENCES = [
   'none',
@@ -96,6 +104,7 @@ export const jobStatusSchema = z.enum(JOB_STATUSES);
 export const jobApplicationStatusSchema = z.enum(JOB_APPLICATION_STATUSES);
 export const moderationStatusSchema = z.enum(MODERATION_STATUSES);
 export const resumeExperienceSchema = z.enum(RESUME_EXPERIENCES);
+export const resumeDocumentTypeSchema = z.enum(RESUME_DOCUMENT_TYPES);
 export const jobCategorySchema = z.enum(JOB_CATEGORIES);
 export const bookingStatusSchema = z.enum(BOOKING_STATUSES);
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
@@ -117,6 +126,7 @@ export type JobStatus = z.infer<typeof jobStatusSchema>;
 export type JobApplicationStatus = z.infer<typeof jobApplicationStatusSchema>;
 export type ModerationStatus = z.infer<typeof moderationStatusSchema>;
 export type ResumeExperience = z.infer<typeof resumeExperienceSchema>;
+export type ResumeDocumentType = z.infer<typeof resumeDocumentTypeSchema>;
 export type JobCategory = z.infer<typeof jobCategorySchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;

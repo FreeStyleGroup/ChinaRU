@@ -16,6 +16,8 @@ import { createV1Router, healthRouter } from './routes';
 export function createApp(deps: ContainerDeps): Express {
   const { config, logger } = deps;
   const container = createContainer(deps);
+  // Идемпотентная подготовка хранилища (создание бакета); ошибки логируются внутри.
+  void container.storage.init();
 
   const app = express();
   // Доверяем первому reverse-proxy (nginx/edge): корректные req.ip и secure-cookies по HTTPS.

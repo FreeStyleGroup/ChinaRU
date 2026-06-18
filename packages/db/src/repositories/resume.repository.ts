@@ -72,6 +72,16 @@ export class ResumeRepository {
     return row;
   }
 
+  /** Устанавливает рейтинг соискателя (пересчитывается по подтверждённым документам). */
+  async setRating(id: string, rating: string): Promise<Resume | null> {
+    const [row] = await this.db
+      .update(resumes)
+      .set({ rating })
+      .where(and(eq(resumes.id, id), isNull(resumes.deletedAt)))
+      .returning();
+    return row ?? null;
+  }
+
   async setModeration(
     id: string,
     status: Resume['moderationStatus'],

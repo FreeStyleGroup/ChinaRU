@@ -6,11 +6,12 @@ import {
   ok,
   resumeListQuerySchema,
   updateApplicationStatusSchema,
+  uploadResumeDocumentSchema,
   upsertResumeSchema,
 } from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
-import { UnauthorizedError } from '../errors';
+import { BadRequestError, UnauthorizedError } from '../errors';
 
 import type { JobService } from '../../domain/jobs/job.service';
 import type { RequestHandler } from 'express';
@@ -18,6 +19,10 @@ import type { RequestHandler } from 'express';
 export interface JobController {
   getResume: RequestHandler;
   upsertResume: RequestHandler;
+  listResumeDocuments: RequestHandler;
+  addResumeDocument: RequestHandler;
+  deleteResumeDocument: RequestHandler;
+  downloadResumeDocument: RequestHandler;
   listPublicResumes: RequestHandler;
   getPublicResume: RequestHandler;
   listVacancies: RequestHandler;
@@ -42,6 +47,37 @@ export function createJobController(deps: { jobs: JobService }): JobController {
       if (!req.auth) throw new UnauthorizedError();
       const input = upsertResumeSchema.parse(req.body);
       res.json(ok(await deps.jobs.upsertResume(req.auth.userId, input)));
+    }),
+
+    listResumeDocuments: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      res.json(ok(await deps.jobs.listResumeDocuments(req.auth.userId)));
+    }),
+
+    addResumeDocument: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      if (!req.file) throw new BadRequestError('Файл не передан', 'file_required');
+      const input = uploadResumeDocumentSchema.parse(req.body);
+      res.status(201).json(ok(await deps.jobs.addResumeDocument(req.auth.userId, input, req.file)));
+    }),
+
+    deleteResumeDocument: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      const id = idSchema.parse(req.params.id);
+      await deps.jobs.deleteResumeDocument(req.auth.userId, id);
+      res.json(ok({ id }));
+    }),
+
+    downloadResumeDocument: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      const id = idSchema.parse(req.params.id);
+      const { file, fileName } = await deps.jobs.downloadResumeDocument(req.auth.userId, id);
+      res.setHeader('Content-Type', file.contentType);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`
+      );
+      res.send(file.body);
     }),
 
     listPublicResumes: asyncHandler(async (req, res) => {

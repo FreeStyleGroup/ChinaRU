@@ -8,8 +8,10 @@ import {
   jobStatusSchema,
   jobWorkTypeSchema,
   moderationStatusSchema,
+  resumeDocumentTypeSchema,
   resumeExperienceSchema,
   type JobCategory,
+  type ResumeDocumentType,
   type ResumeExperience,
 } from '../enums';
 import { paginationQuerySchema } from '../pagination';
@@ -222,6 +224,41 @@ export const resumeDtoSchema = z.object({
   ...timestampsShape,
 });
 export type ResumeDto = z.infer<typeof resumeDtoSchema>;
+
+/* ─────────── Документы резюме (диплом/сертификат/HSK) ─────────── */
+
+export const RESUME_DOCUMENT_TYPE_LABELS: Record<ResumeDocumentType, string> = {
+  diploma: 'Диплом',
+  certificate: 'Сертификат',
+  hsk_certificate: 'Сертификат HSK',
+  reference: 'Рекомендация',
+  other: 'Другой документ',
+};
+
+/** Метаданные загрузки документа (сам файл уходит multipart-полем `file`). */
+export const uploadResumeDocumentSchema = z.object({
+  type: resumeDocumentTypeSchema.default('other'),
+});
+export type UploadResumeDocumentInput = z.infer<typeof uploadResumeDocumentSchema>;
+
+export const resumeDocumentDtoSchema = z.object({
+  id: idSchema,
+  resumeId: idSchema,
+  type: resumeDocumentTypeSchema,
+  fileName: z.string(),
+  mimeType: z.string(),
+  sizeBytes: z.number().int(),
+  /** Подтверждён модератором (учитывается в рейтинге). */
+  verified: z.boolean(),
+  /** Относительная ссылка на скачивание через API-прокси (с проверкой прав). */
+  downloadUrl: z.string(),
+  ...timestampsShape,
+});
+export type ResumeDocumentDto = z.infer<typeof resumeDocumentDtoSchema>;
+
+/** Решение модератора по документу резюме: подтвердить / снять подтверждение. */
+export const verifyResumeDocumentSchema = z.object({ verified: z.boolean() });
+export type VerifyResumeDocumentInput = z.infer<typeof verifyResumeDocumentSchema>;
 
 /* ─────────── Публичная база резюме (витрина для работодателей) ─────────── */
 

@@ -10,6 +10,7 @@ import type {
   Product,
   ProductImage,
   Resume,
+  ResumeDocument,
   ResumeWithUser,
   ReviewWithAuthor,
   SellerProfile,
@@ -28,6 +29,7 @@ import type {
   OrderItemDto,
   ProductDto,
   ProductImageDto,
+  ResumeDocumentDto,
   ResumeDto,
   ResumePublicDto,
   ReviewDto,
@@ -192,6 +194,21 @@ export function toResumePublicDto(r: ResumeWithUser): ResumePublicDto {
     candidateName: r.candidateName,
     candidateNickname: r.candidateNickname,
     candidateVerified: r.candidateVerified,
+  };
+}
+
+export function toResumeDocumentDto(d: ResumeDocument): ResumeDocumentDto {
+  return {
+    id: d.id,
+    resumeId: d.resumeId,
+    type: d.type,
+    fileName: d.fileName,
+    mimeType: d.mimeType,
+    sizeBytes: d.sizeBytes,
+    verified: d.verifiedAt !== null,
+    downloadUrl: `/api/v1/account/resume/documents/${d.id}/download`,
+    createdAt: d.createdAt.toISOString(),
+    updatedAt: d.updatedAt.toISOString(),
   };
 }
 

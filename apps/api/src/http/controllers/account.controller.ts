@@ -7,7 +7,7 @@ import {
 } from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
-import { UnauthorizedError } from '../errors';
+import { BadRequestError, UnauthorizedError } from '../errors';
 
 import type { AccountService } from '../../domain/account/account.service';
 import type { HoroscopeService } from '../../domain/horoscope/horoscope.service';
@@ -17,6 +17,7 @@ export interface AccountController {
   updateProfile: RequestHandler;
   updateMenu: RequestHandler;
   setNickname: RequestHandler;
+  uploadAvatar: RequestHandler;
   getSeller: RequestHandler;
   applySeller: RequestHandler;
   setSellerNickname: RequestHandler;
@@ -44,6 +45,12 @@ export function createAccountController(deps: {
       if (!req.auth) throw new UnauthorizedError();
       const input = setNicknameSchema.parse(req.body);
       res.json(ok(await deps.account.setNickname(req.auth.userId, input)));
+    }),
+
+    uploadAvatar: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      if (!req.file) throw new BadRequestError('Файл не передан', 'file_required');
+      res.json(ok(await deps.account.updateAvatar(req.auth.userId, req.file)));
     }),
 
     getSeller: asyncHandler(async (req, res) => {

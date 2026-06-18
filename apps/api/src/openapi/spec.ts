@@ -137,8 +137,108 @@ export const openApiDocument = {
         responses: { '200': okRef(), '404': okRef() },
       },
     },
+    '/account/avatar': {
+      post: {
+        tags: ['files'],
+        summary: 'Загрузить аватар (image ≤2 МБ)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        requestBody: { content: { 'multipart/form-data': { schema: fileForm() } } },
+        responses: { '200': okRef(), '400': okRef() },
+      },
+    },
+    '/files/avatars/{userId}': {
+      get: {
+        tags: ['files'],
+        summary: 'Аватар пользователя (публичная раздача)',
+        parameters: [
+          {
+            name: 'userId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Файл изображения', content: { 'image/*': {} } },
+          '404': okRef(),
+        },
+      },
+    },
+    '/account/resume/documents': {
+      get: {
+        tags: ['files'],
+        summary: 'Документы резюме (свои)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '200': okRef() },
+      },
+      post: {
+        tags: ['files'],
+        summary: 'Загрузить документ резюме (PDF/изображение ≤10 МБ)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        requestBody: {
+          content: {
+            'multipart/form-data': {
+              schema: {
+                type: 'object',
+                required: ['file'],
+                properties: {
+                  file: { type: 'string', format: 'binary' },
+                  type: {
+                    type: 'string',
+                    enum: ['diploma', 'certificate', 'hsk_certificate', 'reference', 'other'],
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: { '201': okRef(), '400': okRef(), '404': okRef() },
+      },
+    },
+    '/account/resume/documents/{id}/download': {
+      get: {
+        tags: ['files'],
+        summary: 'Скачать свой документ резюме',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': { description: 'Файл' }, '404': okRef() },
+      },
+    },
+    '/account/resume/documents/{id}': {
+      delete: {
+        tags: ['files'],
+        summary: 'Удалить свой документ резюме',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
+    '/admin/resume-documents/{id}/verify': {
+      post: {
+        tags: ['admin'],
+        summary: 'Подтвердить документ резюме (рейтинг соискателя)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
   },
 } as const;
+
+/** Тело multipart с одним обязательным файлом `file`. */
+function fileForm(): Record<string, unknown> {
+  return {
+    type: 'object',
+    required: ['file'],
+    properties: { file: { type: 'string', format: 'binary' } },
+  };
+}
 
 function okRef(): { description: string; content: Record<string, unknown> } {
   return {

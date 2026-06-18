@@ -10,6 +10,7 @@ import {
   ProductImageRepository,
   ProductRepository,
   ReferralRepository,
+  ResumeDocumentRepository,
   ResumeRepository,
   ReviewRepository,
   SellerRepository,
@@ -45,6 +46,7 @@ import {
   createContentController,
   type ContentController,
 } from './http/controllers/content.controller';
+import { createFilesController, type FilesController } from './http/controllers/files.controller';
 import { createJobController, type JobController } from './http/controllers/job.controller';
 import {
   createOrdersController,
@@ -55,6 +57,7 @@ import {
   type ReferralController,
 } from './http/controllers/referral.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
+import { createStorage, type Storage } from './storage/storage';
 
 import type { AppConfig } from './config';
 import type { Logger } from 'pino';
@@ -69,6 +72,7 @@ export interface ContainerDeps {
 
 export interface Container {
   authMiddleware: AuthMiddleware;
+  storage: Storage;
   controllers: {
     auth: AuthController;
     catalog: CatalogController;
@@ -78,6 +82,7 @@ export interface Container {
     jobs: JobController;
     referral: ReferralController;
     content: ContentController;
+    files: FilesController;
   };
 }
 
@@ -94,6 +99,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const orderRepo = new OrderRepository(db);
   const reviewRepo = new ReviewRepository(db);
   const resumeRepo = new ResumeRepository(db);
+  const resumeDocumentRepo = new ResumeDocumentRepository(db);
   const jobListingRepo = new JobListingRepository(db);
   const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
@@ -103,6 +109,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const articleRepo = new ArticleRepository(db);
 
   const ai = createAiProvider(config, logger);
+  const storage = createStorage(config, logger);
 
   const cache: Cache = config.cache.enabled
     ? new RedisCache(config.cache.redisUrl, logger)
@@ -139,9 +146,16 @@ export function createContainer(deps: ContainerDeps): Container {
     config.cache.categoriesTtl
   );
   const orders = new OrderService(orderRepo, referrals);
-  const account = new AccountService(userRepo, sellerRepo);
+  const account = new AccountService(userRepo, sellerRepo, storage, config.apiPublicUrl);
   const horoscope = new HoroscopeService(userRepo, ai, cache);
-  const jobs = new JobService(resumeRepo, jobListingRepo, sellerRepo, jobApplicationRepo);
+  const jobs = new JobService(
+    resumeRepo,
+    jobListingRepo,
+    sellerRepo,
+    jobApplicationRepo,
+    resumeDocumentRepo,
+    storage
+  );
   const content = new ContentService(contentAgentRepo, articleRepo, ai);
   const admin = new AdminService({
     users: userRepo,
@@ -151,6 +165,7 @@ export function createContainer(deps: ContainerDeps): Container {
     orders: orderRepo,
     reviews: reviewRepo,
     resumes: resumeRepo,
+    resumeDocuments: resumeDocumentRepo,
     listings: jobListingRepo,
     analytics: analyticsRepo,
     audit: auditRepo,
@@ -158,6 +173,7 @@ export function createContainer(deps: ContainerDeps): Container {
 
   return {
     authMiddleware: createAuthMiddleware({ tokens, auth }),
+    storage,
     controllers: {
       auth: createAuthController({ auth, tokens, config }),
       catalog: createCatalogController({ catalog }),
@@ -167,6 +183,7 @@ export function createContainer(deps: ContainerDeps): Container {
       jobs: createJobController({ jobs }),
       referral: createReferralController({ referrals }),
       content: createContentController({ content }),
+      files: createFilesController({ storage }),
     },
   };
 }

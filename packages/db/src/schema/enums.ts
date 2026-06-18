@@ -15,6 +15,7 @@ import {
   ORDER_STATUSES,
   PRODUCT_STATUSES,
   REFERRAL_EVENTS,
+  RESUME_DOCUMENT_TYPES,
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
@@ -42,6 +43,7 @@ export const jobStatus = pgEnum('job_status', JOB_STATUSES);
 export const jobApplicationStatus = pgEnum('job_application_status', JOB_APPLICATION_STATUSES);
 export const moderationStatus = pgEnum('moderation_status', MODERATION_STATUSES);
 export const resumeExperience = pgEnum('resume_experience', RESUME_EXPERIENCES);
+export const resumeDocumentType = pgEnum('resume_document_type', RESUME_DOCUMENT_TYPES);
 export const jobCategory = pgEnum('job_category', JOB_CATEGORIES);
 export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);

@@ -11,6 +11,7 @@ import {
   reviewModerationSchema,
   sellerVerifyDecisionSchema,
   userVerifyDecisionSchema,
+  verifyResumeDocumentSchema,
 } from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
@@ -31,6 +32,8 @@ export interface AdminController {
   moderateReview: RequestHandler;
   resumes: RequestHandler;
   moderateResume: RequestHandler;
+  resumeDocuments: RequestHandler;
+  verifyResumeDocument: RequestHandler;
   vacancies: RequestHandler;
   moderateVacancy: RequestHandler;
 }
@@ -98,6 +101,17 @@ export function createAdminController(deps: { admin: AdminService }): AdminContr
       const id = idSchema.parse(req.params.id);
       const input = contentModerationSchema.parse(req.body);
       res.json(ok(await deps.admin.moderateResume(id, input, actorOf(req))));
+    }),
+
+    resumeDocuments: asyncHandler(async (req, res) => {
+      const resumeId = idSchema.parse(req.params.id);
+      res.json(ok(await deps.admin.listResumeDocuments(resumeId)));
+    }),
+
+    verifyResumeDocument: asyncHandler(async (req, res) => {
+      const id = idSchema.parse(req.params.id);
+      const input = verifyResumeDocumentSchema.parse(req.body);
+      res.json(ok(await deps.admin.verifyResumeDocument(id, input, actorOf(req))));
     }),
 
     vacancies: asyncHandler(async (req, res) => {

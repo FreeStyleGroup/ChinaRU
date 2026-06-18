@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { JOB_CATEGORIES, paginate } from '@china-ru/shared';
 
 import { ConflictError, ForbiddenError, NotFoundError } from '../../http/errors';
@@ -6,13 +8,19 @@ import {
   toJobListingDto,
   toJobListingPublicDto,
   toMyApplicationDto,
+  toResumeDocumentDto,
   toResumeDto,
   toResumePublicDto,
 } from '../dto';
 
+import { computeResumeRating } from './resume-rating';
+
+import type { UploadedFile } from '../../http/middleware/upload';
+import type { Storage, StoredFile } from '../../storage/storage';
 import type {
   JobApplicationRepository,
   JobListingRepository,
+  ResumeDocumentRepository,
   ResumeRepository,
   SellerRepository,
 } from '@china-ru/db';
@@ -27,10 +35,12 @@ import type {
   JobListQuery,
   MyApplicationDto,
   Paginated,
+  ResumeDocumentDto,
   ResumeDto,
   ResumeListQuery,
   ResumePublicDto,
   UpdateApplicationStatusInput,
+  UploadResumeDocumentInput,
   UpsertResumeInput,
 } from '@china-ru/shared';
 
@@ -42,7 +52,9 @@ export class JobService {
     private readonly resumes: ResumeRepository,
     private readonly listings: JobListingRepository,
     private readonly sellers: SellerRepository,
-    private readonly applications: JobApplicationRepository
+    private readonly applications: JobApplicationRepository,
+    private readonly documents: ResumeDocumentRepository,
+    private readonly storage: Storage
   ) {}
 
   /* ── Резюме ── */
@@ -55,6 +67,72 @@ export class JobService {
   async upsertResume(userId: string, input: UpsertResumeInput): Promise<ResumeDto> {
     const resume = await this.resumes.upsert(userId, input);
     return toResumeDto(resume);
+  }
+
+  /* ── Документы резюме (диплом/сертификат/HSK) ── */
+
+  async addResumeDocument(
+    userId: string,
+    input: UploadResumeDocumentInput,
+    file: UploadedFile
+  ): Promise<ResumeDocumentDto> {
+    const resume = await this.resumes.findByUserId(userId);
+    if (!resume) throw new NotFoundError('Сначала создайте резюме', 'resume_required');
+    // Ключ объекта независим от id строки (рандомный) — упрощает запись одним шагом.
+    const fileKey = `resume-docs/${resume.id}/${randomUUID()}`;
+    await this.storage.put(fileKey, file.buffer, file.mimetype);
+    const doc = await this.documents.create({
+      resumeId: resume.id,
+      type: input.type,
+      fileKey,
+      fileName: file.originalname,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+    });
+    return toResumeDocumentDto(doc);
+  }
+
+  async listResumeDocuments(userId: string): Promise<ResumeDocumentDto[]> {
+    const resume = await this.resumes.findByUserId(userId);
+    if (!resume) return [];
+    const docs = await this.documents.listByResume(resume.id);
+    return docs.map(toResumeDocumentDto);
+  }
+
+  async deleteResumeDocument(userId: string, documentId: string): Promise<void> {
+    const doc = await this.requireOwnDocument(userId, documentId);
+    await this.storage.delete(doc.fileKey);
+    await this.documents.delete(documentId);
+    await this.recomputeResumeRating(doc.resumeId);
+  }
+
+  /** Отдаёт содержимое документа владельцу резюме (для приватного скачивания). */
+  async downloadResumeDocument(
+    userId: string,
+    documentId: string
+  ): Promise<{ file: StoredFile; fileName: string }> {
+    const doc = await this.requireOwnDocument(userId, documentId);
+    const file = await this.storage.get(doc.fileKey);
+    if (!file) throw new NotFoundError('Файл не найден', 'file_not_found');
+    return { file, fileName: doc.fileName };
+  }
+
+  private async requireOwnDocument(userId: string, documentId: string) {
+    const resume = await this.resumes.findByUserId(userId);
+    if (!resume) throw new NotFoundError('Документ не найден', 'document_not_found');
+    const doc = await this.documents.findById(documentId);
+    // Два if (а не `!doc || doc.x`): иначе eslint prefer-optional-chain + TS не сужает null.
+    if (!doc) throw new NotFoundError('Документ не найден', 'document_not_found');
+    if (doc.resumeId !== resume.id) {
+      throw new NotFoundError('Документ не найден', 'document_not_found');
+    }
+    return doc;
+  }
+
+  /** Пересчитывает рейтинг по числу подтверждённых документов резюме. */
+  private async recomputeResumeRating(resumeId: string): Promise<void> {
+    const verified = await this.documents.countVerified(resumeId);
+    await this.resumes.setRating(resumeId, computeResumeRating(verified));
   }
 
   /* ── Публичная база резюме (для работодателей) ── */

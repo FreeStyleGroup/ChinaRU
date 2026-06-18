@@ -3,6 +3,13 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import { requireRole } from './http/middleware/require-role';
+import {
+  AVATAR_MAX_BYTES,
+  DOCUMENT_MAX_BYTES,
+  DOCUMENT_MIMES,
+  IMAGE_MIMES,
+  singleUpload,
+} from './http/middleware/upload';
 import { openApiDocument } from './openapi/spec';
 
 import type { AppConfig } from './config';
@@ -11,9 +18,16 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs, referral, content } =
+  const { auth, catalog, orders, admin, account, jobs, referral, content, files } =
     container.controllers;
   const { requireAuth } = container.authMiddleware;
+
+  // Приём файлов: аватар (изображение ≤2 МБ) и документ резюме (PDF/картинка ≤10 МБ).
+  const avatarUpload = singleUpload('file', { maxBytes: AVATAR_MAX_BYTES, mimes: IMAGE_MIMES });
+  const documentUpload = singleUpload('file', {
+    maxBytes: DOCUMENT_MAX_BYTES,
+    mimes: DOCUMENT_MIMES,
+  });
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
   const authLimiter = rateLimit({
@@ -43,6 +57,9 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/catalog/products', catalog.listProducts);
   router.get('/catalog/products/:slug', catalog.getProduct);
 
+  // ───────── файлы (публичная раздача аватаров через прокси) ─────────
+  router.get('/files/avatars/:userId', files.avatar);
+
   // ───────── контент (публичное чтение): блок новостей + статьи разделов ─────────
   router.get('/content/articles', content.listArticles);
   router.get('/content/articles/:slug', content.getArticle);
@@ -51,6 +68,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.patch('/account/profile', requireAuth, account.updateProfile);
   router.put('/account/menu', requireAuth, account.updateMenu);
   router.put('/account/nickname', requireAuth, account.setNickname);
+  router.post('/account/avatar', requireAuth, avatarUpload, account.uploadAvatar);
   router.get('/account/seller', requireAuth, account.getSeller);
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
@@ -60,6 +78,15 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── работа (резюме / вакансии / отклики) ─────────
   router.get('/account/resume', requireAuth, jobs.getResume);
   router.put('/account/resume', requireAuth, jobs.upsertResume);
+  // Документы резюме (диплом/сертификат/HSK): статический сегмент до '/:id'.
+  router.get('/account/resume/documents', requireAuth, jobs.listResumeDocuments);
+  router.post('/account/resume/documents', requireAuth, documentUpload, jobs.addResumeDocument);
+  router.get(
+    '/account/resume/documents/:id/download',
+    requireAuth,
+    jobs.downloadResumeDocument
+  );
+  router.delete('/account/resume/documents/:id', requireAuth, jobs.deleteResumeDocument);
   router.get('/account/applications', requireAuth, jobs.myApplications);
   router.get('/jobs', jobs.listVacancies);
   router.get('/jobs/categories', jobs.categoryCounts);
@@ -91,6 +118,8 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/admin/reviews/:id/moderate', onlyAdmin, admin.moderateReview);
   router.get('/admin/resumes', onlyAdmin, admin.resumes);
   router.post('/admin/resumes/:id/moderate', onlyAdmin, admin.moderateResume);
+  router.get('/admin/resumes/:id/documents', onlyAdmin, admin.resumeDocuments);
+  router.post('/admin/resume-documents/:id/verify', onlyAdmin, admin.verifyResumeDocument);
   router.get('/admin/vacancies', onlyAdmin, admin.vacancies);
   router.post('/admin/vacancies/:id/moderate', onlyAdmin, admin.moderateVacancy);
 

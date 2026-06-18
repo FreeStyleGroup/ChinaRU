@@ -1,6 +1,8 @@
 import { BadRequestError, ConflictError, ForbiddenError, NotFoundError } from '../../http/errors';
 import { toSellerProfileDto, toUserDto } from '../dto';
 
+import type { UploadedFile } from '../../http/middleware/upload';
+import type { Storage } from '../../storage/storage';
 import type { SellerRepository, UserRepository } from '@china-ru/db';
 import type {
   CreateSellerProfileInput,
@@ -15,11 +17,26 @@ import type {
 export class AccountService {
   constructor(
     private readonly users: UserRepository,
-    private readonly sellers: SellerRepository
+    private readonly sellers: SellerRepository,
+    private readonly storage: Storage,
+    private readonly apiPublicUrl: string
   ) {}
 
   async updateProfile(userId: string, input: UpdateProfileInput): Promise<UserDto> {
     const updated = await this.users.update(userId, input);
+    if (!updated) throw new NotFoundError('Пользователь не найден', 'user_not_found');
+    return toUserDto(updated);
+  }
+
+  /**
+   * Загрузка аватара. Ключ детерминированный (`avatars/{userId}`) — новая загрузка
+   * перезаписывает старую, без «осиротевших» файлов. Раздаётся публичным прокси-роутом.
+   */
+  async updateAvatar(userId: string, file: UploadedFile): Promise<UserDto> {
+    const key = `avatars/${userId}`;
+    await this.storage.put(key, file.buffer, file.mimetype);
+    const avatarUrl = `${this.apiPublicUrl}/api/v1/files/avatars/${userId}`;
+    const updated = await this.users.update(userId, { avatarUrl });
     if (!updated) throw new NotFoundError('Пользователь не найден', 'user_not_found');
     return toUserDto(updated);
   }

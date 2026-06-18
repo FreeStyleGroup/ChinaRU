@@ -16,6 +16,8 @@ const envSchema = z.object({
   /** CORS: основной фронт (Next.js) и любые доп. origin через запятую. */
   WEB_URL: z.url().default('http://localhost:3000'),
   ADMIN_URL: z.url().default('http://localhost:5173'),
+  /** Публичный базовый URL самого API — для абсолютных ссылок на файлы (аватары). */
+  API_PUBLIC_URL: z.url().default('http://localhost:3001'),
 
   DATABASE_URL: z.string().min(1, { error: 'DATABASE_URL обязателен' }),
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
@@ -72,6 +74,24 @@ const envSchema = z.object({
   AI_BASE_URL: z.string().default(''),
   AI_MODEL: z.string().default(''),
   AI_IMAGE_MODEL: z.string().default(''),
+
+  /**
+   * Объектное хранилище файлов (аватары, документы резюме, картинки товаров).
+   * `memory` — встроенное in-process хранилище (dev/тесты, без Docker); `s3` —
+   * S3-совместимое (MinIO в проде). Файлы раздаются прокси-роутами API, поэтому
+   * бакет может быть приватным — публичные политики/пресайны не нужны.
+   */
+  STORAGE_DRIVER: z.enum(['memory', 's3']).default('memory'),
+  S3_ENDPOINT: z.string().default(''),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_ACCESS_KEY: z.string().default(''),
+  S3_SECRET_KEY: z.string().default(''),
+  S3_BUCKET: z.string().default('china-ru'),
+  /** MinIO требует path-style адресацию (bucket в пути, а не в поддомене). */
+  S3_FORCE_PATH_STYLE: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform(v => v === 'true'),
 });
 
 /** Дефолтные base URL и модель по провайдеру (если не заданы явно). */
@@ -89,6 +109,7 @@ export interface AppConfig {
   port: number;
   webUrl: string;
   adminUrl: string;
+  apiPublicUrl: string;
   db: { url: string; poolMax: number };
   jwt: {
     accessSecret: string;
@@ -119,6 +140,15 @@ export interface AppConfig {
     imageModel: string;
     enabled: boolean;
   };
+  storage: {
+    driver: Env['STORAGE_DRIVER'];
+    endpoint: string;
+    region: string;
+    accessKey: string;
+    secretKey: string;
+    bucket: string;
+    forcePathStyle: boolean;
+  };
 }
 
 /** Ошибка валидации окружения — точка входа печатает её и завершает процесс. */
@@ -140,6 +170,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     port: e.PORT,
     webUrl: e.WEB_URL,
     adminUrl: e.ADMIN_URL,
+    apiPublicUrl: e.API_PUBLIC_URL,
     db: { url: e.DATABASE_URL, poolMax: e.DATABASE_POOL_MAX },
     jwt: {
       accessSecret: e.JWT_ACCESS_SECRET,
@@ -180,6 +211,15 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
       model: e.AI_MODEL || AI_DEFAULTS[e.AI_PROVIDER].model,
       imageModel: e.AI_IMAGE_MODEL,
       enabled: e.AI_API_KEY.length > 0,
+    },
+    storage: {
+      driver: e.STORAGE_DRIVER,
+      endpoint: e.S3_ENDPOINT,
+      region: e.S3_REGION,
+      accessKey: e.S3_ACCESS_KEY,
+      secretKey: e.S3_SECRET_KEY,
+      bucket: e.S3_BUCKET,
+      forcePathStyle: e.S3_FORCE_PATH_STYLE,
     },
   };
 }

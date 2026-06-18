@@ -19,6 +19,7 @@ import {
   jobStatus,
   jobWorkType,
   moderationStatus,
+  resumeDocumentType,
   resumeExperience,
 } from './enums';
 import { sellerProfiles, users } from './users';
@@ -57,6 +58,33 @@ export const resumes = pgTable(
     index('resumes_moderation_idx').on(t.moderationStatus),
     index('resumes_category_idx').on(t.category),
     check('resumes_hsk_chk', sql`${t.hskLevel} is null or ${t.hskLevel} between 1 and 6`),
+  ]
+);
+
+/**
+ * Документы, прикреплённые к резюме (диплом, сертификат, подтверждение HSK школы).
+ * Подтверждённые модератором (`verifiedAt`) повышают рейтинг соискателя. Сам файл
+ * лежит в объектном хранилище под ключом `fileKey`; здесь — только метаданные.
+ */
+export const resumeDocuments = pgTable(
+  'resume_documents',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    resumeId: uuid('resume_id')
+      .notNull()
+      .references(() => resumes.id, { onDelete: 'cascade' }),
+    type: resumeDocumentType('type').notNull().default('other'),
+    fileKey: text('file_key').notNull(),
+    fileName: text('file_name').notNull(),
+    mimeType: text('mime_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    /** Подтверждён модератором — учитывается в рейтинге соискателя. */
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  t => [
+    index('resume_documents_resume_idx').on(t.resumeId),
+    check('resume_documents_size_chk', sql`${t.sizeBytes} >= 0`),
   ]
 );
 

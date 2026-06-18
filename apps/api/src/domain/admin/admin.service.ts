@@ -5,11 +5,13 @@ import {
   toJobListingDto,
   toOrderDto,
   toProductDto,
+  toResumeDocumentDto,
   toResumeDto,
   toReviewDto,
   toSellerProfileDto,
   toUserDto,
 } from '../dto';
+import { computeResumeRating } from '../jobs/resume-rating';
 
 import type {
   AnalyticsRepository,
@@ -19,6 +21,7 @@ import type {
   ProductImage,
   ProductImageRepository,
   ProductRepository,
+  ResumeDocumentRepository,
   ResumeRepository,
   ReviewRepository,
   SellerRepository,
@@ -37,6 +40,7 @@ import type {
   Paginated,
   ProductDto,
   ProductListQuery,
+  ResumeDocumentDto,
   ResumeDto,
   ReviewDto,
   ReviewModerationInput,
@@ -44,6 +48,7 @@ import type {
   SellerVerifyDecisionInput,
   UserDto,
   UserVerifyDecisionInput,
+  VerifyResumeDocumentInput,
 } from '@china-ru/shared';
 
 export interface AdminServiceDeps {
@@ -54,6 +59,7 @@ export interface AdminServiceDeps {
   orders: OrderRepository;
   reviews: ReviewRepository;
   resumes: ResumeRepository;
+  resumeDocuments: ResumeDocumentRepository;
   listings: JobListingRepository;
   analytics: AnalyticsRepository;
   audit: AuditRepository;
@@ -224,6 +230,36 @@ export class AdminService {
       ip: actor.ip ?? null,
     });
     return toResumeDto(updated);
+  }
+
+  /** Документы конкретного резюме (для проверки модератором). */
+  async listResumeDocuments(resumeId: string): Promise<ResumeDocumentDto[]> {
+    const docs = await this.deps.resumeDocuments.listByResume(resumeId);
+    return docs.map(toResumeDocumentDto);
+  }
+
+  /** Подтверждение/снятие подтверждения документа → пересчёт рейтинга соискателя. */
+  async verifyResumeDocument(
+    documentId: string,
+    input: VerifyResumeDocumentInput,
+    actor: ActorContext
+  ): Promise<ResumeDocumentDto> {
+    const doc = await this.deps.resumeDocuments.setVerified(
+      documentId,
+      input.verified ? new Date() : null
+    );
+    if (!doc) throw new NotFoundError('Документ не найден', 'document_not_found');
+    const verified = await this.deps.resumeDocuments.countVerified(doc.resumeId);
+    await this.deps.resumes.setRating(doc.resumeId, computeResumeRating(verified));
+    await this.deps.audit.record({
+      actorId: actor.userId,
+      action: 'resume_document.verify',
+      entity: 'resume_document',
+      entityId: documentId,
+      meta: { verified: input.verified },
+      ip: actor.ip ?? null,
+    });
+    return toResumeDocumentDto(doc);
   }
 
   async listVacancies(query: ModerationListQuery): Promise<Paginated<JobListingDto>> {

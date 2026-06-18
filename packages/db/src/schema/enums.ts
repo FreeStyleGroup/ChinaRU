@@ -19,6 +19,7 @@ import {
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
+  SOCIAL_POST_STATUSES,
   USER_ROLES,
   USER_STATUSES,
 } from '@china-ru/shared';
@@ -45,6 +46,7 @@ export const moderationStatus = pgEnum('moderation_status', MODERATION_STATUSES)
 export const resumeExperience = pgEnum('resume_experience', RESUME_EXPERIENCES);
 export const resumeDocumentType = pgEnum('resume_document_type', RESUME_DOCUMENT_TYPES);
 export const jobCategory = pgEnum('job_category', JOB_CATEGORIES);
+export const socialPostStatus = pgEnum('social_post_status', SOCIAL_POST_STATUSES);
 export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
 export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);

@@ -7,6 +7,8 @@ import {
   JobApplicationRepository,
   JobListingRepository,
   OrderRepository,
+  PostCommentRepository,
+  PostRepository,
   ProductImageRepository,
   ProductRepository,
   ReferralRepository,
@@ -32,6 +34,7 @@ import { HoroscopeService } from './domain/horoscope/horoscope.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
+import { SocialService } from './domain/social/social.service';
 import {
   createAccountController,
   type AccountController,
@@ -56,6 +59,7 @@ import {
   createReferralController,
   type ReferralController,
 } from './http/controllers/referral.controller';
+import { createSocialController, type SocialController } from './http/controllers/social.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 import { createStorage, type Storage } from './storage/storage';
 
@@ -83,6 +87,7 @@ export interface Container {
     referral: ReferralController;
     content: ContentController;
     files: FilesController;
+    social: SocialController;
   };
 }
 
@@ -100,6 +105,8 @@ export function createContainer(deps: ContainerDeps): Container {
   const reviewRepo = new ReviewRepository(db);
   const resumeRepo = new ResumeRepository(db);
   const resumeDocumentRepo = new ResumeDocumentRepository(db);
+  const postRepo = new PostRepository(db);
+  const postCommentRepo = new PostCommentRepository(db);
   const jobListingRepo = new JobListingRepository(db);
   const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
@@ -157,6 +164,7 @@ export function createContainer(deps: ContainerDeps): Container {
     storage
   );
   const content = new ContentService(contentAgentRepo, articleRepo, ai);
+  const social = new SocialService(postRepo, postCommentRepo, sellerRepo, config.apiPublicUrl);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -184,6 +192,7 @@ export function createContainer(deps: ContainerDeps): Container {
       referral: createReferralController({ referrals }),
       content: createContentController({ content }),
       files: createFilesController({ storage }),
+      social: createSocialController({ social }),
     },
   };
 }

@@ -27,6 +27,7 @@ export * from './schemas/order';
 export * from './schemas/chat';
 export * from './schemas/travel';
 export * from './schemas/jobs';
+export * from './schemas/social';
 export * from './schemas/metro';
 export * from './schemas/device';
 export * from './schemas/notification';

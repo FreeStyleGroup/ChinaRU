@@ -19,6 +19,7 @@ import {
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
+  SOCIAL_POST_STATUSES,
   USER_ROLES,
   USER_STATUSES,
 } from '@china-ru/shared';
@@ -48,6 +49,7 @@ describe('db enums ↔ shared tuples', () => {
     [e.resumeExperience, RESUME_EXPERIENCES],
     [e.resumeDocumentType, RESUME_DOCUMENT_TYPES],
     [e.jobCategory, JOB_CATEGORIES],
+    [e.socialPostStatus, SOCIAL_POST_STATUSES],
     [e.bookingStatus, BOOKING_STATUSES],
     [e.notificationType, NOTIFICATION_TYPES],
     [e.devicePlatform, DEVICE_PLATFORMS],

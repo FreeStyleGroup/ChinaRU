@@ -18,9 +18,9 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs, referral, content, files } =
+  const { auth, catalog, orders, admin, account, jobs, referral, content, files, social } =
     container.controllers;
-  const { requireAuth } = container.authMiddleware;
+  const { requireAuth, optionalAuth } = container.authMiddleware;
 
   // Приём файлов: аватар (изображение ≤2 МБ) и документ резюме (PDF/картинка ≤10 МБ).
   const avatarUpload = singleUpload('file', { maxBytes: AVATAR_MAX_BYTES, mimes: IMAGE_MIMES });
@@ -100,6 +100,19 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/seller/vacancies/:id/applicants', requireAuth, jobs.listingApplicants);
   router.put('/seller/applications/:id', requireAuth, jobs.setApplicationStatus);
 
+  // ───────── соцсеть (B2B-лента: посты пользователей и компаний + нативная реклама) ─────────
+  // Публичное чтение с optionalAuth — чтобы проставлять флаг `liked` авторизованному.
+  router.get('/social/feed', optionalAuth, social.feed);
+  router.get('/social/users/:userId/posts', optionalAuth, social.userFeed);
+  router.get('/social/companies/:sellerId/posts', optionalAuth, social.companyFeed);
+  router.get('/social/posts/:id', optionalAuth, social.getPost);
+  router.get('/social/posts/:id/comments', social.listComments);
+  router.post('/social/posts', requireAuth, social.createPost);
+  router.delete('/social/posts/:id', requireAuth, social.deletePost);
+  router.post('/social/posts/:id/like', requireAuth, social.toggleLike);
+  router.post('/social/posts/:id/comments', requireAuth, social.addComment);
+  router.delete('/social/comments/:id', requireAuth, social.deleteComment);
+
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);
   router.post('/orders', requireAuth, orders.create);
@@ -122,6 +135,12 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/admin/resume-documents/:id/verify', onlyAdmin, admin.verifyResumeDocument);
   router.get('/admin/vacancies', onlyAdmin, admin.vacancies);
   router.post('/admin/vacancies/:id/moderate', onlyAdmin, admin.moderateVacancy);
+
+  // ───────── admin: соцсеть (реклама + модерация постов) ─────────
+  router.get('/admin/social/posts', onlyAdmin, social.adminListPosts);
+  router.post('/admin/social/ads', onlyAdmin, social.createAd);
+  router.post('/admin/social/posts/:id/hide', onlyAdmin, social.hidePost);
+  router.post('/admin/social/posts/:id/unhide', onlyAdmin, social.unhidePost);
 
   // ───────── admin: Контент завод (агенты + статьи) ─────────
   router.get('/admin/content/agents', onlyAdmin, content.listAgents);

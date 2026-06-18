@@ -10,6 +10,8 @@ export * from './resume-document.repository';
 export * from './job-listing.repository';
 export * from './job-application.repository';
 export * from './referral.repository';
+export * from './post.repository';
+export * from './post-comment.repository';
 export * from './analytics.repository';
 export * from './content-agent.repository';
 export * from './article.repository';

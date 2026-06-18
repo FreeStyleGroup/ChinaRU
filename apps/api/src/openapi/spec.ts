@@ -228,6 +228,78 @@ export const openApiDocument = {
         responses: { '200': okRef(), '404': okRef() },
       },
     },
+    '/social/feed': {
+      get: {
+        tags: ['social'],
+        summary: 'Лента (посты пользователей и компаний + нативная реклама)',
+        responses: { '200': okRef() },
+      },
+    },
+    '/social/posts': {
+      post: {
+        tags: ['social'],
+        summary: 'Создать пост (опц. от лица компании)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '201': okRef(), '403': okRef() },
+      },
+    },
+    '/social/posts/{id}': {
+      get: {
+        tags: ['social'],
+        summary: 'Пост по id',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+      delete: {
+        tags: ['social'],
+        summary: 'Удалить свой пост',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '403': okRef() },
+      },
+    },
+    '/social/posts/{id}/like': {
+      post: {
+        tags: ['social'],
+        summary: 'Лайк/анлайк поста (тоггл)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
+    '/social/posts/{id}/comments': {
+      get: {
+        tags: ['social'],
+        summary: 'Комментарии поста',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef() },
+      },
+      post: {
+        tags: ['social'],
+        summary: 'Добавить комментарий',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '201': okRef(), '404': okRef() },
+      },
+    },
+    '/admin/social/ads': {
+      post: {
+        tags: ['admin'],
+        summary: 'Создать рекламный пост (вставляется в ленту)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '201': okRef() },
+      },
+    },
   },
 } as const;
 

@@ -65,6 +65,8 @@ export const JOB_CATEGORIES = [
   'translation',
   'management',
 ] as const;
+/** Статус поста соцсети: опубликован → скрыт модератором. */
+export const SOCIAL_POST_STATUSES = ['published', 'hidden'] as const;
 export const BOOKING_STATUSES = ['pending', 'confirmed', 'cancelled'] as const;
 export const NOTIFICATION_TYPES = ['order', 'review', 'chat', 'system'] as const;
 export const DEVICE_PLATFORMS = ['ios', 'android'] as const;
@@ -106,6 +108,7 @@ export const moderationStatusSchema = z.enum(MODERATION_STATUSES);
 export const resumeExperienceSchema = z.enum(RESUME_EXPERIENCES);
 export const resumeDocumentTypeSchema = z.enum(RESUME_DOCUMENT_TYPES);
 export const jobCategorySchema = z.enum(JOB_CATEGORIES);
+export const socialPostStatusSchema = z.enum(SOCIAL_POST_STATUSES);
 export const bookingStatusSchema = z.enum(BOOKING_STATUSES);
 export const notificationTypeSchema = z.enum(NOTIFICATION_TYPES);
 export const devicePlatformSchema = z.enum(DEVICE_PLATFORMS);
@@ -128,6 +131,7 @@ export type ModerationStatus = z.infer<typeof moderationStatusSchema>;
 export type ResumeExperience = z.infer<typeof resumeExperienceSchema>;
 export type ResumeDocumentType = z.infer<typeof resumeDocumentTypeSchema>;
 export type JobCategory = z.infer<typeof jobCategorySchema>;
+export type SocialPostStatus = z.infer<typeof socialPostStatusSchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;

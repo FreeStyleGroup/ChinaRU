@@ -2,11 +2,13 @@ import type {
   ApplicationWithApplicant,
   ApplicationWithVacancy,
   Article,
+  CommentWithAuthor,
   ContentAgent,
   JobListing,
   JobListingWithCompany,
   Order,
   OrderItem,
+  PostWithAuthor,
   Product,
   ProductImage,
   Resume,
@@ -27,6 +29,8 @@ import type {
   MyApplicationDto,
   OrderDto,
   OrderItemDto,
+  PostCommentDto,
+  PostDto,
   ProductDto,
   ProductImageDto,
   ResumeDocumentDto,
@@ -209,6 +213,36 @@ export function toResumeDocumentDto(d: ResumeDocument): ResumeDocumentDto {
     downloadUrl: `/api/v1/account/resume/documents/${d.id}/download`,
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
+  };
+}
+
+export function toPostDto(p: PostWithAuthor, liked: boolean, apiPublicUrl: string): PostDto {
+  return {
+    id: p.id,
+    body: p.body,
+    imageUrls: p.imageKeys.map(key => `${apiPublicUrl}/api/v1/files/social-posts/${p.id}/${key}`),
+    status: p.status,
+    isAd: p.isAd,
+    adUrl: p.adUrl,
+    likeCount: p.likeCount,
+    commentCount: p.commentCount,
+    liked,
+    author: p.author,
+    createdAt: p.createdAt.toISOString(),
+    updatedAt: p.updatedAt.toISOString(),
+  };
+}
+
+export function toPostCommentDto(c: CommentWithAuthor): PostCommentDto {
+  return {
+    id: c.id,
+    postId: c.postId,
+    body: c.body,
+    authorPublicId: c.authorPublicId,
+    authorName: c.authorName,
+    authorNickname: c.authorNickname,
+    authorVerified: c.authorVerified,
+    createdAt: c.createdAt.toISOString(),
   };
 }
 

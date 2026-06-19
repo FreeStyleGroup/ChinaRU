@@ -8,6 +8,7 @@ import type {
   JobListingPublicDto,
   JobListQuery,
   Paginated,
+  PostDto,
   ProductDto,
   ProductListQuery,
   ResumeListQuery,
@@ -100,6 +101,12 @@ export const jobsApi = {
     }),
   resume: (id: string) =>
     apiGet<ResumePublicDto>(`/jobs/resumes/${encodeURIComponent(id)}`, { revalidate: 120 }),
+};
+
+/** Соцсеть: начальная лента для SSR (далее догрузка/интерактив — в браузере). */
+export const socialApi = {
+  feed: (page = 1) =>
+    apiGet<Paginated<PostDto>>(`/social/feed?page=${page}`, { revalidate: 30 }),
 };
 
 /** Контент-завод: статьи разделов (блок новостей + список + деталь). */

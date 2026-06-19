@@ -5,15 +5,22 @@ import type {
   ApplicantDto,
   CreateJobListingInput,
   CreateOrderInput,
+  CreateReportInput,
   CreateSellerProfileInput,
+  FollowStateDto,
   HoroscopeForecastDto,
   JobApplicationStatus,
   JobListingDto,
   LoginInput,
   MyApplicationDto,
+  NotificationDto,
   OrderDto,
+  Paginated,
+  PostCommentDto,
+  PostDto,
   ReferralSummaryDto,
   RegisterInput,
+  ReportDto,
   ResumeDto,
   SellerProfileDto,
   UpdateProfileInput,
@@ -113,6 +120,43 @@ export const referralClient = {
 
 export const horoscopeClient = {
   forecast: () => call<HoroscopeForecastDto>('/account/horoscope'),
+};
+
+export const socialClient = {
+  feed: (page = 1) => call<Paginated<PostDto>>(`/social/feed?page=${page}`),
+  followingFeed: (page = 1) => call<Paginated<PostDto>>(`/social/feed/following?page=${page}`),
+  createPost: (body: string, asCompany = false) =>
+    call<PostDto>('/social/posts', { method: 'POST', body: JSON.stringify({ body, asCompany }) }),
+  deletePost: (id: string) => call<{ id: string }>(`/social/posts/${id}`, { method: 'DELETE' }),
+  toggleLike: (id: string) =>
+    call<{ liked: boolean; likeCount: number }>(`/social/posts/${id}/like`, { method: 'POST' }),
+  listComments: (id: string, page = 1) =>
+    call<Paginated<PostCommentDto>>(`/social/posts/${id}/comments?page=${page}`),
+  addComment: (id: string, body: string) =>
+    call<PostCommentDto>(`/social/posts/${id}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    }),
+  followUser: (id: string) =>
+    call<FollowStateDto>(`/social/users/${id}/follow`, { method: 'POST' }),
+  unfollowUser: (id: string) =>
+    call<FollowStateDto>(`/social/users/${id}/follow`, { method: 'DELETE' }),
+  followCompany: (id: string) =>
+    call<FollowStateDto>(`/social/companies/${id}/follow`, { method: 'POST' }),
+  unfollowCompany: (id: string) =>
+    call<FollowStateDto>(`/social/companies/${id}/follow`, { method: 'DELETE' }),
+  report: (input: CreateReportInput) =>
+    call<ReportDto>('/social/reports', { method: 'POST', body: JSON.stringify(input) }),
+};
+
+export const notificationClient = {
+  list: (page = 1) => call<Paginated<NotificationDto>>(`/account/notifications?page=${page}`),
+  unread: () => call<{ unread: number }>('/account/notifications/unread'),
+  markRead: (ids?: string[]) =>
+    call<{ ok: true }>('/account/notifications/read', {
+      method: 'POST',
+      body: JSON.stringify(ids ? { ids } : { all: true }),
+    }),
 };
 
 export const sellerJobClient = {

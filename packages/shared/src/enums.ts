@@ -137,6 +137,13 @@ export const TENDER_BID_STATUSES = [
   'withdrawn',
 ] as const;
 
+/**
+ * Авто-раздел (китайский автопарк): три направления. `auto` — легковые/коммерческие,
+ * `moto` — мото и производные (мопеды/скутеры/квадро/снегоходы), `special` —
+ * спецтехника (крупная и средняя). Бренд может покрывать несколько направлений.
+ */
+export const VEHICLE_TYPES = ['auto', 'moto', 'special'] as const;
+
 export const localeSchema = z.enum(LOCALES);
 export const userRoleSchema = z.enum(USER_ROLES);
 export const userStatusSchema = z.enum(USER_STATUSES);
@@ -166,6 +173,7 @@ export const tenderMethodSchema = z.enum(TENDER_METHODS);
 export const tenderLawSchema = z.enum(TENDER_LAWS);
 export const tenderStatusSchema = z.enum(TENDER_STATUSES);
 export const tenderBidStatusSchema = z.enum(TENDER_BID_STATUSES);
+export const vehicleTypeSchema = z.enum(VEHICLE_TYPES);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -195,6 +203,7 @@ export type TenderMethod = z.infer<typeof tenderMethodSchema>;
 export type TenderLaw = z.infer<typeof tenderLawSchema>;
 export type TenderStatus = z.infer<typeof tenderStatusSchema>;
 export type TenderBidStatus = z.infer<typeof tenderBidStatusSchema>;
+export type VehicleType = z.infer<typeof vehicleTypeSchema>;
 
 /** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 10%, 2 → 5%, 3 → 2%. */
 export const REFERRAL_LEVEL_RATES = [0.1, 0.05, 0.02] as const;

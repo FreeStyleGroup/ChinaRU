@@ -28,6 +28,7 @@ import {
   TENDER_STATUSES,
   USER_ROLES,
   USER_STATUSES,
+  VEHICLE_TYPES,
 } from '@china-ru/shared';
 import { pgEnum } from 'drizzle-orm/pg-core';
 
@@ -65,3 +66,4 @@ export const tenderMethod = pgEnum('tender_method', TENDER_METHODS);
 export const tenderLaw = pgEnum('tender_law', TENDER_LAWS);
 export const tenderStatus = pgEnum('tender_status', TENDER_STATUSES);
 export const tenderBidStatus = pgEnum('tender_bid_status', TENDER_BID_STATUSES);
+export const vehicleType = pgEnum('vehicle_type', VEHICLE_TYPES);

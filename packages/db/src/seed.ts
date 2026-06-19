@@ -3,6 +3,7 @@ import { DEFAULT_CONTENT_AGENTS, HOROSCOPE_HERO_IMAGE, slugify, zodiacImage } fr
 import { createDb } from './client';
 import { ArticleRepository, CategoryRepository, ContentAgentRepository } from './repositories';
 import { metroCities } from './schema';
+import { seedVehicles } from './seed-vehicles';
 
 /**
  * Базовый seed справочных данных (категории, метро). Запускается против реальной БД:
@@ -95,6 +96,8 @@ try {
       }
     }
   }
+
+  await seedVehicles(db);
 
   process.stdout.write('✓ seed complete\n');
 } catch (error) {

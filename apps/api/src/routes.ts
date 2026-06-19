@@ -18,8 +18,21 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs, referral, content, files, social, tenders } =
-    container.controllers;
+  const {
+    auth,
+    catalog,
+    orders,
+    admin,
+    account,
+    jobs,
+    referral,
+    content,
+    files,
+    social,
+    tenders,
+    vehicles,
+    garage,
+  } = container.controllers;
   const { requireAuth, optionalAuth } = container.authMiddleware;
 
   // Приём файлов: аватар (изображение ≤2 МБ) и документ резюме (PDF/картинка ≤10 МБ).
@@ -149,6 +162,19 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.patch('/tender-bids/:id', requireAuth, tenders.updateBid);
   router.post('/tender-bids/:id/withdraw', requireAuth, tenders.withdrawBid);
   router.post('/tender-bids/:id/review', requireAuth, tenders.reviewBid);
+
+  // ───────── авто-раздел (бренды/модели китайского автопарка + дилеры) ─────────
+  router.get('/auto/brands', vehicles.listBrands);
+  router.get('/auto/brands/:brandId/models', vehicles.listModels);
+  // Статический сегмент строго до '/auto/dealers' параметрических нет, но порядок безопасен.
+  router.get('/auto/dealers/cities', vehicles.dealerCities);
+  router.get('/auto/dealers', vehicles.listDealers);
+
+  // ───────── Мой гараж (кабинет) + подбор запчастей по ТС ─────────
+  router.get('/account/garage', requireAuth, garage.list);
+  router.post('/account/garage', requireAuth, garage.add);
+  router.delete('/account/garage/:id', requireAuth, garage.remove);
+  router.get('/account/garage/:id/parts', requireAuth, garage.parts);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);

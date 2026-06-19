@@ -7,6 +7,7 @@ export * from './travel';
 export * from './jobs';
 export * from './social';
 export * from './tenders';
+export * from './vehicles';
 export * from './metro';
 export * from './content';
 export * from './audit';

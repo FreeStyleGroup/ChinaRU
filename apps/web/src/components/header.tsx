@@ -24,6 +24,9 @@ export function Header() {
           <Link href="/catalog" className="text-muted transition-colors hover:text-ink">
             {t('catalog')}
           </Link>
+          <Link href="/auto" className="text-muted transition-colors hover:text-ink">
+            {t('auto')}
+          </Link>
           <Link href="/jobs" className="text-muted transition-colors hover:text-ink">
             {t('jobs')}
           </Link>

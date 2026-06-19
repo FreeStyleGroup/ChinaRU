@@ -40,3 +40,4 @@ export * from './schemas/referral';
 export * from './schemas/content';
 export * from './schemas/horoscope';
 export * from './schemas/tenders';
+export * from './schemas/vehicles';

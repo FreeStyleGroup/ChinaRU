@@ -1,36 +1,21 @@
 'use client';
 
 /**
- * Мой гараж — список авто пользователя, добавление (марка/модель/год), запчасти для ТО
- * под выбранное авто, подбор шин и дисков. Марки/модели — китайский автопарк
- * (перенос из боевого china:cabinet). Состояние локальное (демо); привязка к каталогу позже.
+ * Мой гараж: транспорт пользователя из справочника авто-раздела. По выбранному ТС
+ * в каталоге подбираются применимые запчасти (через таблицу fitment). Живые данные.
  */
-import { useState } from 'react';
+import { Button } from '@china-ru/ui';
+import { useEffect, useState } from 'react';
 
-const CAR_BRANDS: Record<string, { name: string; models: string[] }> = {
-  haval: { name: 'Haval', models: ['Jolion', 'F7', 'F7x', 'H5', 'H9', 'Dargo', 'M6'] },
-  chery: {
-    name: 'Chery',
-    models: ['Tiggo 4 Pro', 'Tiggo 7 Pro', 'Tiggo 7 Pro Max', 'Tiggo 8 Pro', 'Tiggo 8 Pro Max', 'Arrizo 8'],
-  },
-  geely: { name: 'Geely', models: ['Coolray', 'Atlas Pro', 'Monjaro', 'Tugella', 'Emgrand'] },
-  changan: {
-    name: 'Changan',
-    models: ['CS35 Plus', 'CS55 Plus', 'CS75 Plus', 'UNI-K', 'UNI-V', 'UNI-T'],
-  },
-  exeed: { name: 'Exeed', models: ['TXL', 'VX', 'LX', 'RX'] },
-  omoda: { name: 'Omoda', models: ['C5', 'S5', 'C5 New'] },
-  jaecoo: { name: 'Jaecoo', models: ['J7', 'J8'] },
-  tank: { name: 'Tank', models: ['300', '500'] },
-  jetour: { name: 'Jetour', models: ['Dashing', 'X70 Plus', 'T2'] },
-  byd: { name: 'BYD', models: ['Song Plus', 'Han', 'Tang', 'Seal', 'Dolphin'] },
-  dongfeng: { name: 'Dongfeng', models: ['580', 'ix5', 'Huge'] },
-  faw: { name: 'FAW', models: ['Bestune T77', 'Bestune T99'] },
-  zeekr: { name: 'Zeekr', models: ['001', '007', 'X'] },
-  voyah: { name: 'Voyah', models: ['Free', 'Dream'] },
-  greatwall: { name: 'Great Wall', models: ['Wingle 7', 'Poer'] },
-};
+import { Link } from '@/i18n/navigation';
+import { ClientApiError, garageClient, vehicleClient } from '@/lib/api-client';
 
+import type { GarageVehicleDto, ProductDto, VehicleBrandDto, VehicleModelDto } from '@china-ru/shared';
+
+const CURRENT_YEAR = new Date().getFullYear();
+const YEARS = Array.from({ length: CURRENT_YEAR - 1999 }, (_, i) => CURRENT_YEAR - i);
+
+/** Базовые позиции ТО — быстрый поиск в каталоге, если применимых товаров ещё нет. */
 const TO_PARTS = [
   'Моторное масло',
   'Масляный фильтр',
@@ -40,73 +25,137 @@ const TO_PARTS = [
   'Тормозные колодки',
 ];
 
-interface Car {
-  brand: string;
-  model: string;
-  year: number;
-}
-
-const SEED: Car[] = [{ brand: 'Haval', model: 'Jolion', year: 2023 }];
-const CURRENT_YEAR = 2026;
-const YEARS = Array.from({ length: CURRENT_YEAR - 1999 }, (_, i) => CURRENT_YEAR - i);
-
 export default function GaragePage() {
-  const [cars, setCars] = useState<Car[]>(SEED);
-  const [activeIdx, setActiveIdx] = useState(0);
+  const [cars, setCars] = useState<GarageVehicleDto[]>([]);
+  const [brands, setBrands] = useState<VehicleBrandDto[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [parts, setParts] = useState<ProductDto[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  // форма добавления
   const [adding, setAdding] = useState(false);
-  const [brandKey, setBrandKey] = useState('');
-  const [model, setModel] = useState('');
+  const [brandId, setBrandId] = useState('');
+  const [models, setModels] = useState<VehicleModelDto[]>([]);
+  const [modelId, setModelId] = useState('');
+  const [modelName, setModelName] = useState('');
   const [year, setYear] = useState<number>(CURRENT_YEAR);
+  const [error, setError] = useState('');
 
-  const models = brandKey ? (CAR_BRANDS[brandKey]?.models ?? []) : [];
-  const active = cars[activeIdx];
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all([
+      garageClient.list().catch(() => [] as GarageVehicleDto[]),
+      vehicleClient.brands().catch(() => [] as VehicleBrandDto[]),
+    ]).then(([list, b]) => {
+      if (cancelled) return;
+      setCars(list);
+      setBrands(b);
+      setActiveId(list[0]?.id ?? null);
+      setLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const addCar = (): void => {
-    const brand = brandKey ? CAR_BRANDS[brandKey]?.name : undefined;
-    if (!brand || !model) return;
-    setCars(prev => [...prev, { brand, model, year }]);
-    setActiveIdx(cars.length);
-    setAdding(false);
-    setBrandKey('');
-    setModel('');
-    setYear(CURRENT_YEAR);
+  useEffect(() => {
+    if (!activeId) {
+      setParts([]);
+      return;
+    }
+    let cancelled = false;
+    void garageClient
+      .parts(activeId)
+      .then(p => !cancelled && setParts(p))
+      .catch(() => !cancelled && setParts([]));
+    return () => {
+      cancelled = true;
+    };
+  }, [activeId]);
+
+  const onBrand = (id: string): void => {
+    setBrandId(id);
+    setModelId('');
+    setModelName('');
+    setModels([]);
+    if (id) {
+      void vehicleClient
+        .models(id)
+        .then(setModels)
+        .catch(() => setModels([]));
+    }
   };
 
-  const removeCar = (idx: number): void => {
-    setCars(prev => prev.filter((_, i) => i !== idx));
-    setActiveIdx(0);
+  const add = async (): Promise<void> => {
+    if (!brandId) return;
+    const chosen = models.find(m => m.id === modelId);
+    const name = chosen?.name ?? modelName.trim();
+    if (!name) {
+      setError('Укажите модель');
+      return;
+    }
+    setError('');
+    try {
+      const created = await garageClient.add({
+        brandId,
+        ...(modelId ? { modelId } : {}),
+        ...(name ? { modelName: name } : {}),
+        year,
+        type: 'auto',
+      });
+      setCars(prev => [created, ...prev]);
+      setActiveId(created.id);
+      setAdding(false);
+      setBrandId('');
+      setModelId('');
+      setModelName('');
+      setModels([]);
+    } catch (e) {
+      setError(e instanceof ClientApiError ? e.message : 'Не удалось добавить транспорт');
+    }
   };
+
+  const remove = async (id: string): Promise<void> => {
+    await garageClient.remove(id).catch(() => undefined);
+    setCars(prev => {
+      const next = prev.filter(c => c.id !== id);
+      setActiveId(next[0]?.id ?? null);
+      return next;
+    });
+  };
+
+  const active = cars.find(c => c.id === activeId) ?? null;
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-ink">Мой гараж</h1>
 
       <div className="flex flex-wrap items-center gap-2">
-        {cars.map((c, i) => (
+        {cars.map(c => (
           <button
-            key={`${c.brand}-${c.model}-${i}`}
+            key={c.id}
             type="button"
             onClick={() => {
-              setActiveIdx(i);
+              setActiveId(c.id);
             }}
             className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm transition-colors ${
-              i === activeIdx
+              c.id === activeId
                 ? 'border-brand bg-brand/10 font-medium text-brand'
                 : 'border-line text-muted hover:bg-surface'
             }`}
           >
-            {c.brand} {c.model}
+            {c.brandName} {c.modelName}
             <span
               role="button"
               tabIndex={0}
               onClick={e => {
                 e.stopPropagation();
-                removeCar(i);
+                void remove(c.id);
               }}
               onKeyDown={e => {
                 if (e.key === 'Enter') {
                   e.stopPropagation();
-                  removeCar(i);
+                  void remove(c.id);
                 }
               }}
               className="text-muted hover:text-brand"
@@ -122,130 +171,145 @@ export default function GaragePage() {
           }}
           className="rounded-full border border-dashed border-line px-4 py-1.5 text-sm text-ink hover:bg-surface"
         >
-          + Добавить авто
+          + Добавить транспорт
         </button>
       </div>
 
       {adding && (
-        <div className="grid gap-3 rounded-2xl border border-line bg-white p-5 sm:grid-cols-[1fr_1fr_auto_auto]">
-          <select
-            value={brandKey}
-            onChange={e => {
-              setBrandKey(e.target.value);
-              setModel('');
-            }}
-            className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand"
-          >
-            <option value="">Марка</option>
-            {Object.entries(CAR_BRANDS).map(([key, b]) => (
-              <option key={key} value={key}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={model}
-            onChange={e => {
-              setModel(e.target.value);
-            }}
-            disabled={!brandKey}
-            className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand disabled:bg-surface"
-          >
-            <option value="">Модель</option>
-            {models.map(m => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-          <select
-            value={year}
-            onChange={e => {
-              setYear(Number(e.target.value));
-            }}
-            className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand"
-          >
-            {YEARS.map(y => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={addCar}
-            disabled={!brandKey || !model}
-            className="h-11 rounded-lg bg-brand px-5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            Сохранить
-          </button>
+        <div className="space-y-3 rounded-2xl border border-line bg-white p-5">
+          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_auto]">
+            <select
+              value={brandId}
+              onChange={e => {
+                onBrand(e.target.value);
+              }}
+              className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand"
+            >
+              <option value="">Марка</option>
+              {brands.map(b => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            {models.length > 0 ? (
+              <select
+                value={modelId}
+                onChange={e => {
+                  setModelId(e.target.value);
+                }}
+                disabled={!brandId}
+                className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand disabled:bg-surface"
+              >
+                <option value="">Модель</option>
+                {models.map(m => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={modelName}
+                onChange={e => {
+                  setModelName(e.target.value);
+                }}
+                disabled={!brandId}
+                placeholder="Модель"
+                className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand disabled:bg-surface"
+              />
+            )}
+            <select
+              value={year}
+              onChange={e => {
+                setYear(Number(e.target.value));
+              }}
+              className="h-11 rounded-lg border border-line px-3 outline-none focus:border-brand"
+            >
+              {YEARS.map(y => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <Button
+              disabled={!brandId || (models.length > 0 ? !modelId : modelName.trim().length === 0)}
+              onClick={() => {
+                void add();
+              }}
+            >
+              Сохранить
+            </Button>
+          </div>
         </div>
       )}
 
-      {active ? (
+      {!loaded ? (
+        <p className="text-sm text-muted">Загрузка…</p>
+      ) : active ? (
         <>
           <div className="flex items-center gap-5 rounded-2xl bg-ink p-6 text-white">
             <span className="text-5xl">🚗</span>
             <div>
-              <p className="text-sm text-white/60">Текущий автомобиль</p>
+              <p className="text-sm text-white/60">Текущий транспорт</p>
               <p className="text-2xl font-bold">
-                {active.brand} {active.model}
+                {active.brandName} {active.modelName}
               </p>
-              <p className="text-sm text-white/70">{active.year} год</p>
+              {active.year && <p className="text-sm text-white/70">{active.year} год</p>}
             </div>
           </div>
 
-          <div>
-            <h2 className="mb-3 text-sm font-semibold text-muted">Запчасти для ТО</h2>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {TO_PARTS.map(part => (
-                <a
-                  key={part}
-                  href={`/catalog?q=${encodeURIComponent(`${part} ${active.brand} ${active.model}`)}`}
-                  className="rounded-xl border border-line bg-white p-4 text-center text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand"
-                >
-                  {part}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="flex items-center justify-between rounded-2xl border border-line bg-white p-5">
-              <div>
-                <p className="font-semibold text-ink">Шины</p>
-                <p className="text-sm text-muted">Подбор по вашему авто</p>
+          {parts.length > 0 ? (
+            <div>
+              <h2 className="mb-3 text-sm font-semibold text-muted">
+                Запчасти для вашего {active.brandName} {active.modelName}
+              </h2>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {parts.map(p => (
+                  <Link
+                    key={p.id}
+                    href={`/catalog/${p.slug}`}
+                    className="rounded-xl border border-line bg-white p-3 transition-colors hover:border-brand"
+                  >
+                    {p.images[0] ? (
+                      <img src={p.images[0].url} alt={p.nameRu} className="mb-2 h-24 w-full rounded object-cover" />
+                    ) : (
+                      <div className="mb-2 h-24 w-full rounded bg-surface" />
+                    )}
+                    <p className="line-clamp-2 text-sm text-ink">{p.nameRu}</p>
+                    <p className="mt-1 font-semibold text-ink">
+                      {Number(p.price).toLocaleString('ru-RU')} ₽
+                    </p>
+                  </Link>
+                ))}
               </div>
-              <a
-                href={`/catalog?q=${encodeURIComponent(`шины ${active.brand} ${active.model}`)}`}
-                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white"
-              >
-                Подобрать шины
-              </a>
             </div>
-            <div className="flex items-center justify-between rounded-2xl border border-line bg-white p-5">
-              <div>
-                <p className="font-semibold text-ink">Диски</p>
-                <p className="text-sm text-muted">Подбор по вашему авто</p>
+          ) : (
+            <div>
+              <h2 className="mb-3 text-sm font-semibold text-muted">Запчасти для ТО</h2>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {TO_PARTS.map(part => (
+                  <Link
+                    key={part}
+                    href={`/catalog?search=${encodeURIComponent(`${part} ${active.brandName} ${active.modelName}`)}`}
+                    className="rounded-xl border border-line bg-white p-4 text-center text-sm font-medium text-ink transition-colors hover:border-brand hover:text-brand"
+                  >
+                    {part}
+                  </Link>
+                ))}
               </div>
-              <a
-                href={`/catalog?q=${encodeURIComponent(`диски ${active.brand} ${active.model}`)}`}
-                className="rounded-lg bg-ink px-4 py-2 text-sm font-medium text-white"
-              >
-                Подобрать диски
-              </a>
+              <p className="mt-3 text-xs text-muted">
+                Применимые товары появятся, как только поставщики привяжут запчасти к вашей модели.
+              </p>
             </div>
-          </div>
+          )}
         </>
       ) : (
         <div className="rounded-2xl border border-dashed border-line p-12 text-center text-muted">
-          Добавьте автомобиль, чтобы видеть подобранные запчасти для ТО, шины и диски.
+          Добавьте транспорт, чтобы видеть подобранные запчасти и комплектующие.
         </div>
       )}
-
-      <p className="text-center text-xs text-muted">
-        Демонстрационные данные — привязка к каталогу запчастей подключается позже.
-      </p>
     </div>
   );
 }

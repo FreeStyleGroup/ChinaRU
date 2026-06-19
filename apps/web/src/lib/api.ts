@@ -15,6 +15,9 @@ import type {
   ResumePublicDto,
   TenderDto,
   TenderListQuery,
+  DealerDto,
+  VehicleBrandDto,
+  VehicleType,
 } from '@china-ru/shared';
 
 /** Базовый URL API для server-side запросов (внутренний адрес сервиса). */
@@ -121,6 +124,17 @@ function buildTenderQuery(query: Partial<TenderListQuery>): string {
   const qs = sp.toString();
   return qs ? `?${qs}` : '';
 }
+
+/** Авто-раздел: бренды, дилеры, города (SSR для лендинга и карты дилеров). */
+export const autoApi = {
+  brands: (type?: VehicleType) =>
+    apiGet<VehicleBrandDto[]>(`/auto/brands${type ? `?type=${type}` : ''}`, { revalidate: 300 }),
+  dealerCities: () => apiGet<string[]>('/auto/dealers/cities', { revalidate: 300 }),
+  dealers: (city?: string) =>
+    apiGet<DealerDto[]>(`/auto/dealers${city ? `?city=${encodeURIComponent(city)}` : ''}`, {
+      revalidate: 120,
+    }),
+};
 
 /** Тендерная площадка: реестр (SSR) и извещение по id. */
 export const tendersApi = {

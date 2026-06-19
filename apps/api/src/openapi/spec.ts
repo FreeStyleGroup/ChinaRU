@@ -454,6 +454,60 @@ export const openApiDocument = {
         responses: { '200': okRef(), '400': okRef() },
       },
     },
+    '/auto/brands': {
+      get: {
+        tags: ['auto'],
+        summary: 'Бренды китайского автопарка (фильтры type=auto|moto|special, popular)',
+        responses: { '200': okRef() },
+      },
+    },
+    '/auto/brands/{brandId}/models': {
+      get: {
+        tags: ['auto'],
+        summary: 'Модели бренда',
+        parameters: [
+          {
+            name: 'brandId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: { '200': okRef() },
+      },
+    },
+    '/auto/dealers': {
+      get: {
+        tags: ['auto'],
+        summary: 'Официальные дилеры (фильтр city + brands=csv id) с координатами для карты',
+        responses: { '200': okRef() },
+      },
+    },
+    '/account/garage': {
+      get: {
+        tags: ['auto'],
+        summary: 'Мой гараж: список транспорта',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '200': okRef() },
+      },
+      post: {
+        tags: ['auto'],
+        summary: 'Добавить транспорт в гараж',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '201': okRef(), '404': okRef() },
+      },
+    },
+    '/account/garage/{id}/parts': {
+      get: {
+        tags: ['auto'],
+        summary: 'Запчасти каталога, подходящие транспорту из гаража',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '403': okRef() },
+      },
+    },
   },
 } as const;
 

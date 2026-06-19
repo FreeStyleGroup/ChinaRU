@@ -30,6 +30,13 @@ import type {
   TenderBidDto,
   TenderDto,
   TenderListQuery,
+  AddGarageVehicleInput,
+  DealerDto,
+  GarageVehicleDto,
+  ProductDto,
+  VehicleBrandDto,
+  VehicleModelDto,
+  VehicleType,
   UpdateProfileInput,
   UpsertResumeInput,
   UserDto,
@@ -218,6 +225,35 @@ export const tenderClient = {
   // кабинет
   myTenders: (page = 1) => call<Paginated<TenderDto>>(`/account/tenders?page=${page}`),
   myBids: (page = 1) => call<Paginated<MyTenderBidDto>>(`/account/tender-bids?page=${page}`),
+};
+
+/** Авто-раздел: бренды/модели/дилеры (публично). */
+export const vehicleClient = {
+  brands: (q: { type?: VehicleType; popular?: boolean } = {}) => {
+    const sp = new URLSearchParams();
+    if (q.type) sp.set('type', q.type);
+    if (q.popular !== undefined) sp.set('popular', String(q.popular));
+    const s = sp.toString();
+    return call<VehicleBrandDto[]>(`/auto/brands${s ? `?${s}` : ''}`);
+  },
+  models: (brandId: string) => call<VehicleModelDto[]>(`/auto/brands/${brandId}/models`),
+  dealers: (q: { city?: string; brands?: string[] } = {}) => {
+    const sp = new URLSearchParams();
+    if (q.city) sp.set('city', q.city);
+    if (q.brands && q.brands.length > 0) sp.set('brands', q.brands.join(','));
+    const s = sp.toString();
+    return call<DealerDto[]>(`/auto/dealers${s ? `?${s}` : ''}`);
+  },
+  dealerCities: () => call<string[]>('/auto/dealers/cities'),
+};
+
+/** Мой гараж (авторизованный): транспорт пользователя + подбор запчастей. */
+export const garageClient = {
+  list: () => call<GarageVehicleDto[]>('/account/garage'),
+  add: (input: AddGarageVehicleInput) =>
+    call<GarageVehicleDto>('/account/garage', { method: 'POST', body: JSON.stringify(input) }),
+  remove: (id: string) => call<{ id: string }>(`/account/garage/${id}`, { method: 'DELETE' }),
+  parts: (id: string) => call<ProductDto[]>(`/account/garage/${id}/parts`),
 };
 
 export const sellerJobClient = {

@@ -28,6 +28,7 @@ import {
   TENDER_STATUSES,
   USER_ROLES,
   USER_STATUSES,
+  VEHICLE_TYPES,
 } from '@china-ru/shared';
 import { describe, expect, it } from 'vitest';
 
@@ -68,6 +69,7 @@ describe('db enums ↔ shared tuples', () => {
     [e.tenderLaw, TENDER_LAWS],
     [e.tenderStatus, TENDER_STATUSES],
     [e.tenderBidStatus, TENDER_BID_STATUSES],
+    [e.vehicleType, VEHICLE_TYPES],
   ])('%s pgEnum matches its shared tuple', (pgEnum, tuple) => {
     expect(pgEnum.enumValues).toEqual([...tuple]);
   });

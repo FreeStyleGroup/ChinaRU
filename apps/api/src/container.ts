@@ -21,6 +21,11 @@ import {
   SellerRepository,
   TenderBidRepository,
   TenderRepository,
+  VehicleBrandRepository,
+  VehicleModelRepository,
+  DealerRepository,
+  GarageRepository,
+  ProductFitmentRepository,
   UserRepository,
   type Database,
 } from '@china-ru/db';
@@ -43,6 +48,8 @@ import { ReferralService } from './domain/referral/referral.service';
 import { ReportService } from './domain/social/report.service';
 import { SocialService } from './domain/social/social.service';
 import { TenderService } from './domain/tenders/tender.service';
+import { GarageService } from './domain/vehicles/garage.service';
+import { DealerService, VehicleService } from './domain/vehicles/vehicle.service';
 import {
   createAccountController,
   type AccountController,
@@ -69,6 +76,8 @@ import {
 } from './http/controllers/referral.controller';
 import { createSocialController, type SocialController } from './http/controllers/social.controller';
 import { createTenderController, type TenderController } from './http/controllers/tender.controller';
+import { createGarageController, type GarageController } from './http/controllers/garage.controller';
+import { createVehicleController, type VehicleController } from './http/controllers/vehicle.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 import { createStorage, type Storage } from './storage/storage';
 
@@ -98,6 +107,8 @@ export interface Container {
     files: FilesController;
     social: SocialController;
     tenders: TenderController;
+    vehicles: VehicleController;
+    garage: GarageController;
   };
 }
 
@@ -122,6 +133,11 @@ export function createContainer(deps: ContainerDeps): Container {
   const notificationRepo = new NotificationRepository(db);
   const tenderRepo = new TenderRepository(db);
   const tenderBidRepo = new TenderBidRepository(db);
+  const vehicleBrandRepo = new VehicleBrandRepository(db);
+  const vehicleModelRepo = new VehicleModelRepository(db);
+  const dealerRepo = new DealerRepository(db);
+  const garageRepo = new GarageRepository(db);
+  const productFitmentRepo = new ProductFitmentRepository(db);
   const jobListingRepo = new JobListingRepository(db);
   const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
@@ -191,6 +207,15 @@ export function createContainer(deps: ContainerDeps): Container {
   );
   const reports = new ReportService(reportRepo, notificationRepo, userRepo, postRepo);
   const tenders = new TenderService(tenderRepo, tenderBidRepo, sellerRepo, notificationRepo);
+  const vehicles = new VehicleService(vehicleBrandRepo, vehicleModelRepo);
+  const dealers = new DealerService(dealerRepo);
+  const garage = new GarageService(
+    garageRepo,
+    vehicleBrandRepo,
+    vehicleModelRepo,
+    productFitmentRepo,
+    productImageRepo
+  );
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -220,6 +245,8 @@ export function createContainer(deps: ContainerDeps): Container {
       files: createFilesController({ storage }),
       social: createSocialController({ social, reports }),
       tenders: createTenderController({ tenders }),
+      vehicles: createVehicleController({ vehicles, dealers }),
+      garage: createGarageController({ garage }),
     },
   };
 }

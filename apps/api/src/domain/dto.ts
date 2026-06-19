@@ -22,6 +22,10 @@ import type {
   ReviewWithAuthor,
   SellerProfile,
   TenderWithCustomer,
+  BrandWithCount,
+  VehicleModel,
+  DealerWithBrands,
+  GarageVehicleRow,
   User,
 } from '@china-ru/db';
 import type {
@@ -50,6 +54,11 @@ import type {
   SellerProfileDto,
   TenderBidDto,
   TenderDto,
+  VehicleBrandDto,
+  VehicleModelDto,
+  VehicleType,
+  DealerDto,
+  GarageVehicleDto,
   UserDto,
   UserRefDto,
 } from '@china-ru/shared';
@@ -462,5 +471,63 @@ export function toMyTenderBidDto(b: MyBid): MyTenderBidDto {
     tenderRegistryNumber: b.tenderRegistryNumber,
     tenderTitle: b.tenderTitle,
     tenderStatus: b.tenderStatus,
+  };
+}
+
+export function toVehicleBrandDto(b: BrandWithCount): VehicleBrandDto {
+  return {
+    id: b.id,
+    slug: b.slug,
+    name: b.name,
+    nameZh: b.nameZh,
+    country: b.country,
+    types: b.types as VehicleType[],
+    logoUrl: b.logoUrl,
+    popular: b.popular,
+    modelCount: b.modelCount,
+  };
+}
+
+export function toVehicleModelDto(m: VehicleModel): VehicleModelDto {
+  return {
+    id: m.id,
+    brandId: m.brandId,
+    slug: m.slug,
+    name: m.name,
+    type: m.type,
+    bodyType: m.bodyType,
+    yearFrom: m.yearFrom,
+    yearTo: m.yearTo,
+    imageUrl: m.imageUrl,
+  };
+}
+
+export function toDealerDto(d: DealerWithBrands): DealerDto {
+  return {
+    id: d.id,
+    name: d.name,
+    city: d.city,
+    region: d.region,
+    address: d.address,
+    phone: d.phone,
+    website: d.website,
+    lat: Number(d.lat),
+    lng: Number(d.lng),
+    brands: d.brands,
+  };
+}
+
+export function toGarageVehicleDto(v: GarageVehicleRow): GarageVehicleDto {
+  return {
+    id: v.id,
+    brandId: v.brandId,
+    brandName: v.brandName,
+    modelId: v.modelId,
+    modelName: v.modelName,
+    year: v.year,
+    vin: v.vin,
+    plate: v.plate,
+    type: v.type,
+    createdAt: v.createdAt.toISOString(),
   };
 }

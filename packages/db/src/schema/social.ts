@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { softDelete, timestamps } from './columns';
-import { socialPostStatus } from './enums';
+import { reportStatus, reportTargetType, socialPostStatus } from './enums';
 import { sellerProfiles, users } from './users';
 
 /**
@@ -97,5 +97,61 @@ export const postComments = pgTable(
   t => [
     index('post_comments_post_idx').on(t.postId),
     index('post_comments_author_idx').on(t.authorUserId),
+  ]
+);
+
+/**
+ * Подписки: пользователь подписывается на другого пользователя ИЛИ на компанию
+ * (ровно одно из двух). Используется для персональной ленты «по подпискам».
+ */
+export const follows = pgTable(
+  'follows',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    followerId: uuid('follower_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    followingUserId: uuid('following_user_id').references(() => users.id, { onDelete: 'cascade' }),
+    followingSellerId: uuid('following_seller_id').references(() => sellerProfiles.id, {
+      onDelete: 'cascade',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  t => [
+    uniqueIndex('follows_user_uidx').on(t.followerId, t.followingUserId),
+    uniqueIndex('follows_seller_uidx').on(t.followerId, t.followingSellerId),
+    index('follows_following_user_idx').on(t.followingUserId),
+    index('follows_following_seller_idx').on(t.followingSellerId),
+    check(
+      'follows_one_target_chk',
+      sql`(${t.followingUserId} is not null) <> (${t.followingSellerId} is not null)`
+    ),
+    check('follows_not_self_chk', sql`${t.followerId} <> ${t.followingUserId} or ${t.followingUserId} is null`),
+  ]
+);
+
+/**
+ * Жалобы на контент. Полиморфная цель (`targetType`+`targetId`): пост или
+ * пользователь. Модератор разбирает очередь (pending → resolved/dismissed).
+ */
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    reporterId: uuid('reporter_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    targetType: reportTargetType('target_type').notNull(),
+    targetId: uuid('target_id').notNull(),
+    reason: text('reason'),
+    status: reportStatus('status').notNull().default('pending'),
+    resolvedById: uuid('resolved_by_id').references(() => users.id, { onDelete: 'set null' }),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  t => [
+    index('reports_status_idx').on(t.status),
+    index('reports_reporter_idx').on(t.reporterId),
+    index('reports_target_idx').on(t.targetType, t.targetId),
   ]
 );

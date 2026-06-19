@@ -15,6 +15,8 @@ import {
   ORDER_STATUSES,
   PRODUCT_STATUSES,
   REFERRAL_EVENTS,
+  REPORT_STATUSES,
+  REPORT_TARGET_TYPES,
   RESUME_DOCUMENT_TYPES,
   RESUME_EXPERIENCES,
   REVIEW_STATUSES,
@@ -49,6 +51,8 @@ export const jobCategory = pgEnum('job_category', JOB_CATEGORIES);
 export const socialPostStatus = pgEnum('social_post_status', SOCIAL_POST_STATUSES);
 export const bookingStatus = pgEnum('booking_status', BOOKING_STATUSES);
 export const notificationType = pgEnum('notification_type', NOTIFICATION_TYPES);
+export const reportTargetType = pgEnum('report_target_type', REPORT_TARGET_TYPES);
+export const reportStatus = pgEnum('report_status', REPORT_STATUSES);
 export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);
 export const referralEvent = pgEnum('referral_event', REFERRAL_EVENTS);
 export const articleSection = pgEnum('article_section', ARTICLE_SECTIONS);

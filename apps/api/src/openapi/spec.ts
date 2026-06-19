@@ -300,6 +300,84 @@ export const openApiDocument = {
         responses: { '201': okRef() },
       },
     },
+    '/social/feed/following': {
+      get: {
+        tags: ['social'],
+        summary: 'Лента по подпискам',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '200': okRef() },
+      },
+    },
+    '/social/users/{userId}/follow': {
+      post: {
+        tags: ['social'],
+        summary: 'Подписаться на пользователя',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '403': okRef() },
+      },
+      delete: {
+        tags: ['social'],
+        summary: 'Отписаться от пользователя',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'userId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef() },
+      },
+    },
+    '/social/companies/{sellerId}/follow': {
+      post: {
+        tags: ['social'],
+        summary: 'Подписаться на компанию',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'sellerId',
+            in: 'path',
+            required: true,
+            schema: { type: 'string', format: 'uuid' },
+          },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
+    '/social/users/by-public-id/{publicId}': {
+      get: {
+        tags: ['social'],
+        summary: 'Резолв пользователя по публичному ID (для упоминаний @ID)',
+        parameters: [
+          { name: 'publicId', in: 'path', required: true, schema: { type: 'integer' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
+    '/social/reports': {
+      post: {
+        tags: ['social'],
+        summary: 'Пожаловаться на пост или пользователя',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '201': okRef(), '404': okRef() },
+      },
+    },
+    '/account/notifications': {
+      get: {
+        tags: ['account'],
+        summary: 'Уведомления пользователя',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '200': okRef() },
+      },
+    },
+    '/admin/social/reports': {
+      get: {
+        tags: ['admin'],
+        summary: 'Очередь жалоб на модерацию',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '200': okRef() },
+      },
+    },
   },
 } as const;
 

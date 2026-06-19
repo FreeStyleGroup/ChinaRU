@@ -71,6 +71,13 @@
       "when": 1781825159840,
       "tag": "0009_closed_colossus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781826628083,
+      "tag": "0010_fresh_moondragon",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { idSchema, isoDateTime, timestampsShape } from '../common';
-import { socialPostStatusSchema } from '../enums';
+import { reportStatusSchema, reportTargetTypeSchema, socialPostStatusSchema } from '../enums';
 import { paginationQuerySchema } from '../pagination';
 
 /* ───────────────── Создание контента ───────────────── */
@@ -90,3 +90,56 @@ export const postCommentDtoSchema = z.object({
   createdAt: isoDateTime,
 });
 export type PostCommentDto = z.infer<typeof postCommentDtoSchema>;
+
+/* ───────────────── Подписки ───────────────── */
+
+/** Состояние подписки на цель (для кнопки follow и счётчика подписчиков). */
+export const followStateDtoSchema = z.object({
+  following: z.boolean(),
+  followersCount: z.number().int(),
+});
+export type FollowStateDto = z.infer<typeof followStateDtoSchema>;
+
+/* ───────────────── Упоминания (@ID) ───────────────── */
+
+/** Краткая публичная ссылка на пользователя — для резолва упоминаний `@<publicId>`. */
+export const userRefDtoSchema = z.object({
+  userId: idSchema,
+  publicId: z.number().int(),
+  name: z.string().nullable(),
+  nickname: z.string().nullable(),
+  verified: z.boolean(),
+});
+export type UserRefDto = z.infer<typeof userRefDtoSchema>;
+
+/* ───────────────── Жалобы ───────────────── */
+
+export const createReportSchema = z.object({
+  targetType: reportTargetTypeSchema,
+  targetId: idSchema,
+  reason: z.string().trim().max(1000).optional(),
+});
+export type CreateReportInput = z.infer<typeof createReportSchema>;
+
+export const resolveReportSchema = z.object({
+  status: z.enum(['resolved', 'dismissed']),
+});
+export type ResolveReportInput = z.infer<typeof resolveReportSchema>;
+
+export const adminReportListQuerySchema = paginationQuerySchema.extend({
+  status: reportStatusSchema.optional(),
+});
+export type AdminReportListQuery = z.infer<typeof adminReportListQuerySchema>;
+
+export const reportDtoSchema = z.object({
+  id: idSchema,
+  reporterId: idSchema,
+  targetType: reportTargetTypeSchema,
+  targetId: idSchema,
+  reason: z.string().nullable(),
+  status: reportStatusSchema,
+  resolvedById: idSchema.nullable(),
+  resolvedAt: isoDateTime.nullable(),
+  createdAt: isoDateTime,
+});
+export type ReportDto = z.infer<typeof reportDtoSchema>;

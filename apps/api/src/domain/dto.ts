@@ -6,10 +6,12 @@ import type {
   ContentAgent,
   JobListing,
   JobListingWithCompany,
+  Notification,
   Order,
   OrderItem,
   PostWithAuthor,
   Product,
+  Report,
   ProductImage,
   Resume,
   ResumeDocument,
@@ -27,18 +29,21 @@ import type {
   JobListingDto,
   JobListingPublicDto,
   MyApplicationDto,
+  NotificationDto,
   OrderDto,
   OrderItemDto,
   PostCommentDto,
   PostDto,
   ProductDto,
   ProductImageDto,
+  ReportDto,
   ResumeDocumentDto,
   ResumeDto,
   ResumePublicDto,
   ReviewDto,
   SellerProfileDto,
   UserDto,
+  UserRefDto,
 } from '@china-ru/shared';
 
 /** Единые мапперы строк БД → DTO (контракты R2). Используются всеми сервисами. */
@@ -243,6 +248,41 @@ export function toPostCommentDto(c: CommentWithAuthor): PostCommentDto {
     authorNickname: c.authorNickname,
     authorVerified: c.authorVerified,
     createdAt: c.createdAt.toISOString(),
+  };
+}
+
+export function toNotificationDto(n: Notification): NotificationDto {
+  return {
+    id: n.id,
+    userId: n.userId,
+    type: n.type,
+    payload: n.payload,
+    readAt: n.readAt ? n.readAt.toISOString() : null,
+    createdAt: n.createdAt.toISOString(),
+  };
+}
+
+export function toReportDto(r: Report): ReportDto {
+  return {
+    id: r.id,
+    reporterId: r.reporterId,
+    targetType: r.targetType,
+    targetId: r.targetId,
+    reason: r.reason,
+    status: r.status,
+    resolvedById: r.resolvedById,
+    resolvedAt: r.resolvedAt ? r.resolvedAt.toISOString() : null,
+    createdAt: r.createdAt.toISOString(),
+  };
+}
+
+export function toUserRefDto(u: User): UserRefDto {
+  return {
+    userId: u.id,
+    publicId: u.publicId,
+    name: u.name,
+    nickname: u.nickname,
+    verified: u.verifiedAt !== null,
   };
 }
 

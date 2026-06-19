@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 
 import { postLikes, posts, sellerProfiles, users } from '../schema';
 
@@ -150,6 +150,34 @@ export class PostRepository {
       .orderBy(desc(posts.createdAt))
       .limit(limit)
       .offset((page - 1) * limit);
+    const [agg] = await this.db.select({ value: count() }).from(posts).where(where);
+    return { rows: rows.map(r => this.map(r)), total: agg?.value ?? 0 };
+  }
+
+  /** Лента «по подпискам»: посты подписанных пользователей и компаний (без рекламы). */
+  async listFollowingFeed(
+    userIds: string[],
+    sellerIds: string[],
+    page = 1,
+    limit = 20
+  ): Promise<{ rows: PostWithAuthor[]; total: number }> {
+    if (userIds.length === 0 && sellerIds.length === 0) return { rows: [], total: 0 };
+    const targets: SQL[] = [];
+    if (userIds.length > 0) targets.push(inArray(posts.authorUserId, userIds));
+    if (sellerIds.length > 0) targets.push(inArray(posts.sellerId, sellerIds));
+    const where = and(
+      isNull(posts.deletedAt),
+      eq(posts.status, 'published'),
+      eq(posts.isAd, false),
+      or(...targets)
+    );
+    const p = Math.max(1, page);
+    const l = Math.min(50, Math.max(1, limit));
+    const rows = await this.base()
+      .where(where)
+      .orderBy(desc(posts.createdAt))
+      .limit(l)
+      .offset((p - 1) * l);
     const [agg] = await this.db.select({ value: count() }).from(posts).where(where);
     return { rows: rows.map(r => this.map(r)), total: agg?.value ?? 0 };
   }

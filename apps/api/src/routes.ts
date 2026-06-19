@@ -69,6 +69,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.put('/account/menu', requireAuth, account.updateMenu);
   router.put('/account/nickname', requireAuth, account.setNickname);
   router.post('/account/avatar', requireAuth, avatarUpload, account.uploadAvatar);
+  // Уведомления (упоминания, новые подписчики, жалобы для админов).
+  router.get('/account/notifications', requireAuth, account.notifications);
+  router.get('/account/notifications/unread', requireAuth, account.notificationsUnread);
+  router.post('/account/notifications/read', requireAuth, account.markNotificationsRead);
   router.get('/account/seller', requireAuth, account.getSeller);
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
@@ -103,6 +107,8 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── соцсеть (B2B-лента: посты пользователей и компаний + нативная реклама) ─────────
   // Публичное чтение с optionalAuth — чтобы проставлять флаг `liked` авторизованному.
   router.get('/social/feed', optionalAuth, social.feed);
+  router.get('/social/feed/following', requireAuth, social.followingFeed);
+  router.get('/social/users/by-public-id/:publicId', social.resolveMention);
   router.get('/social/users/:userId/posts', optionalAuth, social.userFeed);
   router.get('/social/companies/:sellerId/posts', optionalAuth, social.companyFeed);
   router.get('/social/posts/:id', optionalAuth, social.getPost);
@@ -112,6 +118,13 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/social/posts/:id/like', requireAuth, social.toggleLike);
   router.post('/social/posts/:id/comments', requireAuth, social.addComment);
   router.delete('/social/comments/:id', requireAuth, social.deleteComment);
+  // Подписки на людей и компании.
+  router.post('/social/users/:userId/follow', requireAuth, social.followUser);
+  router.delete('/social/users/:userId/follow', requireAuth, social.unfollowUser);
+  router.post('/social/companies/:sellerId/follow', requireAuth, social.followCompany);
+  router.delete('/social/companies/:sellerId/follow', requireAuth, social.unfollowCompany);
+  // Жалоба на пост/пользователя (уведомление улетает админам).
+  router.post('/social/reports', requireAuth, social.report);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);
@@ -141,6 +154,8 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/admin/social/ads', onlyAdmin, social.createAd);
   router.post('/admin/social/posts/:id/hide', onlyAdmin, social.hidePost);
   router.post('/admin/social/posts/:id/unhide', onlyAdmin, social.unhidePost);
+  router.get('/admin/social/reports', onlyAdmin, social.adminListReports);
+  router.post('/admin/social/reports/:id/resolve', onlyAdmin, social.resolveReport);
 
   // ───────── admin: Контент завод (агенты + статьи) ─────────
   router.get('/admin/content/agents', onlyAdmin, content.listAgents);

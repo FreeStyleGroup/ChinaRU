@@ -52,6 +52,24 @@ export class UserRepository {
     return row ?? null;
   }
 
+  async findByPublicId(publicId: number): Promise<User | null> {
+    const [row] = await this.db
+      .select()
+      .from(users)
+      .where(and(eq(users.publicId, publicId), isNull(users.deletedAt)))
+      .limit(1);
+    return row ?? null;
+  }
+
+  /** Идентификаторы пользователей с ролью (например, все админы — для оповещений). */
+  async idsByRole(role: User['role']): Promise<string[]> {
+    const rows = await this.db
+      .select({ id: users.id })
+      .from(users)
+      .where(and(eq(users.role, role), isNull(users.deletedAt)));
+    return rows.map(r => r.id);
+  }
+
   async update(id: string, patch: UserUpdate): Promise<User | null> {
     const [row] = await this.db
       .update(users)

@@ -14,6 +14,9 @@ export * from './common';
 // Пагинация
 export * from './pagination';
 
+// Контент-модерация (антиспам/мат/стоп-слова)
+export * from './moderation';
+
 // Китайский зодиак (раздел «Гороскоп» в кабинете)
 export * from './zodiac';
 

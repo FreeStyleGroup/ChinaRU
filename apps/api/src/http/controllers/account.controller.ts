@@ -1,5 +1,7 @@
 import {
   createSellerProfileSchema,
+  markNotificationsReadSchema,
+  notificationListQuerySchema,
   ok,
   setNicknameSchema,
   updateMenuSectionsSchema,
@@ -10,6 +12,7 @@ import { asyncHandler } from '../async-handler';
 import { BadRequestError, UnauthorizedError } from '../errors';
 
 import type { AccountService } from '../../domain/account/account.service';
+import type { NotificationService } from '../../domain/account/notification.service';
 import type { HoroscopeService } from '../../domain/horoscope/horoscope.service';
 import type { RequestHandler } from 'express';
 
@@ -22,11 +25,15 @@ export interface AccountController {
   applySeller: RequestHandler;
   setSellerNickname: RequestHandler;
   horoscope: RequestHandler;
+  notifications: RequestHandler;
+  notificationsUnread: RequestHandler;
+  markNotificationsRead: RequestHandler;
 }
 
 export function createAccountController(deps: {
   account: AccountService;
   horoscope: HoroscopeService;
+  notifications: NotificationService;
 }): AccountController {
   return {
     updateProfile: asyncHandler(async (req, res) => {
@@ -73,6 +80,23 @@ export function createAccountController(deps: {
     horoscope: asyncHandler(async (req, res) => {
       if (!req.auth) throw new UnauthorizedError();
       res.json(ok(await deps.horoscope.getDailyForecast(req.auth.userId)));
+    }),
+
+    notifications: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      const query = notificationListQuerySchema.parse(req.query);
+      res.json(ok(await deps.notifications.list(req.auth.userId, query)));
+    }),
+
+    notificationsUnread: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      res.json(ok(await deps.notifications.unreadCount(req.auth.userId)));
+    }),
+
+    markNotificationsRead: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      const input = markNotificationsReadSchema.parse(req.body);
+      res.json(ok(await deps.notifications.markRead(req.auth.userId, input)));
     }),
   };
 }

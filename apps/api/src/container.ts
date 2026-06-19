@@ -4,11 +4,14 @@ import {
   AuditRepository,
   CategoryRepository,
   ContentAgentRepository,
+  FollowRepository,
   JobApplicationRepository,
   JobListingRepository,
+  NotificationRepository,
   OrderRepository,
   PostCommentRepository,
   PostRepository,
+  ReportRepository,
   ProductImageRepository,
   ProductRepository,
   ReferralRepository,
@@ -23,6 +26,7 @@ import {
 import { createAiProvider } from './ai/factory';
 import { NoopCache, RedisCache, type Cache } from './cache/cache';
 import { AccountService } from './domain/account/account.service';
+import { NotificationService } from './domain/account/notification.service';
 import { AdminService } from './domain/admin/admin.service';
 import { AuthService } from './domain/auth/auth.service';
 import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
@@ -34,6 +38,7 @@ import { HoroscopeService } from './domain/horoscope/horoscope.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
+import { ReportService } from './domain/social/report.service';
 import { SocialService } from './domain/social/social.service';
 import {
   createAccountController,
@@ -107,6 +112,9 @@ export function createContainer(deps: ContainerDeps): Container {
   const resumeDocumentRepo = new ResumeDocumentRepository(db);
   const postRepo = new PostRepository(db);
   const postCommentRepo = new PostCommentRepository(db);
+  const followRepo = new FollowRepository(db);
+  const reportRepo = new ReportRepository(db);
+  const notificationRepo = new NotificationRepository(db);
   const jobListingRepo = new JobListingRepository(db);
   const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
@@ -154,6 +162,7 @@ export function createContainer(deps: ContainerDeps): Container {
   );
   const orders = new OrderService(orderRepo, referrals);
   const account = new AccountService(userRepo, sellerRepo, storage, config.apiPublicUrl);
+  const notificationService = new NotificationService(notificationRepo);
   const horoscope = new HoroscopeService(userRepo, ai, cache);
   const jobs = new JobService(
     resumeRepo,
@@ -164,7 +173,16 @@ export function createContainer(deps: ContainerDeps): Container {
     storage
   );
   const content = new ContentService(contentAgentRepo, articleRepo, ai);
-  const social = new SocialService(postRepo, postCommentRepo, sellerRepo, config.apiPublicUrl);
+  const social = new SocialService(
+    postRepo,
+    postCommentRepo,
+    sellerRepo,
+    userRepo,
+    followRepo,
+    notificationRepo,
+    config.apiPublicUrl
+  );
+  const reports = new ReportService(reportRepo, notificationRepo, userRepo, postRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -187,12 +205,12 @@ export function createContainer(deps: ContainerDeps): Container {
       catalog: createCatalogController({ catalog }),
       orders: createOrdersController({ orders }),
       admin: createAdminController({ admin }),
-      account: createAccountController({ account, horoscope }),
+      account: createAccountController({ account, horoscope, notifications: notificationService }),
       jobs: createJobController({ jobs }),
       referral: createReferralController({ referrals }),
       content: createContentController({ content }),
       files: createFilesController({ storage }),
-      social: createSocialController({ social }),
+      social: createSocialController({ social, reports }),
     },
   };
 }

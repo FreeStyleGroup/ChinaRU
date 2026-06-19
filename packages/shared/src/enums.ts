@@ -76,6 +76,7 @@ export const NOTIFICATION_TYPES = [
   'mention',
   'follow',
   'report',
+  'tender',
 ] as const;
 /** Объект жалобы и статус её рассмотрения модератором. */
 export const REPORT_TARGET_TYPES = ['post', 'user'] as const;
@@ -103,6 +104,39 @@ export const ARTICLE_SECTIONS = [
 /** Статус статьи: черновик (сгенерирован ИИ/создан) → опубликован → в архиве. */
 export const ARTICLE_STATUSES = ['draft', 'published', 'archived'] as const;
 
+/**
+ * Тендерная площадка (B2B-закупки между верифицированными компаниями).
+ * Способы проведения смоделированы по 44-ФЗ/223-ФЗ; для частной площадки правовой
+ * режим — справочный признак (`commercial` по умолчанию, `fz44`/`fz223` — если заказчик
+ * является госзаказчиком и ссылается на регламент).
+ */
+export const TENDER_METHODS = [
+  'open_tender', // открытый конкурс — выбор по совокупности критериев
+  'auction', // электронный аукцион — выбор по наименьшей цене
+  'request_quotations', // запрос котировок — малые закупки по цене
+  'request_proposals', // запрос предложений
+  'single_source', // закупка у единственного поставщика
+] as const;
+export const TENDER_LAWS = ['fz44', 'fz223', 'commercial'] as const;
+/** Жизненный цикл тендера: черновик → опубликован (приём заявок) → рассмотрение → итоги/отмена/завершён. */
+export const TENDER_STATUSES = [
+  'draft',
+  'published',
+  'review',
+  'awarded',
+  'cancelled',
+  'completed',
+] as const;
+/** Статус заявки участника: подана → допущена/отклонена → победитель/проигравшая/отозвана. */
+export const TENDER_BID_STATUSES = [
+  'submitted',
+  'admitted',
+  'rejected',
+  'won',
+  'lost',
+  'withdrawn',
+] as const;
+
 export const localeSchema = z.enum(LOCALES);
 export const userRoleSchema = z.enum(USER_ROLES);
 export const userStatusSchema = z.enum(USER_STATUSES);
@@ -128,6 +162,10 @@ export const devicePlatformSchema = z.enum(DEVICE_PLATFORMS);
 export const referralEventSchema = z.enum(REFERRAL_EVENTS);
 export const articleSectionSchema = z.enum(ARTICLE_SECTIONS);
 export const articleStatusSchema = z.enum(ARTICLE_STATUSES);
+export const tenderMethodSchema = z.enum(TENDER_METHODS);
+export const tenderLawSchema = z.enum(TENDER_LAWS);
+export const tenderStatusSchema = z.enum(TENDER_STATUSES);
+export const tenderBidStatusSchema = z.enum(TENDER_BID_STATUSES);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -153,6 +191,10 @@ export type DevicePlatform = z.infer<typeof devicePlatformSchema>;
 export type ReferralEvent = z.infer<typeof referralEventSchema>;
 export type ArticleSection = z.infer<typeof articleSectionSchema>;
 export type ArticleStatus = z.infer<typeof articleStatusSchema>;
+export type TenderMethod = z.infer<typeof tenderMethodSchema>;
+export type TenderLaw = z.infer<typeof tenderLawSchema>;
+export type TenderStatus = z.infer<typeof tenderStatusSchema>;
+export type TenderBidStatus = z.infer<typeof tenderBidStatusSchema>;
 
 /** Доли вознаграждения по уровням реферальной сети (MLM): 1 → 10%, 2 → 5%, 3 → 2%. */
 export const REFERRAL_LEVEL_RATES = [0.1, 0.05, 0.02] as const;

@@ -78,6 +78,13 @@
       "when": 1781826628083,
       "tag": "0010_fresh_moondragon",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781829454313,
+      "tag": "0011_groovy_nomad",
+      "breakpoints": true
     }
   ]
 }

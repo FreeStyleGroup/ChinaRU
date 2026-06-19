@@ -39,3 +39,4 @@ export * from './schemas/cabinet';
 export * from './schemas/referral';
 export * from './schemas/content';
 export * from './schemas/horoscope';
+export * from './schemas/tenders';

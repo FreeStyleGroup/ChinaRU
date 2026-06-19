@@ -19,6 +19,8 @@ import {
   ResumeRepository,
   ReviewRepository,
   SellerRepository,
+  TenderBidRepository,
+  TenderRepository,
   UserRepository,
   type Database,
 } from '@china-ru/db';
@@ -40,6 +42,7 @@ import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
 import { ReportService } from './domain/social/report.service';
 import { SocialService } from './domain/social/social.service';
+import { TenderService } from './domain/tenders/tender.service';
 import {
   createAccountController,
   type AccountController,
@@ -65,6 +68,7 @@ import {
   type ReferralController,
 } from './http/controllers/referral.controller';
 import { createSocialController, type SocialController } from './http/controllers/social.controller';
+import { createTenderController, type TenderController } from './http/controllers/tender.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 import { createStorage, type Storage } from './storage/storage';
 
@@ -93,6 +97,7 @@ export interface Container {
     content: ContentController;
     files: FilesController;
     social: SocialController;
+    tenders: TenderController;
   };
 }
 
@@ -115,6 +120,8 @@ export function createContainer(deps: ContainerDeps): Container {
   const followRepo = new FollowRepository(db);
   const reportRepo = new ReportRepository(db);
   const notificationRepo = new NotificationRepository(db);
+  const tenderRepo = new TenderRepository(db);
+  const tenderBidRepo = new TenderBidRepository(db);
   const jobListingRepo = new JobListingRepository(db);
   const jobApplicationRepo = new JobApplicationRepository(db);
   const referralRepo = new ReferralRepository(db);
@@ -183,6 +190,7 @@ export function createContainer(deps: ContainerDeps): Container {
     config.apiPublicUrl
   );
   const reports = new ReportService(reportRepo, notificationRepo, userRepo, postRepo);
+  const tenders = new TenderService(tenderRepo, tenderBidRepo, sellerRepo, notificationRepo);
   const admin = new AdminService({
     users: userRepo,
     sellers: sellerRepo,
@@ -211,6 +219,7 @@ export function createContainer(deps: ContainerDeps): Container {
       content: createContentController({ content }),
       files: createFilesController({ storage }),
       social: createSocialController({ social, reports }),
+      tenders: createTenderController({ tenders }),
     },
   };
 }

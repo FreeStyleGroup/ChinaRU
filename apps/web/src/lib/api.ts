@@ -13,6 +13,8 @@ import type {
   ProductListQuery,
   ResumeListQuery,
   ResumePublicDto,
+  TenderDto,
+  TenderListQuery,
 } from '@china-ru/shared';
 
 /** Базовый URL API для server-side запросов (внутренний адрес сервиса). */
@@ -107,6 +109,25 @@ export const jobsApi = {
 export const socialApi = {
   feed: (page = 1) =>
     apiGet<Paginated<PostDto>>(`/social/feed?page=${page}`, { revalidate: 30 }),
+};
+
+function buildTenderQuery(query: Partial<TenderListQuery>): string {
+  const sp = new URLSearchParams();
+  if (query.page) sp.set('page', String(query.page));
+  if (query.method) sp.set('method', query.method);
+  if (query.law) sp.set('law', query.law);
+  if (query.region) sp.set('region', query.region);
+  if (query.q) sp.set('q', query.q);
+  const qs = sp.toString();
+  return qs ? `?${qs}` : '';
+}
+
+/** Тендерная площадка: реестр (SSR) и извещение по id. */
+export const tendersApi = {
+  list: (query: Partial<TenderListQuery> = {}) =>
+    apiGet<Paginated<TenderDto>>(`/tenders${buildTenderQuery(query)}`, { revalidate: 60 }),
+  tender: (id: string) =>
+    apiGet<TenderDto>(`/tenders/${encodeURIComponent(id)}`, { revalidate: 30 }),
 };
 
 /** Контент-завод: статьи разделов (блок новостей + список + деталь). */

@@ -22,6 +22,10 @@ import {
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
   SOCIAL_POST_STATUSES,
+  TENDER_BID_STATUSES,
+  TENDER_LAWS,
+  TENDER_METHODS,
+  TENDER_STATUSES,
   USER_ROLES,
   USER_STATUSES,
 } from '@china-ru/shared';
@@ -57,3 +61,7 @@ export const devicePlatform = pgEnum('device_platform', DEVICE_PLATFORMS);
 export const referralEvent = pgEnum('referral_event', REFERRAL_EVENTS);
 export const articleSection = pgEnum('article_section', ARTICLE_SECTIONS);
 export const articleStatus = pgEnum('article_status', ARTICLE_STATUSES);
+export const tenderMethod = pgEnum('tender_method', TENDER_METHODS);
+export const tenderLaw = pgEnum('tender_law', TENDER_LAWS);
+export const tenderStatus = pgEnum('tender_status', TENDER_STATUSES);
+export const tenderBidStatus = pgEnum('tender_bid_status', TENDER_BID_STATUSES);

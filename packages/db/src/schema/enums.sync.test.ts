@@ -22,6 +22,10 @@ import {
   REVIEW_STATUSES,
   SELLER_VERIFY_STATUSES,
   SOCIAL_POST_STATUSES,
+  TENDER_BID_STATUSES,
+  TENDER_LAWS,
+  TENDER_METHODS,
+  TENDER_STATUSES,
   USER_ROLES,
   USER_STATUSES,
 } from '@china-ru/shared';
@@ -60,6 +64,10 @@ describe('db enums ↔ shared tuples', () => {
     [e.referralEvent, REFERRAL_EVENTS],
     [e.articleSection, ARTICLE_SECTIONS],
     [e.articleStatus, ARTICLE_STATUSES],
+    [e.tenderMethod, TENDER_METHODS],
+    [e.tenderLaw, TENDER_LAWS],
+    [e.tenderStatus, TENDER_STATUSES],
+    [e.tenderBidStatus, TENDER_BID_STATUSES],
   ])('%s pgEnum matches its shared tuple', (pgEnum, tuple) => {
     expect(pgEnum.enumValues).toEqual([...tuple]);
   });

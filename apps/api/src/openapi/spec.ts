@@ -378,6 +378,82 @@ export const openApiDocument = {
         responses: { '200': okRef() },
       },
     },
+    '/tenders': {
+      get: {
+        tags: ['tenders'],
+        summary: 'Реестр тендеров (фильтры: способ, закон, регион, поиск)',
+        responses: { '200': okRef() },
+      },
+      post: {
+        tags: ['tenders'],
+        summary: 'Создать тендер (черновик) — верифицированная компания-заказчик',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        responses: { '201': okRef(), '403': okRef() },
+      },
+    },
+    '/tenders/{id}': {
+      get: {
+        tags: ['tenders'],
+        summary: 'Извещение тендера',
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '404': okRef() },
+      },
+    },
+    '/tenders/{id}/publish': {
+      post: {
+        tags: ['tenders'],
+        summary: 'Опубликовать тендер (открыть приём заявок)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '400': okRef(), '422': okRef() },
+      },
+    },
+    '/tenders/{id}/bids': {
+      get: {
+        tags: ['tenders'],
+        summary: 'Заявки тендера (только для заказчика)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '403': okRef() },
+      },
+      post: {
+        tags: ['tenders'],
+        summary: 'Подать заявку на тендер (верифицированная компания)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '201': okRef(), '400': okRef(), '403': okRef(), '409': okRef() },
+      },
+    },
+    '/tenders/{id}/award': {
+      post: {
+        tags: ['tenders'],
+        summary: 'Определить победителя (подведение итогов)',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '400': okRef(), '404': okRef() },
+      },
+    },
+    '/tender-bids/{id}/review': {
+      post: {
+        tags: ['tenders'],
+        summary: 'Рассмотреть заявку: допуск или отклонение',
+        security: [{ cookieAuth: [] }, { bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': okRef(), '400': okRef() },
+      },
+    },
   },
 } as const;
 

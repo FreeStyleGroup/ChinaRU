@@ -2,10 +2,13 @@ import type {
   ApplicationWithApplicant,
   ApplicationWithVacancy,
   Article,
+  BidWithBidder,
   CommentWithAuthor,
+  CompanyRef,
   ContentAgent,
   JobListing,
   JobListingWithCompany,
+  MyBid,
   Notification,
   Order,
   OrderItem,
@@ -18,6 +21,7 @@ import type {
   ResumeWithUser,
   ReviewWithAuthor,
   SellerProfile,
+  TenderWithCustomer,
   User,
 } from '@china-ru/db';
 import type {
@@ -25,10 +29,12 @@ import type {
   ArticleCardDto,
   ArticleDto,
   ArticlePublicDto,
+  CompanyRefDto,
   ContentAgentDto,
   JobListingDto,
   JobListingPublicDto,
   MyApplicationDto,
+  MyTenderBidDto,
   NotificationDto,
   OrderDto,
   OrderItemDto,
@@ -42,6 +48,8 @@ import type {
   ResumePublicDto,
   ReviewDto,
   SellerProfileDto,
+  TenderBidDto,
+  TenderDto,
   UserDto,
   UserRefDto,
 } from '@china-ru/shared';
@@ -391,5 +399,68 @@ export function toApplicantDto(a: ApplicationWithApplicant): ApplicantDto {
     createdAt: a.createdAt.toISOString(),
     applicantPublicId: a.applicantPublicId,
     applicantName: a.applicantName,
+  };
+}
+
+export function toCompanyRefDto(c: CompanyRef): CompanyRefDto {
+  return {
+    sellerId: c.sellerId,
+    publicId: c.publicId,
+    companyName: c.companyName,
+    nickname: c.nickname,
+    verified: c.verified,
+    rating: c.rating,
+  };
+}
+
+export function toTenderDto(t: TenderWithCustomer): TenderDto {
+  return {
+    id: t.id,
+    registryNumber: t.registryNumber,
+    customer: toCompanyRefDto(t.customer),
+    title: t.title,
+    description: t.description,
+    method: t.method,
+    law: t.law,
+    category: t.category,
+    region: t.region,
+    deliveryPlace: t.deliveryPlace,
+    startPrice: t.startPrice,
+    currency: t.currency,
+    bidSecurity: t.bidSecurity,
+    contractSecurity: t.contractSecurity,
+    status: t.status,
+    submissionDeadline: t.submissionDeadline.toISOString(),
+    publishedAt: t.publishedAt ? t.publishedAt.toISOString() : null,
+    awardedBidId: t.awardedBidId,
+    awardComment: t.awardComment,
+    cancelReason: t.cancelReason,
+    bidCount: t.bidCount,
+    viewCount: t.viewCount,
+    createdAt: t.createdAt.toISOString(),
+    updatedAt: t.updatedAt.toISOString(),
+  };
+}
+
+export function toTenderBidDto(b: BidWithBidder): TenderBidDto {
+  return {
+    id: b.id,
+    tenderId: b.tenderId,
+    bidder: toCompanyRefDto(b.bidder),
+    price: b.price,
+    comment: b.comment,
+    status: b.status,
+    rejectionReason: b.rejectionReason,
+    createdAt: b.createdAt.toISOString(),
+    updatedAt: b.updatedAt.toISOString(),
+  };
+}
+
+export function toMyTenderBidDto(b: MyBid): MyTenderBidDto {
+  return {
+    ...toTenderBidDto(b),
+    tenderRegistryNumber: b.tenderRegistryNumber,
+    tenderTitle: b.tenderTitle,
+    tenderStatus: b.tenderStatus,
   };
 }

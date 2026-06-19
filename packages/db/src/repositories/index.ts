@@ -15,6 +15,8 @@ export * from './post-comment.repository';
 export * from './follow.repository';
 export * from './report.repository';
 export * from './notification.repository';
+export * from './tender.repository';
+export * from './tender-bid.repository';
 export * from './analytics.repository';
 export * from './content-agent.repository';
 export * from './article.repository';

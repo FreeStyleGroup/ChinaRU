@@ -23,6 +23,13 @@ import type {
   ReportDto,
   ResumeDto,
   SellerProfileDto,
+  CreateTenderInput,
+  CreateBidInput,
+  ReviewBidInput,
+  MyTenderBidDto,
+  TenderBidDto,
+  TenderDto,
+  TenderListQuery,
   UpdateProfileInput,
   UpsertResumeInput,
   UserDto,
@@ -157,6 +164,60 @@ export const notificationClient = {
       method: 'POST',
       body: JSON.stringify(ids ? { ids } : { all: true }),
     }),
+};
+
+function tenderQuery(q: Partial<TenderListQuery> = {}): string {
+  const sp = new URLSearchParams();
+  if (q.page) sp.set('page', String(q.page));
+  if (q.method) sp.set('method', q.method);
+  if (q.law) sp.set('law', q.law);
+  if (q.status) sp.set('status', q.status);
+  if (q.region) sp.set('region', q.region);
+  if (q.q) sp.set('q', q.q);
+  const s = sp.toString();
+  return s ? `?${s}` : '';
+}
+
+/** Тендерная площадка: реестр, извещение, заявки и управление жизненным циклом. */
+export const tenderClient = {
+  list: (q: Partial<TenderListQuery> = {}) =>
+    call<Paginated<TenderDto>>(`/tenders${tenderQuery(q)}`),
+  get: (id: string) => call<TenderDto>(`/tenders/${id}`),
+  create: (input: CreateTenderInput) =>
+    call<TenderDto>('/tenders', { method: 'POST', body: JSON.stringify(input) }),
+  publish: (id: string) => call<TenderDto>(`/tenders/${id}/publish`, { method: 'POST' }),
+  closeBidding: (id: string) => call<TenderDto>(`/tenders/${id}/close`, { method: 'POST' }),
+  cancel: (id: string, reason?: string) =>
+    call<TenderDto>(`/tenders/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
+  award: (id: string, bidId: string, comment?: string) =>
+    call<TenderDto>(`/tenders/${id}/award`, {
+      method: 'POST',
+      body: JSON.stringify(comment ? { bidId, comment } : { bidId }),
+    }),
+  complete: (id: string) => call<TenderDto>(`/tenders/${id}/complete`, { method: 'POST' }),
+  remove: (id: string) => call<{ id: string }>(`/tenders/${id}`, { method: 'DELETE' }),
+  // заявки участника
+  submitBid: (tenderId: string, input: CreateBidInput) =>
+    call<TenderBidDto>(`/tenders/${tenderId}/bids`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  myBid: (tenderId: string) => call<TenderBidDto | null>(`/tenders/${tenderId}/my-bid`),
+  withdrawBid: (bidId: string) =>
+    call<TenderBidDto>(`/tender-bids/${bidId}/withdraw`, { method: 'POST' }),
+  // рассмотрение (заказчик)
+  listBids: (tenderId: string) => call<TenderBidDto[]>(`/tenders/${tenderId}/bids`),
+  reviewBid: (bidId: string, input: ReviewBidInput) =>
+    call<TenderBidDto>(`/tender-bids/${bidId}/review`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  // кабинет
+  myTenders: (page = 1) => call<Paginated<TenderDto>>(`/account/tenders?page=${page}`),
+  myBids: (page = 1) => call<Paginated<MyTenderBidDto>>(`/account/tender-bids?page=${page}`),
 };
 
 export const sellerJobClient = {

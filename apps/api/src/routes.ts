@@ -18,7 +18,7 @@ import type { Container } from './container';
 /** Строит роутер /api/v1 из собранного контейнера. */
 export function createV1Router(container: Container, config: AppConfig): Router {
   const router = Router();
-  const { auth, catalog, orders, admin, account, jobs, referral, content, files, social } =
+  const { auth, catalog, orders, admin, account, jobs, referral, content, files, social, tenders } =
     container.controllers;
   const { requireAuth, optionalAuth } = container.authMiddleware;
 
@@ -125,6 +125,30 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.delete('/social/companies/:sellerId/follow', requireAuth, social.unfollowCompany);
   // Жалоба на пост/пользователя (уведомление улетает админам).
   router.post('/social/reports', requireAuth, social.report);
+
+  // ───────── тендеры (B2B-закупки: заказчик ↔ участники, по образцу 44-ФЗ/223-ФЗ) ─────────
+  // Кабинет: «мои тендеры» / «мои заявки» — статические сегменты до '/tenders/:id'.
+  router.get('/account/tenders', requireAuth, tenders.myTenders);
+  router.get('/account/tender-bids', requireAuth, tenders.myBids);
+  // Публичный реестр + детали (optionalAuth — владелец видит свой черновик).
+  router.get('/tenders', tenders.list);
+  router.get('/tenders/:id', optionalAuth, tenders.get);
+  router.get('/tenders/:id/my-bid', requireAuth, tenders.myBidForTender);
+  router.get('/tenders/:id/bids', requireAuth, tenders.listBids);
+  router.post('/tenders/:id/bids', requireAuth, tenders.submitBid);
+  // Управление тендером (заказчик).
+  router.post('/tenders', requireAuth, tenders.create);
+  router.patch('/tenders/:id', requireAuth, tenders.update);
+  router.delete('/tenders/:id', requireAuth, tenders.remove);
+  router.post('/tenders/:id/publish', requireAuth, tenders.publish);
+  router.post('/tenders/:id/close', requireAuth, tenders.closeBidding);
+  router.post('/tenders/:id/cancel', requireAuth, tenders.cancel);
+  router.post('/tenders/:id/award', requireAuth, tenders.award);
+  router.post('/tenders/:id/complete', requireAuth, tenders.complete);
+  // Заявки участника / рассмотрение заказчиком.
+  router.patch('/tender-bids/:id', requireAuth, tenders.updateBid);
+  router.post('/tender-bids/:id/withdraw', requireAuth, tenders.withdrawBid);
+  router.post('/tender-bids/:id/review', requireAuth, tenders.reviewBid);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);

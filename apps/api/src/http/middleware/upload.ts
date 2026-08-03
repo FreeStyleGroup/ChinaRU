@@ -9,6 +9,7 @@ export const DOCUMENT_MIMES = ['application/pdf', ...IMAGE_MIMES] as const;
 
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024; // 2 МБ
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024; // 10 МБ
+export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 МБ
 
 export interface UploadLimits {
   maxBytes: number;

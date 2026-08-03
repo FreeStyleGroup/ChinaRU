@@ -1,10 +1,14 @@
 import type {
   ApiResponse,
   AuthTokens,
+  CartDto,
+  CategoryTreeNode,
   ChangePasswordInput,
   ApplicantDto,
   CreateJobListingInput,
   CreateOrderInput,
+  CreateProductInput,
+  UpdateProductInput,
   CreateReportInput,
   CreateSellerProfileInput,
   FollowStateDto,
@@ -15,12 +19,15 @@ import type {
   MyApplicationDto,
   NotificationDto,
   OrderDto,
+  SellerOrderDto,
+  FulfillmentStatus,
   Paginated,
   PostCommentDto,
   PostDto,
   ReferralSummaryDto,
   RegisterInput,
   ReportDto,
+  ReviewDto,
   ResumeDto,
   SellerProfileDto,
   CreateTenderInput,
@@ -70,6 +77,22 @@ async function call<T>(path: string, init: RequestInit = {}): Promise<T> {
   return json.data;
 }
 
+/** Загрузка файла (multipart). Content-Type ставит браузер сам (boundary). */
+async function upload<T>(path: string, file: File): Promise<T> {
+  const body = new FormData();
+  body.append('file', file);
+  const res = await fetch(`${API_URL}/api/v1${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body,
+  });
+  const json = (await res.json()) as ApiResponse<T>;
+  if (!json.ok) {
+    throw new ClientApiError(res.status, json.error.code, json.error.message, json.error.fields);
+  }
+  return json.data;
+}
+
 interface SessionResponse {
   user: UserDto;
   tokens: AuthTokens;
@@ -94,6 +117,57 @@ export const orderClient = {
   create: (input: CreateOrderInput) =>
     call<OrderDto>('/orders', { method: 'POST', body: JSON.stringify(input) }),
   list: () => call<OrderDto[]>('/orders'),
+};
+
+/** Отзывы на товар: публичный список и создание покупателем. */
+export const reviewClient = {
+  list: (productId: string) => call<ReviewDto[]>(`/products/${productId}/reviews`),
+  create: (productId: string, input: { rating: number; title?: string; body: string }) =>
+    call<ReviewDto>(`/products/${productId}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+};
+
+/** Публичный каталог (для селектов в кабинете продавца). */
+export const catalogClient = {
+  categories: () => call<CategoryTreeNode[]>('/catalog/categories'),
+};
+
+/** Управление товарами продавца («Мой магазин»). */
+export const sellerProductClient = {
+  list: () => call<ProductDto[]>('/seller/products'),
+  get: (id: string) => call<ProductDto>(`/seller/products/${id}`),
+  create: (input: CreateProductInput) =>
+    call<ProductDto>('/seller/products', { method: 'POST', body: JSON.stringify(input) }),
+  update: (id: string, input: UpdateProductInput) =>
+    call<ProductDto>(`/seller/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+  remove: (id: string) => call<{ id: string }>(`/seller/products/${id}`, { method: 'DELETE' }),
+  addImage: (id: string, file: File) => upload<ProductDto>(`/seller/products/${id}/images`, file),
+  removeImage: (id: string, imageId: string) =>
+    call<ProductDto>(`/seller/products/${id}/images/${imageId}`, { method: 'DELETE' }),
+};
+
+/** Заказы продавца («Мой магазин» → «Заказы»): список своих позиций + смена статуса исполнения. */
+export const sellerOrderClient = {
+  list: () => call<SellerOrderDto[]>('/seller/orders'),
+  setFulfillment: (orderId: string, status: FulfillmentStatus) =>
+    call<SellerOrderDto>(`/seller/orders/${orderId}/fulfillment`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+};
+
+/** Корзина покупателя: чтение, изменение позиций и оформление заказа. */
+export const cartClient = {
+  get: () => call<CartDto>('/cart'),
+  add: (productId: string, qty = 1) =>
+    call<CartDto>('/cart/items', { method: 'POST', body: JSON.stringify({ productId, qty }) }),
+  updateItem: (itemId: string, qty: number) =>
+    call<CartDto>(`/cart/items/${itemId}`, { method: 'PATCH', body: JSON.stringify({ qty }) }),
+  remove: (itemId: string) => call<CartDto>(`/cart/items/${itemId}`, { method: 'DELETE' }),
+  clear: () => call<CartDto>('/cart', { method: 'DELETE' }),
+  checkout: () => call<OrderDto>('/cart/checkout', { method: 'POST' }),
 };
 
 export const accountClient = {

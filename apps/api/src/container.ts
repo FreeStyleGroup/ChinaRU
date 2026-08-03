@@ -2,6 +2,7 @@ import {
   AnalyticsRepository,
   ArticleRepository,
   AuditRepository,
+  CartRepository,
   CategoryRepository,
   ContentAgentRepository,
   FollowRepository,
@@ -39,12 +40,16 @@ import { AuthService } from './domain/auth/auth.service';
 import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
 import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
+import { CartService } from './domain/cart/cart.service';
 import { CatalogService } from './domain/catalog/catalog.service';
+import { ReviewService } from './domain/catalog/review.service';
 import { ContentService } from './domain/content/content.service';
 import { HoroscopeService } from './domain/horoscope/horoscope.service';
 import { JobService } from './domain/jobs/job.service';
 import { OrderService } from './domain/orders/order.service';
 import { ReferralService } from './domain/referral/referral.service';
+import { SellerOrderService } from './domain/seller/seller-order.service';
+import { SellerProductService } from './domain/seller/seller-product.service';
 import { ReportService } from './domain/social/report.service';
 import { SocialService } from './domain/social/social.service';
 import { TenderService } from './domain/tenders/tender.service';
@@ -56,6 +61,7 @@ import {
 } from './http/controllers/account.controller';
 import { createAdminController, type AdminController } from './http/controllers/admin.controller';
 import { createAuthController, type AuthController } from './http/controllers/auth.controller';
+import { createCartController, type CartController } from './http/controllers/cart.controller';
 import {
   createCatalogController,
   type CatalogController,
@@ -65,6 +71,7 @@ import {
   type ContentController,
 } from './http/controllers/content.controller';
 import { createFilesController, type FilesController } from './http/controllers/files.controller';
+import { createGarageController, type GarageController } from './http/controllers/garage.controller';
 import { createJobController, type JobController } from './http/controllers/job.controller';
 import {
   createOrdersController,
@@ -74,9 +81,17 @@ import {
   createReferralController,
   type ReferralController,
 } from './http/controllers/referral.controller';
+import { createReviewsController, type ReviewsController } from './http/controllers/reviews.controller';
+import {
+  createSellerOrdersController,
+  type SellerOrdersController,
+} from './http/controllers/seller-orders.controller';
+import {
+  createSellerProductsController,
+  type SellerProductsController,
+} from './http/controllers/seller-products.controller';
 import { createSocialController, type SocialController } from './http/controllers/social.controller';
 import { createTenderController, type TenderController } from './http/controllers/tender.controller';
-import { createGarageController, type GarageController } from './http/controllers/garage.controller';
 import { createVehicleController, type VehicleController } from './http/controllers/vehicle.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 import { createStorage, type Storage } from './storage/storage';
@@ -98,11 +113,15 @@ export interface Container {
   controllers: {
     auth: AuthController;
     catalog: CatalogController;
+    reviews: ReviewsController;
+    cart: CartController;
     orders: OrdersController;
     admin: AdminController;
     account: AccountController;
     jobs: JobController;
     referral: ReferralController;
+    sellerProducts: SellerProductsController;
+    sellerOrders: SellerOrdersController;
     content: ContentController;
     files: FilesController;
     social: SocialController;
@@ -123,6 +142,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const productRepo = new ProductRepository(db);
   const productImageRepo = new ProductImageRepository(db);
   const orderRepo = new OrderRepository(db);
+  const cartRepo = new CartRepository(db);
   const reviewRepo = new ReviewRepository(db);
   const resumeRepo = new ResumeRepository(db);
   const resumeDocumentRepo = new ResumeDocumentRepository(db);
@@ -184,6 +204,16 @@ export function createContainer(deps: ContainerDeps): Container {
     config.cache.categoriesTtl
   );
   const orders = new OrderService(orderRepo, referrals);
+  const reviews = new ReviewService(reviewRepo, productRepo, orderRepo, sellerRepo, userRepo);
+  const cart = new CartService(cartRepo, productRepo, orders);
+  const sellerProducts = new SellerProductService(
+    sellerRepo,
+    productRepo,
+    productImageRepo,
+    storage,
+    config.apiPublicUrl
+  );
+  const sellerOrders = new SellerOrderService(sellerRepo, orderRepo, notificationRepo);
   const account = new AccountService(userRepo, sellerRepo, storage, config.apiPublicUrl);
   const notificationService = new NotificationService(notificationRepo);
   const horoscope = new HoroscopeService(userRepo, ai, cache);
@@ -223,6 +253,7 @@ export function createContainer(deps: ContainerDeps): Container {
     productImages: productImageRepo,
     orders: orderRepo,
     reviews: reviewRepo,
+    reviewService: reviews,
     resumes: resumeRepo,
     resumeDocuments: resumeDocumentRepo,
     listings: jobListingRepo,
@@ -236,11 +267,15 @@ export function createContainer(deps: ContainerDeps): Container {
     controllers: {
       auth: createAuthController({ auth, tokens, config }),
       catalog: createCatalogController({ catalog }),
+      reviews: createReviewsController({ reviews }),
+      cart: createCartController({ cart }),
       orders: createOrdersController({ orders }),
       admin: createAdminController({ admin }),
       account: createAccountController({ account, horoscope, notifications: notificationService }),
       jobs: createJobController({ jobs }),
       referral: createReferralController({ referrals }),
+      sellerProducts: createSellerProductsController({ sellerProducts }),
+      sellerOrders: createSellerOrdersController({ sellerOrders }),
       content: createContentController({ content }),
       files: createFilesController({ storage }),
       social: createSocialController({ social, reports }),

@@ -4,6 +4,7 @@ export * from './category.repository';
 export * from './product.repository';
 export * from './product-image.repository';
 export * from './order.repository';
+export * from './cart.repository';
 export * from './review.repository';
 export * from './resume.repository';
 export * from './resume-document.repository';

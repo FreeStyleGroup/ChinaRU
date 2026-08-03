@@ -12,7 +12,7 @@ import {
 
 import { products } from './catalog';
 import { softDelete, timestamps } from './columns';
-import { currency, orderStatus } from './enums';
+import { currency, fulfillmentStatus, orderStatus } from './enums';
 import { sellerProfiles, users } from './users';
 
 export const orders = pgTable(
@@ -47,6 +47,7 @@ export const orderItems = pgTable(
     qty: integer('qty').notNull(),
     price: numeric('price', { precision: 12, scale: 2 }).notNull(),
     nameSnapshot: text('name_snapshot').notNull(),
+    fulfillmentStatus: fulfillmentStatus('fulfillment_status').notNull().default('processing'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   t => [

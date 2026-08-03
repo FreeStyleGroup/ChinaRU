@@ -7,6 +7,20 @@ import type { Database } from '../client';
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 
+/** Плоская строка «заказ × позиция продавца» для группировки в кабинете продавца. */
+export interface SellerOrderRow {
+  orderId: string;
+  orderStatus: Order['status'];
+  currency: Order['currency'];
+  orderCreatedAt: Date;
+  itemId: string;
+  productId: string;
+  nameSnapshot: string;
+  qty: number;
+  price: string;
+  fulfillmentStatus: OrderItem['fulfillmentStatus'];
+}
+
 export interface CreateOrderItemInput {
   productId: string;
   qty: number;
@@ -129,6 +143,23 @@ export class OrderRepository {
     return this.db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
   }
 
+  /** Покупал ли пользователь этот товар (для «отзыв только после покупки»). */
+  async hasPurchased(buyerId: string, productId: string): Promise<boolean> {
+    const [row] = await this.db
+      .select({ id: orderItems.id })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(
+        and(
+          eq(orders.buyerId, buyerId),
+          eq(orderItems.productId, productId),
+          isNull(orders.deletedAt)
+        )
+      )
+      .limit(1);
+    return row !== undefined;
+  }
+
   async listByBuyer(buyerId: string): Promise<Order[]> {
     return this.db
       .select()
@@ -165,5 +196,62 @@ export class OrderRepository {
       .where(and(eq(orders.id, id), isNull(orders.deletedAt)))
       .returning();
     return row ?? null;
+  }
+
+  /**
+   * Строки «заказ × позиция» для одного продавца (кабинет «Заказы»), новые сверху.
+   * Один запрос с join; сервис группирует по `orderId`.
+   */
+  async listSellerOrderRows(sellerId: string): Promise<SellerOrderRow[]> {
+    return this.db
+      .select({
+        orderId: orders.id,
+        orderStatus: orders.status,
+        currency: orders.currency,
+        orderCreatedAt: orders.createdAt,
+        itemId: orderItems.id,
+        productId: orderItems.productId,
+        nameSnapshot: orderItems.nameSnapshot,
+        qty: orderItems.qty,
+        price: orderItems.price,
+        fulfillmentStatus: orderItems.fulfillmentStatus,
+      })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(and(eq(orderItems.sellerId, sellerId), isNull(orders.deletedAt)))
+      .orderBy(desc(orders.createdAt));
+  }
+
+  /** Текущие статусы исполнения позиций продавца в конкретном заказе (для валидации перехода). */
+  async sellerItemFulfillments(
+    orderId: string,
+    sellerId: string
+  ): Promise<OrderItem['fulfillmentStatus'][]> {
+    const rows = await this.db
+      .select({ fulfillmentStatus: orderItems.fulfillmentStatus })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(
+        and(
+          eq(orderItems.orderId, orderId),
+          eq(orderItems.sellerId, sellerId),
+          isNull(orders.deletedAt)
+        )
+      );
+    return rows.map(r => r.fulfillmentStatus);
+  }
+
+  /** Обновляет статус исполнения всех позиций продавца в заказе разом. Возвращает число затронутых. */
+  async updateSellerItemsFulfillment(
+    orderId: string,
+    sellerId: string,
+    status: OrderItem['fulfillmentStatus']
+  ): Promise<number> {
+    const rows = await this.db
+      .update(orderItems)
+      .set({ fulfillmentStatus: status })
+      .where(and(eq(orderItems.orderId, orderId), eq(orderItems.sellerId, sellerId)))
+      .returning({ id: orderItems.id });
+    return rows.length;
   }
 }

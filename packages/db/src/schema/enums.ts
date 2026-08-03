@@ -13,6 +13,7 @@ import {
   NOTIFICATION_TYPES,
   OAUTH_PROVIDERS,
   ORDER_STATUSES,
+  FULFILLMENT_STATUSES,
   PRODUCT_STATUSES,
   REFERRAL_EVENTS,
   REPORT_STATUSES,
@@ -45,6 +46,7 @@ export const oauthProvider = pgEnum('oauth_provider', OAUTH_PROVIDERS);
 export const sellerVerifyStatus = pgEnum('seller_verify_status', SELLER_VERIFY_STATUSES);
 export const productStatus = pgEnum('product_status', PRODUCT_STATUSES);
 export const orderStatus = pgEnum('order_status', ORDER_STATUSES);
+export const fulfillmentStatus = pgEnum('fulfillment_status', FULFILLMENT_STATUSES);
 export const reviewStatus = pgEnum('review_status', REVIEW_STATUSES);
 export const jobWorkType = pgEnum('job_work_type', JOB_WORK_TYPES);
 export const jobStatus = pgEnum('job_status', JOB_STATUSES);

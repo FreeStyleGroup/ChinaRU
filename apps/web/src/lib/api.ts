@@ -11,6 +11,7 @@ import type {
   PostDto,
   ProductDto,
   ProductListQuery,
+  ReviewDto,
   ResumeListQuery,
   ResumePublicDto,
   TenderDto,
@@ -71,6 +72,8 @@ export const catalogApi = {
     }),
   product: (slug: string) =>
     apiGet<ProductDto>(`/catalog/products/${encodeURIComponent(slug)}`, { revalidate: 300 }),
+  reviews: (productId: string) =>
+    apiGet<ReviewDto[]>(`/products/${encodeURIComponent(productId)}/reviews`, { revalidate: 120 }),
 };
 
 function buildJobQuery(query: Partial<JobListQuery>): string {

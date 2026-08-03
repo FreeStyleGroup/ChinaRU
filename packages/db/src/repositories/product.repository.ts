@@ -96,6 +96,18 @@ export class ProductRepository {
     return row ?? null;
   }
 
+  /** Товар продавца по SKU (для проверки уникальности артикула в рамках магазина). */
+  async findBySellerSku(sellerId: string, sku: string): Promise<Product | null> {
+    const [row] = await this.db
+      .select()
+      .from(products)
+      .where(
+        and(eq(products.sellerId, sellerId), eq(products.sku, sku), isNull(products.deletedAt))
+      )
+      .limit(1);
+    return row ?? null;
+  }
+
   async create(data: NewProduct): Promise<Product> {
     const [row] = await this.db.insert(products).values(data).returning();
     if (!row) throw new Error('products.insert returned no row');
@@ -119,5 +131,10 @@ export class ProductRepository {
       .where(and(eq(products.id, id), eq(products.sellerId, sellerId), isNull(products.deletedAt)))
       .returning({ id: products.id });
     return rows.length > 0;
+  }
+
+  /** Пересчёт агрегатов рейтинга (вызывается после модерации отзыва). */
+  async setRating(id: string, rating: string, reviewCount: number): Promise<void> {
+    await this.db.update(products).set({ rating, reviewCount }).where(eq(products.id, id));
   }
 }

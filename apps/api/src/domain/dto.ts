@@ -3,6 +3,7 @@ import type {
   ApplicationWithVacancy,
   Article,
   BidWithBidder,
+  CartLine,
   CommentWithAuthor,
   CompanyRef,
   ContentAgent,
@@ -12,6 +13,7 @@ import type {
   Notification,
   Order,
   OrderItem,
+  SellerOrderRow,
   PostWithAuthor,
   Product,
   Report,
@@ -33,6 +35,7 @@ import type {
   ArticleCardDto,
   ArticleDto,
   ArticlePublicDto,
+  CartDto,
   CompanyRefDto,
   ContentAgentDto,
   JobListingDto,
@@ -42,6 +45,8 @@ import type {
   NotificationDto,
   OrderDto,
   OrderItemDto,
+  SellerOrderDto,
+  FulfillmentStatus,
   PostCommentDto,
   PostDto,
   ProductDto,
@@ -150,7 +155,45 @@ export function toOrderItemDto(i: OrderItem): OrderItemDto {
     qty: i.qty,
     price: i.price,
     nameSnapshot: i.nameSnapshot,
+    fulfillmentStatus: i.fulfillmentStatus,
     createdAt: i.createdAt.toISOString(),
+  };
+}
+
+/** Ранг «продвинутости» исполнения для агрегата по позициям продавца (наименее продвинутый — представитель). */
+const FULFILLMENT_RANK: Record<FulfillmentStatus, number> = {
+  processing: 0,
+  shipped: 1,
+  delivered: 2,
+  cancelled: 3,
+};
+
+/** Группа строк одного заказа (все — одного продавца) → DTO кабинета продавца. */
+export function toSellerOrderDto(rows: SellerOrderRow[]): SellerOrderDto {
+  const first = rows[0];
+  if (!first) throw new Error('toSellerOrderDto: empty rows');
+  const items = rows.map(r => ({
+    id: r.itemId,
+    productId: r.productId,
+    nameSnapshot: r.nameSnapshot,
+    qty: r.qty,
+    price: r.price,
+    lineTotal: (Number.parseFloat(r.price) * r.qty).toFixed(2),
+    fulfillmentStatus: r.fulfillmentStatus,
+  }));
+  const subtotal = items.reduce((s, i) => s + Number.parseFloat(i.lineTotal), 0).toFixed(2);
+  const fulfillmentStatus = items.reduce<FulfillmentStatus>(
+    (min, i) => (FULFILLMENT_RANK[i.fulfillmentStatus] < FULFILLMENT_RANK[min] ? i.fulfillmentStatus : min),
+    first.fulfillmentStatus
+  );
+  return {
+    orderId: first.orderId,
+    orderStatus: first.orderStatus,
+    currency: first.currency,
+    items,
+    subtotal,
+    fulfillmentStatus,
+    createdAt: first.orderCreatedAt.toISOString(),
   };
 }
 
@@ -165,6 +208,32 @@ export function toOrderDto(order: Order, items: OrderItem[]): OrderDto {
     createdAt: order.createdAt.toISOString(),
     updatedAt: order.updatedAt.toISOString(),
   };
+}
+
+export function toCartDto(lines: CartLine[]): CartDto {
+  const items = lines.map(l => {
+    const lineTotal = (Number.parseFloat(l.price) * l.qty).toFixed(2);
+    return {
+      id: l.id,
+      productId: l.productId,
+      qty: l.qty,
+      slug: l.slug,
+      nameRu: l.nameRu,
+      nameEn: l.nameEn,
+      nameZh: l.nameZh,
+      price: l.price,
+      currency: l.currency,
+      imageUrl: l.imageUrl,
+      stock: l.stock,
+      available: l.status === 'active' && l.stock >= l.qty,
+      lineTotal,
+      createdAt: l.createdAt.toISOString(),
+    };
+  });
+  const totalQty = items.reduce((s, i) => s + i.qty, 0);
+  const totalAmount = items.reduce((s, i) => s + Number.parseFloat(i.lineTotal), 0).toFixed(2);
+  const currency = items[0]?.currency ?? 'rub';
+  return { items, totalQty, totalAmount, currency };
 }
 
 export function toReviewDto(r: ReviewWithAuthor): ReviewDto {

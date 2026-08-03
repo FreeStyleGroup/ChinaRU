@@ -8,8 +8,8 @@ import {
 import { Container } from '@china-ru/ui';
 
 import { NewsBlock } from '@/components/content/news-block';
-import { CompatibilityChecker } from '@/components/horoscope/compatibility-checker';
 import { HoroscopeCalculator } from '@/components/horoscope/calculator';
+import { CompatibilityChecker } from '@/components/horoscope/compatibility-checker';
 import { Link } from '@/i18n/navigation';
 
 import type { Metadata } from 'next';

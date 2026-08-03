@@ -13,6 +13,7 @@ import {
 } from '../dto';
 import { computeResumeRating } from '../jobs/resume-rating';
 
+import type { ReviewService } from '../catalog/review.service';
 import type {
   AnalyticsRepository,
   AuditRepository,
@@ -58,6 +59,7 @@ export interface AdminServiceDeps {
   productImages: ProductImageRepository;
   orders: OrderRepository;
   reviews: ReviewRepository;
+  reviewService: ReviewService;
   resumes: ResumeRepository;
   resumeDocuments: ResumeDocumentRepository;
   listings: JobListingRepository;
@@ -189,6 +191,8 @@ export class AdminService {
   ): Promise<{ id: string; status: string }> {
     const updated = await this.deps.reviews.setStatus(id, input.status);
     if (!updated) throw new NotFoundError('Отзыв не найден', 'review_not_found');
+    // Одобрение включает отзыв в агрегат рейтинга, отклонение исключает — пересчитываем.
+    await this.deps.reviewService.recomputeAggregates(updated.productId, updated.sellerId);
     await this.deps.audit.record({
       actorId: actor.userId,
       action: 'review.moderate',

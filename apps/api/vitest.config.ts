@@ -14,5 +14,11 @@ export default defineConfig({
       JWT_REFRESH_SECRET: 'test_refresh_secret_must_be_at_least_32_chars',
       BCRYPT_COST: '8',
     },
+    // Каждый интеграционный файл поднимает свой инстанс PGlite (in-memory Postgres).
+    // Без ограничения форков десятки инстансов конкурируют за CPU и хук beforeAll
+    // (createTestDb) срывается по таймауту. Ограничиваем параллелизм и даём хукам запас.
+    hookTimeout: 30_000,
+    testTimeout: 30_000,
+    poolOptions: { forks: { maxForks: 4, minForks: 1 } },
   },
 });

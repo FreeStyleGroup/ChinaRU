@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { idSchema, isoDateTime } from '../common';
-import { currencySchema, orderStatusSchema } from '../enums';
+import { currencySchema, fulfillmentStatusSchema, orderStatusSchema } from '../enums';
 
 /** Позиция создаваемого заказа. */
 export const createOrderItemSchema = z.object({
@@ -31,9 +31,43 @@ export const orderItemDtoSchema = z.object({
   qty: z.number().int(),
   price: z.string(),
   nameSnapshot: z.string(),
+  fulfillmentStatus: fulfillmentStatusSchema,
   createdAt: isoDateTime,
 });
 export type OrderItemDto = z.infer<typeof orderItemDtoSchema>;
+
+/** Смена статуса исполнения продавцом; переходы валидирует сервис (R3). */
+export const updateFulfillmentSchema = z.object({
+  status: fulfillmentStatusSchema,
+});
+export type UpdateFulfillmentInput = z.infer<typeof updateFulfillmentSchema>;
+
+/** Позиция заказа глазами продавца (только свои товары, с итогом строки). */
+export const sellerOrderItemDtoSchema = z.object({
+  id: idSchema,
+  productId: idSchema,
+  nameSnapshot: z.string(),
+  qty: z.number().int(),
+  price: z.string(),
+  lineTotal: z.string(),
+  fulfillmentStatus: fulfillmentStatusSchema,
+});
+export type SellerOrderItemDto = z.infer<typeof sellerOrderItemDtoSchema>;
+
+/**
+ * Заказ в кабинете продавца: содержит только его позиции + подытог по ним.
+ * `fulfillmentStatus` — агрегат по позициям продавца (действие в UI применяется ко всем сразу).
+ */
+export const sellerOrderDtoSchema = z.object({
+  orderId: idSchema,
+  orderStatus: orderStatusSchema,
+  currency: currencySchema,
+  items: z.array(sellerOrderItemDtoSchema),
+  subtotal: z.string(),
+  fulfillmentStatus: fulfillmentStatusSchema,
+  createdAt: isoDateTime,
+});
+export type SellerOrderDto = z.infer<typeof sellerOrderDtoSchema>;
 
 export const orderDtoSchema = z.object({
   id: idSchema,

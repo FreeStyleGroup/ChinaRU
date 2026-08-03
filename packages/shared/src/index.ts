@@ -27,6 +27,7 @@ export * from './schemas/seller';
 export * from './schemas/catalog';
 export * from './schemas/review';
 export * from './schemas/order';
+export * from './schemas/cart';
 export * from './schemas/chat';
 export * from './schemas/travel';
 export * from './schemas/jobs';

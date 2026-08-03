@@ -1,4 +1,4 @@
-import { asc, eq, inArray } from 'drizzle-orm';
+import { asc, count, eq, inArray } from 'drizzle-orm';
 
 import { productImages } from '../schema';
 
@@ -32,5 +32,26 @@ export class ProductImageRepository {
     const [row] = await this.db.insert(productImages).values(data).returning();
     if (!row) throw new Error('product_images.insert returned no row');
     return row;
+  }
+
+  async findById(id: string): Promise<ProductImage | null> {
+    const [row] = await this.db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.id, id))
+      .limit(1);
+    return row ?? null;
+  }
+
+  async countByProduct(productId: string): Promise<number> {
+    const [agg] = await this.db
+      .select({ value: count() })
+      .from(productImages)
+      .where(eq(productImages.productId, productId));
+    return agg?.value ?? 0;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.db.delete(productImages).where(eq(productImages.id, id));
   }
 }

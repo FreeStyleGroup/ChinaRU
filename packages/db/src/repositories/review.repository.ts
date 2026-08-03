@@ -1,8 +1,15 @@
-import { and, count, desc, eq, isNull, type SQL } from 'drizzle-orm';
+import { and, avg, count, desc, eq, isNull, type SQL } from 'drizzle-orm';
 
 import { reviews, users } from '../schema';
 
 import type { Database } from '../client';
+
+/** Агрегат одобренных отзывов для пересчёта рейтинга товара/продавца. */
+export interface RatingAggregate {
+  /** Средний рейтинг с двумя знаками (строка numeric); '0.00' при отсутствии отзывов. */
+  average: string;
+  count: number;
+}
 
 export type Review = typeof reviews.$inferSelect;
 export type NewReview = typeof reviews.$inferInsert;
@@ -79,5 +86,41 @@ export class ReviewRepository {
       .where(and(eq(reviews.id, id), isNull(reviews.deletedAt)))
       .returning();
     return row ?? null;
+  }
+
+  /** Отзыв данного автора на данный товар (защита «один отзыв на товар»). */
+  async findByProductAndAuthor(productId: string, authorId: string): Promise<Review | null> {
+    const [row] = await this.db
+      .select()
+      .from(reviews)
+      .where(
+        and(
+          eq(reviews.productId, productId),
+          eq(reviews.authorId, authorId),
+          isNull(reviews.deletedAt)
+        )
+      )
+      .limit(1);
+    return row ?? null;
+  }
+
+  private async aggregate(condition: SQL): Promise<RatingAggregate> {
+    const [row] = await this.db
+      .select({ average: avg(reviews.rating), value: count() })
+      .from(reviews)
+      .where(and(condition, eq(reviews.status, 'approved'), isNull(reviews.deletedAt)));
+    const raw = row?.average ?? null;
+    return {
+      average: raw === null ? '0.00' : Number.parseFloat(raw).toFixed(2),
+      count: row?.value ?? 0,
+    };
+  }
+
+  aggregateForProduct(productId: string): Promise<RatingAggregate> {
+    return this.aggregate(eq(reviews.productId, productId));
+  }
+
+  aggregateForSeller(sellerId: string): Promise<RatingAggregate> {
+    return this.aggregate(eq(reviews.sellerId, sellerId));
   }
 }

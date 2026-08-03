@@ -8,6 +8,7 @@ import {
   DOCUMENT_MAX_BYTES,
   DOCUMENT_MIMES,
   IMAGE_MIMES,
+  PRODUCT_IMAGE_MAX_BYTES,
   singleUpload,
 } from './http/middleware/upload';
 import { openApiDocument } from './openapi/spec';
@@ -21,11 +22,15 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   const {
     auth,
     catalog,
+    reviews,
+    cart,
     orders,
     admin,
     account,
     jobs,
     referral,
+    sellerProducts,
+    sellerOrders,
     content,
     files,
     social,
@@ -40,6 +45,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   const documentUpload = singleUpload('file', {
     maxBytes: DOCUMENT_MAX_BYTES,
     mimes: DOCUMENT_MIMES,
+  });
+  const productImageUpload = singleUpload('file', {
+    maxBytes: PRODUCT_IMAGE_MAX_BYTES,
+    mimes: IMAGE_MIMES,
   });
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -70,8 +79,13 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/catalog/products', catalog.listProducts);
   router.get('/catalog/products/:slug', catalog.getProduct);
 
-  // ───────── файлы (публичная раздача аватаров через прокси) ─────────
+  // ───────── отзывы на товар (публичное чтение + создание покупателем) ─────────
+  router.get('/products/:id/reviews', reviews.listForProduct);
+  router.post('/products/:id/reviews', requireAuth, reviews.create);
+
+  // ───────── файлы (публичная раздача аватаров и фото товаров через прокси) ─────────
   router.get('/files/avatars/:userId', files.avatar);
+  router.get('/files/product-images/:productId/:imageId', files.productImage);
 
   // ───────── контент (публичное чтение): блок новостей + статьи разделов ─────────
   router.get('/content/articles', content.listArticles);
@@ -116,6 +130,24 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/seller/vacancies', requireAuth, jobs.createVacancy);
   router.get('/seller/vacancies/:id/applicants', requireAuth, jobs.listingApplicants);
   router.put('/seller/applications/:id', requireAuth, jobs.setApplicationStatus);
+
+  // ───────── товары продавца («Мой магазин»: CRUD + фото) ─────────
+  router.get('/seller/products', requireAuth, sellerProducts.list);
+  router.post('/seller/products', requireAuth, sellerProducts.create);
+  router.get('/seller/products/:id', requireAuth, sellerProducts.get);
+  router.patch('/seller/products/:id', requireAuth, sellerProducts.update);
+  router.delete('/seller/products/:id', requireAuth, sellerProducts.remove);
+  router.post(
+    '/seller/products/:id/images',
+    requireAuth,
+    productImageUpload,
+    sellerProducts.addImage
+  );
+  router.delete('/seller/products/:id/images/:imageId', requireAuth, sellerProducts.removeImage);
+
+  // ───────── заказы продавца («Мой магазин» → «Заказы»: список + статус исполнения) ─────────
+  router.get('/seller/orders', requireAuth, sellerOrders.list);
+  router.patch('/seller/orders/:orderId/fulfillment', requireAuth, sellerOrders.setFulfillment);
 
   // ───────── соцсеть (B2B-лента: посты пользователей и компаний + нативная реклама) ─────────
   // Публичное чтение с optionalAuth — чтобы проставлять флаг `liked` авторизованному.
@@ -175,6 +207,14 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/account/garage', requireAuth, garage.add);
   router.delete('/account/garage/:id', requireAuth, garage.remove);
   router.get('/account/garage/:id/parts', requireAuth, garage.parts);
+
+  // ───────── cart (корзина покупателя) ─────────
+  router.get('/cart', requireAuth, cart.get);
+  router.post('/cart/items', requireAuth, cart.add);
+  router.patch('/cart/items/:id', requireAuth, cart.updateItem);
+  router.delete('/cart/items/:id', requireAuth, cart.remove);
+  router.delete('/cart', requireAuth, cart.clear);
+  router.post('/cart/checkout', requireAuth, cart.checkout);
 
   // ───────── orders (покупатель) ─────────
   router.get('/orders', requireAuth, orders.list);

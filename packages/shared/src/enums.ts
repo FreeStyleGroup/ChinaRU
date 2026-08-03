@@ -25,6 +25,12 @@ export const ORDER_STATUSES = [
   'refunded',
 ] as const;
 export const REVIEW_STATUSES = ['pending', 'approved', 'rejected'] as const;
+/**
+ * Статус исполнения позиции заказа со стороны продавца (мультивендорный маркетплейс:
+ * каждый продавец отгружает только свои позиции). Отделён от `ORDER_STATUSES`
+ * (платёжный/общий статус заказа для покупателя).
+ */
+export const FULFILLMENT_STATUSES = ['processing', 'shipped', 'delivered', 'cancelled'] as const;
 export const JOB_WORK_TYPES = [
   'full_time',
   'part_time',
@@ -153,6 +159,7 @@ export const sellerVerifyStatusSchema = z.enum(SELLER_VERIFY_STATUSES);
 export const productStatusSchema = z.enum(PRODUCT_STATUSES);
 export const orderStatusSchema = z.enum(ORDER_STATUSES);
 export const reviewStatusSchema = z.enum(REVIEW_STATUSES);
+export const fulfillmentStatusSchema = z.enum(FULFILLMENT_STATUSES);
 export const jobWorkTypeSchema = z.enum(JOB_WORK_TYPES);
 export const jobStatusSchema = z.enum(JOB_STATUSES);
 export const jobApplicationStatusSchema = z.enum(JOB_APPLICATION_STATUSES);
@@ -182,6 +189,7 @@ export type OauthProvider = z.infer<typeof oauthProviderSchema>;
 export type SellerVerifyStatus = z.infer<typeof sellerVerifyStatusSchema>;
 export type ProductStatus = z.infer<typeof productStatusSchema>;
 export type OrderStatus = z.infer<typeof orderStatusSchema>;
+export type FulfillmentStatus = z.infer<typeof fulfillmentStatusSchema>;
 export type ReviewStatus = z.infer<typeof reviewStatusSchema>;
 export type JobWorkType = z.infer<typeof jobWorkTypeSchema>;
 export type JobStatus = z.infer<typeof jobStatusSchema>;

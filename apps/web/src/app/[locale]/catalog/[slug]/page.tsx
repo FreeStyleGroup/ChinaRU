@@ -3,13 +3,15 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 
+import { AddToCart } from '@/components/add-to-cart';
 import { OrderButton } from '@/components/order-button';
+import { ProductReviews } from '@/components/product-reviews';
 import { ApiError, catalogApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
 import { localizedName, pickText } from '@/lib/localize';
 import { breadcrumbJsonLd, buildMetadata, productJsonLd } from '@/lib/seo';
 
-import type { ProductDto } from '@china-ru/shared';
+import type { ProductDto, ReviewDto } from '@china-ru/shared';
 import type { Metadata } from 'next';
 
 async function loadProduct(slug: string): Promise<ProductDto | null> {
@@ -18,6 +20,14 @@ async function loadProduct(slug: string): Promise<ProductDto | null> {
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
+  }
+}
+
+async function loadReviews(productId: string): Promise<ReviewDto[]> {
+  try {
+    return await catalogApi.reviews(productId);
+  } catch {
+    return [];
   }
 }
 
@@ -57,6 +67,7 @@ export default async function ProductPage({
 
   const product = await loadProduct(slug);
   if (!product) notFound();
+  const reviews = await loadReviews(product.id);
 
   const name = localizedName(product, locale);
   const description = pickText(
@@ -99,13 +110,27 @@ export default async function ProductPage({
               {t('sku')}: {product.sku}
             </Badge>
             <h1 className="text-3xl font-bold tracking-tight text-ink">{name}</h1>
+            {product.reviewCount > 0 && (
+              <p className="flex items-center gap-2 text-sm text-muted">
+                <span className="text-amber-500" aria-hidden>
+                  {'★'.repeat(Math.round(Number(product.rating)))}
+                  <span className="text-line">
+                    {'★'.repeat(5 - Math.round(Number(product.rating)))}
+                  </span>
+                </span>
+                {Number(product.rating).toFixed(1)} · {product.reviewCount} отзыв(ов)
+              </p>
+            )}
           </div>
 
           <p className="text-3xl font-bold text-brand">
             {formatPrice(product.price, product.currency, locale)}
           </p>
 
-          <OrderButton productId={product.id} />
+          <div className="flex flex-wrap items-start gap-3">
+            <AddToCart productId={product.id} />
+            <OrderButton productId={product.id} />
+          </div>
 
           {description && (
             <div className="space-y-2 border-t border-line pt-6">
@@ -114,6 +139,10 @@ export default async function ProductPage({
             </div>
           )}
         </div>
+      </div>
+
+      <div className="mt-12">
+        <ProductReviews productId={product.id} initial={reviews} />
       </div>
     </Container>
   );

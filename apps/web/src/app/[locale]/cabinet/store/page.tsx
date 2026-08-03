@@ -11,18 +11,21 @@ import { useState } from 'react';
 
 import { CompanyVacancies } from '@/components/cabinet/company-vacancies';
 import { useSellerProfile } from '@/components/cabinet/seller-context';
+import { SellerOrders } from '@/components/cabinet/seller-orders';
+import { SellerProducts } from '@/components/cabinet/seller-products';
+import { Tabs } from '@/components/cabinet/tabs';
 import { accountClient, ClientApiError } from '@/lib/api-client';
 
 import type { CreateSellerProfileInput, SellerProfileDto } from '@china-ru/shared';
 
-const SELLER_TABS = [
-  'Обзор',
-  'Товары',
-  'Заказы',
-  'Магазин',
-  'Аналитика',
-  'Продвижение',
-  'Помощь',
+const STORE_TABS = [
+  { key: 'overview', label: 'Обзор' },
+  { key: 'products', label: 'Товары' },
+  { key: 'orders', label: 'Заказы' },
+  { key: 'shop', label: 'Магазин' },
+  { key: 'analytics', label: 'Аналитика' },
+  { key: 'promo', label: 'Продвижение' },
+  { key: 'help', label: 'Помощь' },
 ] as const;
 
 function StoreHandle({ profile }: { profile: SellerProfileDto }) {
@@ -247,6 +250,56 @@ function NicknamePanel({ profile, onSaved }: { profile: SellerProfileDto; onSave
   );
 }
 
+function StoreOverview() {
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="rounded-2xl border border-line bg-white p-5">
+          <p className="text-sm text-muted">Финансы</p>
+          <p className="mt-1 text-2xl font-bold text-ink">152 340,50 ₽</p>
+          <p className="text-sm text-muted">Можно вывести: 121 800 ₽</p>
+        </div>
+        <div className="rounded-2xl border border-line bg-white p-5">
+          <p className="text-sm text-muted">Споры</p>
+          <p className="mt-1 text-sm text-ink">Новые: 1 · В процессе: 3 · Ждут возврата: 0</p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-5">
+        <p className="mb-3 text-sm font-semibold text-muted">Ключевые метрики · за сутки</p>
+        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-5">
+          {[
+            ['Просмотры', '12 540'],
+            ['Посетители', '8 930'],
+            ['Заказы', '112'],
+            ['Выручка', '256 780 ₽'],
+            ['CTR', '2.5%'],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-xl bg-surface p-3">
+              <p className="text-lg font-bold text-ink">{value}</p>
+              <p className="text-xs text-muted">{label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <CompanyVacancies />
+
+      <p className="text-center text-xs text-muted">
+        Финансы и метрики — демонстрационные; товары во вкладке «Товары» уже реальные.
+      </p>
+    </div>
+  );
+}
+
+function Placeholder({ text }: { text: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-line p-12 text-center text-muted">
+      {text}
+    </div>
+  );
+}
+
 function SellerDashboard({
   profile,
   onProfile,
@@ -271,75 +324,16 @@ function SellerDashboard({
         </span>
       </div>
 
-      <div className="flex flex-wrap gap-1 border-b border-line">
-        {SELLER_TABS.map((t, i) => (
-          <span
-            key={t}
-            className={`-mb-px border-b-2 px-4 py-2.5 text-sm ${
-              i === 0 ? 'border-brand font-medium text-brand' : 'border-transparent text-muted'
-            }`}
-          >
-            {t}
-          </span>
-        ))}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-sm text-muted">Финансы</p>
-          <p className="mt-1 text-2xl font-bold text-ink">152 340,50 ₽</p>
-          <p className="text-sm text-muted">Можно вывести: 121 800 ₽</p>
-        </div>
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <p className="text-sm text-muted">Споры</p>
-          <p className="mt-1 text-sm text-ink">Новые: 1 · В процессе: 3 · Ждут возврата: 0</p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-line bg-white p-5">
-        <p className="mb-3 text-sm font-semibold text-muted">Товары</p>
-        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-3">
-          {[
-            ['В продаже', 250],
-            ['Нет в наличии', 15],
-            ['Заблокировано', 2],
-            ['На рассмотрении', 5],
-            ['Нужно исправить', 1],
-            ['Снято с продажи', 10],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-surface p-3">
-              <p className="text-xl font-bold text-ink">{value}</p>
-              <p className="text-xs text-muted">{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-line bg-white p-5">
-        <p className="mb-3 text-sm font-semibold text-muted">Ключевые метрики · за сутки</p>
-        <div className="grid grid-cols-2 gap-3 text-center sm:grid-cols-5">
-          {[
-            ['Просмотры', '12 540'],
-            ['Посетители', '8 930'],
-            ['Заказы', '112'],
-            ['Выручка', '256 780 ₽'],
-            ['CTR', '2.5%'],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-surface p-3">
-              <p className="text-lg font-bold text-ink">{value}</p>
-              <p className="text-xs text-muted">{label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <CompanyVacancies />
-
-      <NicknamePanel profile={profile} onSaved={onProfile} />
-
-      <p className="text-center text-xs text-muted">
-        Демонстрационные показатели — данные подключаются вместе с товарами и заказами продавца.
-      </p>
+      <Tabs tabs={STORE_TABS}>
+        {active => {
+          if (active === 'products') return <SellerProducts />;
+          if (active === 'orders') return <SellerOrders />;
+          if (active === 'shop')
+            return <NicknamePanel profile={profile} onSaved={onProfile} />;
+          if (active === 'overview') return <StoreOverview />;
+          return <Placeholder text="Раздел в разработке." />;
+        }}
+      </Tabs>
     </div>
   );
 }

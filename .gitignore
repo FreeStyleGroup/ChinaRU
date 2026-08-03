@@ -54,3 +54,6 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# Сгенерированный листинг для подачи ЭВМ (собирается build-listing.mjs)
+docs/registration/out/

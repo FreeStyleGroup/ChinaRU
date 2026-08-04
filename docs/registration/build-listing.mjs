@@ -26,6 +26,16 @@ const META = {
   author: 'Бабаев Игорь Владимирович (единственный автор)',
   year: '2026',
   revision: 'deposit/evm-v1.0.0',
+  abstract:
+    '«China.ru — маркетплейс промышленного оборудования из Китая» — веб-платформа B2B-торговли ' +
+    'промышленным оборудованием и комплектующими из КНР. Реализованы: каталог с категориями, ' +
+    'фильтрами, поиском и серверным SEO-рендерингом; карточки товаров с отзывами; корзина и ' +
+    'оформление заказов со списанием остатков в транзакции; личные кабинеты покупателя (заказы, ' +
+    'избранное, гараж, партнёрская программа), продавца (управление товарами с фотографиями, ' +
+    'статусы отгрузки заказов, вакансии) и администратора (модерация контента, верификация ' +
+    'продавцов, аналитика) с разграничением прав по ролям; регистрация и авторизация пользователей, ' +
+    'REST API. Тип ЭВМ: сервер/ПК. ОС: Linux (кроссплатформенно). Языки: TypeScript (Node.js, React), ' +
+    'SQL. СУБД: PostgreSQL. Объём исходного кода: 1 123 833 байта (~1097 КБ).',
 };
 
 // ── Порядок разделов листинга (по приоритету префикса пути) ──
@@ -58,6 +68,7 @@ const EXCLUDE = [
   /drizzle\/meta\/.*\.json$/, // авто-снапшоты Drizzle (машинные, не исходный код)
   /\.(png|jpe?g|svg|ico|webp|gif|woff2?|ttf|map)$/,
   /\.test\.(ts|tsx)$/, // тесты — вспомогательные, в депонируемый листинг не включаем
+  /^docs\//, // документация и оснастка подачи (генераторы) — не код программы
 ];
 
 function tracked() {
@@ -125,6 +136,10 @@ const title = `
     <tr><td>Строк кода</td><td>${totalLines.toLocaleString('ru-RU')}</td></tr>
     <tr><td>Объём исходного кода</td><td>${totalBytes.toLocaleString('ru-RU')} байт (${kb} КБ)</td></tr>
   </table>
+  <div class="cover-abstract">
+    <div class="cover-abstract-h">РЕФЕРАТ</div>
+    <p>${esc(META.abstract)}</p>
+  </div>
   <div class="cover-foot">Санкт-Петербург, ${esc(META.year)}</div>
 </section>`;
 
@@ -135,15 +150,18 @@ const html = `<!doctype html>
   @page { size: A4; margin: 14mm 12mm 16mm 12mm; }
   * { box-sizing: border-box; }
   body { font-family: 'Consolas','DejaVu Sans Mono','Courier New',monospace; color:#000; margin:0; }
-  .cover { height: 262mm; display:flex; flex-direction:column; justify-content:center;
-    text-align:center; page-break-after: always; font-family: 'Times New Roman', serif; }
-  .cover-top { font-size: 12pt; margin-bottom: 30mm; }
+  .cover { min-height: 262mm; display:flex; flex-direction:column; text-align:center;
+    padding-top: 18mm; page-break-after: always; font-family: 'Times New Roman', serif; }
+  .cover-top { font-size: 12pt; margin-bottom: 22mm; }
   .cover h1 { font-size: 20pt; letter-spacing:.5px; margin:0 0 8mm; }
-  .cover-name { font-size: 16pt; font-weight:bold; margin-bottom: 20mm; }
+  .cover-name { font-size: 16pt; font-weight:bold; margin-bottom: 14mm; }
   .cover-meta { margin: 0 auto; border-collapse: collapse; font-size: 11pt; max-width: 165mm; }
   .cover-meta td { border:1px solid #000; padding:2mm 3mm; text-align:left; vertical-align:top; }
   .cover-meta td:first-child { font-weight:bold; white-space:nowrap; width: 48mm; }
-  .cover-foot { margin-top: 28mm; font-size: 12pt; }
+  .cover-abstract { max-width: 165mm; margin: 12mm auto 0; text-align: justify; }
+  .cover-abstract-h { font-weight:bold; font-size: 12pt; text-align:center; margin-bottom: 3mm; }
+  .cover-abstract p { font-size: 11pt; line-height: 1.4; margin: 0; }
+  .cover-foot { margin-top: auto; padding-top: 16mm; font-size: 12pt; }
   .file { page-break-inside: auto; }
   .file h2 { font-size: 9.5pt; background:#000; color:#fff; padding:1.5mm 2mm; margin:6mm 0 0;
     page-break-after: avoid; font-family: 'Consolas', monospace; }

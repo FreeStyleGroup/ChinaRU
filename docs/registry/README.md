@@ -28,13 +28,49 @@
 
 | Документ | Адрес публикации |
 |---|---|
-| 01 Функциональные характеристики | `https://china-ru.ru/docs/registry/01-funkcionalnye-harakteristiki` |
-| 02 Установка и эксплуатация | `https://china-ru.ru/docs/registry/02-ustanovka-i-ekspluataciya` |
-| 03 Жизненный цикл и поддержка | `https://china-ru.ru/docs/registry/03-zhiznennyy-cikl-i-podderzhka` |
-| 04 Стоимость | `https://china-ru.ru/docs/registry/04-stoimost` |
+| 01 Функциональные характеристики | `https://china-ru.ru/reestr-po/funkcionalnye-harakteristiki/` |
+| 02 Установка и эксплуатация | `https://china-ru.ru/reestr-po/ustanovka-i-ekspluataciya/` |
+| 03 Жизненный цикл и поддержка | `https://china-ru.ru/reestr-po/zhiznennyy-cikl-i-podderzhka/` |
+| 04 Стоимость | `https://china-ru.ru/reestr-po/stoimost/` |
 
 Адреса не должны меняться при выпуске новых версий: они попадают в карточку
 реестра, и битая ссылка там — повод для исключения сведений.
+
+### Как опубликовать
+
+Страницы собираются из этих же .md — руками их верстать не надо и НЕЛЬЗЯ:
+две копии одного текста разъезжаются на первой правке, и разъехавшуюся
+заметит проверяющий, а не мы.
+
+```
+node docs/registry/build-site-pages.mjs
+```
+
+Получится готовая папка `out/site/reestr-po/` — залить её целиком в корень
+сайта china-ru.ru (сайт на Битриксе, репозиторий `D:/Claude/China-Bitrix`).
+
+```
+out/site/reestr-po/  →  <корень сайта>/reestr-po/
+  index.php                        оглавление
+  funkcionalnye-harakteristiki/index.php
+  ustanovka-i-ekspluataciya/index.php
+  zhiznennyy-cikl-i-podderzhka/index.php
+  stoimost/index.php
+  regdoc.css                       стили раздела
+  .htaccess                        запрет листинга каталога
+```
+
+Страницы обычные битриксовые: `bitrix/header.php`, содержимое, `bitrix/footer.php`.
+Ни компонента, ни инфоблока, ни правок шаблона не требуется — раздел
+переносится одной папкой и живёт сам по себе.
+
+🔥 Адрес выбран `/reestr-po/`, а не `/docs/`: в репозитории China-Bitrix
+папка `docs/` занята внутренней документацией по архитектуре, и раздел
+с таким именем на сайте однажды выложил бы её наружу.
+
+После заливки проверить: все пять адресов открываются без авторизации,
+в приватном окне и с телефона. Требование реестра — свободный доступ.
+
 
 ## Порядок подачи
 

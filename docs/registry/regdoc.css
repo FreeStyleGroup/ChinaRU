@@ -1,0 +1,199 @@
+/**
+ * Страницы документации для реестра российского ПО.
+ *
+ * Задача та же, что у правового раздела: длинный технический текст должен
+ * читаться. Узкая колонка, крупный интервал, видимая иерархия заголовков
+ * и таблицы, которые не разваливают страницу на телефоне.
+ *
+ * Палитра взята из /local/components/china/legal — эти страницы стоят
+ * рядом с политикой и согласиями и не должны выглядеть чужими.
+ *
+ * Файл лежит в /reestr-po/regdoc.css и подключается через SetAdditionalCSS.
+ */
+
+.regdoc {
+  --rd-brand: #c62828;
+  --rd-ink: #1c1f24;
+  --rd-muted: #6b7280;
+  --rd-line: #e5e7eb;
+  --rd-bg: #f7f8fa;
+
+  padding: 24px 0 56px;
+  color: var(--rd-ink);
+}
+
+/* ─── Переключатель документов ─────────────────────────────── */
+
+.regdoc__nav {
+  padding-bottom: 16px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--rd-line);
+}
+
+.regdoc__nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+}
+
+.regdoc__nav a {
+  color: var(--rd-muted);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.regdoc__nav a:hover {
+  color: var(--rd-brand);
+  border-bottom-color: currentColor;
+}
+
+.regdoc__nav-cur {
+  color: var(--rd-ink);
+  font-weight: 600;
+}
+
+/* ─── Текст документа ──────────────────────────────────────── */
+
+/* Ограничение по символам, а не по пикселям: колонка держит комфортную
+   длину строки независимо от кегля, который задаст шаблон сайта. */
+.regdoc__body {
+  max-width: 76ch;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.regdoc__body h2 {
+  margin: 38px 0 14px;
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.regdoc__body h2:first-child {
+  margin-top: 0;
+}
+
+.regdoc__body h3 {
+  margin: 30px 0 12px;
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.regdoc__body h4 {
+  margin: 24px 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.regdoc__body p {
+  margin: 0 0 14px;
+}
+
+.regdoc__body ul,
+.regdoc__body ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.regdoc__body li {
+  margin-bottom: 7px;
+}
+
+.regdoc__body a {
+  color: var(--rd-brand);
+}
+
+.regdoc__body hr {
+  height: 0;
+  margin: 26px 0;
+  border: 0;
+  border-top: 1px solid var(--rd-line);
+}
+
+.regdoc__body blockquote {
+  margin: 0 0 18px;
+  padding: 14px 18px;
+  border-left: 3px solid var(--rd-brand);
+  background: var(--rd-bg);
+}
+
+.regdoc__body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.regdoc__body code {
+  padding: 2px 5px;
+  border-radius: 3px;
+  background: var(--rd-bg);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.9em;
+  word-break: break-word;
+}
+
+.regdoc__body pre {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border: 1px solid var(--rd-line);
+  border-radius: 4px;
+  background: var(--rd-bg);
+  line-height: 1.5;
+}
+
+.regdoc__body pre code {
+  padding: 0;
+  background: none;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* ─── Таблицы ──────────────────────────────────────────────── */
+
+/* Обёртка со своей прокруткой: таблица требований к оборудованию
+   на телефоне иначе растягивает страницу и ломает всю вёрстку сайта,
+   а не только сам документ. */
+.regdoc__scroll {
+  margin: 0 0 20px;
+  overflow-x: auto;
+}
+
+.regdoc__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.regdoc__table th,
+.regdoc__table td {
+  padding: 9px 12px;
+  border: 1px solid var(--rd-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.regdoc__table th {
+  background: var(--rd-bg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .regdoc {
+    padding-bottom: 36px;
+  }
+
+  .regdoc__body {
+    font-size: 15px;
+  }
+
+  .regdoc__body h2 {
+    font-size: 21px;
+  }
+
+  .regdoc__body h3 {
+    font-size: 17px;
+  }
+}

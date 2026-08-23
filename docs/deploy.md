@@ -16,8 +16,9 @@ prod-образе API при старте).
 
 ## Production
 
-Требуется Docker + домены `china.ru`, `api.china.ru`, `admin.china.ru`,
-указывающие на сервер, и выпущенные сертификаты Let's Encrypt в `/etc/letsencrypt`.
+Требуется Docker + домены из `WEB_HOST`, `API_HOST`, `ADMIN_HOST`,
+указывающие на сервер. Основной china-ru.ru занят действующим сайтом,
+поэтому экземпляр разворачивается на поддоменах app/api/admin, и выпущенные сертификаты Let's Encrypt в `/etc/letsencrypt`.
 
 ```bash
 cp .env.prod.example .env.prod          # заполнить секреты (openssl rand -hex 32 для JWT)
@@ -31,8 +32,9 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 - **web** — Next.js standalone на `:3000` (внутренний). `NEXT_PUBLIC_*` вшиваются на
   этапе сборки (build args).
 - **admin** — собранный Vite-SPA за nginx (`:80`, внутренний).
-- **nginx** — TLS на `80/443`, маршрутизация: `china.ru`→web, `api.china.ru`→api,
-  `admin.china.ru`→admin. ACME-challenge через volume `certbot_webroot`.
+- **nginx** — TLS на `80/443`, маршрутизация по доменам из .env.prod:
+  `WEB_HOST`→web, `API_HOST`→api, `ADMIN_HOST`→admin. Конфиг nginx —
+  шаблон, домены подставляются при старте контейнера. ACME-challenge через volume `certbot_webroot`.
 
 ### Первичный выпуск сертификата
 
@@ -40,7 +42,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 docker run --rm -v /etc/letsencrypt:/etc/letsencrypt \
   -v china-ru_certbot_webroot:/var/www/certbot certbot/certbot certonly \
   --webroot -w /var/www/certbot \
-  -d china.ru -d www.china.ru -d api.china.ru -d admin.china.ru
+  -d app.china-ru.ru -d www.app.china-ru.ru -d api.china-ru.ru -d admin.china-ru.ru
 ```
 
 ## CI/CD

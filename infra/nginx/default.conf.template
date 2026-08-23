@@ -1,0 +1,88 @@
+# ════════════════════════════════════════════════════════════════
+#  China.ru — пограничный nginx (TLS-терминация + маршрутизация).
+#
+#  ШАБЛОН. Домены подставляются при старте контейнера из .env.prod:
+#    WEB_HOST    витрина            (например app.china-ru.ru)
+#    API_HOST    программный интерфейс
+#    ADMIN_HOST  административная панель
+#    CERT_NAME   имя каталога сертификата в /etc/letsencrypt/live/
+#
+#  🔥 Раньше домены были вписаны в конфиг намертво. Это ломало любое
+#  развёртывание не на china.ru: .env.prod меняли, compose поднимался,
+#  а nginx продолжал слушать чужие имена — и наружу не отдавалось ничего.
+#  Подстановкой занимается штатный механизм образа nginx: файлы
+#  /etc/nginx/templates/*.template прогоняются через envsubst.
+#
+#  Переменные самого nginx ($host, $remote_addr) envsubst не трогает —
+#  список подставляемых имён ограничен NGINX_ENVSUBST_FILTER в compose.
+#  Без этого фильтра $host превратился бы в пустую строку.
+# ════════════════════════════════════════════════════════════════
+
+# HTTP → ACME-challenge + редирект на HTTPS.
+server {
+  listen 80;
+  server_name ${WEB_HOST} www.${WEB_HOST} ${API_HOST} ${ADMIN_HOST};
+
+  location /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+  }
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+# Витрина (Next.js).
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${WEB_HOST} www.${WEB_HOST};
+
+  ssl_certificate /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;
+
+  location / {
+    proxy_pass http://web:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
+# API.
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${API_HOST};
+
+  ssl_certificate /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;
+
+  client_max_body_size 5m;
+
+  location / {
+    proxy_pass http://api:3001;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+
+# Админка (статический SPA за своим nginx).
+server {
+  listen 443 ssl;
+  http2 on;
+  server_name ${ADMIN_HOST};
+
+  ssl_certificate /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;
+
+  location / {
+    proxy_pass http://admin:80;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}

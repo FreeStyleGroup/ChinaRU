@@ -111,8 +111,8 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china.ru}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-https://china.ru}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL не задан в .env.prod}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL не задан в .env.prod}
     container_name: china-ru-web
     depends_on: [api]
     networks: [china-ru-network-prod]
@@ -124,7 +124,7 @@ services:
       context: .
       dockerfile: apps/admin/Dockerfile
       args:
-        VITE_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.china.ru}
+        VITE_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL не задан в .env.prod}
     container_name: china-ru-admin
     depends_on: [api]
     networks: [china-ru-network-prod]
@@ -139,8 +139,18 @@ services:
     ports:
       - '80:80'
       - '443:443'
+    environment:
+      # Домены подставляются в шаблон при старте контейнера.
+      # NGINX_ENVSUBST_FILTER ограничивает подстановку этими четырьмя
+      # именами: без него envsubst затёр бы $host и $remote_addr
+      # самого nginx пустыми строками.
+      WEB_HOST: ${WEB_HOST:?WEB_HOST не задан в .env.prod}
+      API_HOST: ${API_HOST:?API_HOST не задан в .env.prod}
+      ADMIN_HOST: ${ADMIN_HOST:?ADMIN_HOST не задан в .env.prod}
+      CERT_NAME: ${CERT_NAME:?CERT_NAME не задан в .env.prod}
+      NGINX_ENVSUBST_FILTER: '^(WEB_HOST|API_HOST|ADMIN_HOST|CERT_NAME)$$'
     volumes:
-      - ./infra/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
       - /etc/letsencrypt:/etc/letsencrypt:ro
       - certbot_webroot:/var/www/certbot
     restart: unless-stopped

@@ -14,6 +14,11 @@ export default tseslint.config(
       '**/coverage/**',
       '**/node_modules/**',
       '**/*.gen.ts',
+      // Генерируется самим Next.js при сборке и правке не подлежит:
+      // next build дописывает в него ссылки на свои типы, а правило
+      // triple-slash-reference валит на этом весь lint. На чистом
+      // клоне проблема не видна — только после первой сборки.
+      '**/next-env.d.ts',
     ],
   },
 

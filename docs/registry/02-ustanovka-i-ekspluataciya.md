@@ -77,7 +77,7 @@ openssl rand -hex 32
 docker run --rm -v /etc/letsencrypt:/etc/letsencrypt \
   -v china-ru_certbot_webroot:/var/www/certbot certbot/certbot certonly \
   --webroot -w /var/www/certbot \
-  -d china.ru -d www.china.ru -d api.china.ru -d admin.china.ru
+  -d china-ru.ru -d www.china-ru.ru -d api.china-ru.ru -d admin.china-ru.ru
 ```
 
 Домены указываются в соответствии с фактическим развёртыванием. Допускается

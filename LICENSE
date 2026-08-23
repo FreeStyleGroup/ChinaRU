@@ -1,0 +1,32 @@
+Copyright (c) 2026 ООО «Чайна.Ру» (OOO "Chaina.Ru")
+ОГРН 1257800030025, ИНН 7801741236
+199178, г. Санкт-Петербург, 17-я линия В.О., д. 52, к. 2, лит. А, помещ. 23-н, офис 8
+
+Все права защищены. All rights reserved.
+
+Программа для ЭВМ «China.ru — маркетплейс промышленного оборудования из Китая».
+
+Исключительное право на настоящее программное обеспечение в полном объёме
+принадлежит ООО «Чайна.Ру».
+
+Использование, копирование, распространение, модификация, декомпиляция
+и иные способы использования настоящего программного обеспечения или любой
+его части допускаются исключительно на основании письменного разрешения
+правообладателя либо заключённого с ним лицензионного договора.
+
+Настоящее программное обеспечение содержит компоненты третьих лиц,
+распространяемые на условиях свободных лицензий (MIT, Apache-2.0, BSD, ISC).
+Перечень таких компонентов с указанием применимых лицензий приведён в файле
+docs/registration/out/SBOM.md. Условия соответствующих лицензий сохраняют
+своё действие в отношении этих компонентов.
+
+--------------------------------------------------------------------------
+
+This software is proprietary. Copyright (c) 2026 OOO "Chaina.Ru".
+All rights reserved. Use, copying, distribution and modification are permitted
+only under a written licence granted by the copyright holder.
+
+Third-party components included in this software are distributed under their
+own permissive open-source licences (MIT, Apache-2.0, BSD, ISC); those licences
+continue to apply to the respective components. See docs/registration/out/SBOM.md
+for the full inventory.

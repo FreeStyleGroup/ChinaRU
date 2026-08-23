@@ -4,7 +4,7 @@
   "description": "China-RU — международный B2B-маркетплейс и портал (Next.js + Node.js). Реестр ПО / investor-grade.",
   "private": true,
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"

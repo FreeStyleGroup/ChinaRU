@@ -52,6 +52,12 @@ services:
     restart: unless-stopped
 
   minio:
+    # ⚠️ Плавающий тег latest: за ним завтра окажется другая сборка — возможно,
+    # с другими условиями лицензии (так Redis уехал с BSD на SSPL). Для реестра
+    # ПО это значит, что заявленный состав перестаёт совпадать с фактическим
+    # сам по себе. Перед подачей зафиксировать версию тем, что реально запущено:
+    #   docker image inspect minio/minio --format '{{index .RepoDigests 0}}'
+    # и подставить сюда minio/minio@sha256:... либо конкретный RELEASE-тег.
     image: minio/minio:latest
     container_name: china-ru-minio-prod
     environment:
@@ -80,11 +86,11 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china.ru}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china-ru.ru}
       COOKIE_SECURE: 'true'
-      WEB_URL: ${WEB_URL:-https://china.ru}
-      ADMIN_URL: ${ADMIN_URL:-https://admin.china.ru}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-https://api.china.ru}
+      WEB_URL: ${WEB_URL:-https://app.china-ru.ru}
+      ADMIN_URL: ${ADMIN_URL:-https://admin.china-ru.ru}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:-https://api.china-ru.ru}
       BCRYPT_COST: '12'
       STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}

@@ -53,13 +53,14 @@
 
 | Что | Адрес | |
 |---|---|---|
-| Функциональные характеристики | `https://china-ru.ru/reestr-po/funkcionalnye-harakteristiki/` | ⏳ опубликовать |
-| Установка и эксплуатация | `https://china-ru.ru/reestr-po/ustanovka-i-ekspluataciya/` | ⏳ опубликовать |
-| Процессы жизненного цикла и поддержка | `https://china-ru.ru/reestr-po/zhiznennyy-cikl-i-podderzhka/` | ⏳ опубликовать |
-| Стоимость | `https://china-ru.ru/reestr-po/stoimost/` | ⏳ опубликовать |
+| Функциональные характеристики | `https://china-ru.ru/reestr-po/funkcionalnye-harakteristiki/` | ✅ |
+| Установка и эксплуатация | `https://china-ru.ru/reestr-po/ustanovka-i-ekspluataciya/` | ✅ |
+| Процессы жизненного цикла и поддержка | `https://china-ru.ru/reestr-po/zhiznennyy-cikl-i-podderzhka/` | ✅ |
+| Стоимость | `https://china-ru.ru/reestr-po/stoimost/` | ✅ |
 
-Тексты готовы, страницы собраны. Публикация — одна команда и заливка папки,
-см. `README.md`, раздел «Как опубликовать».
+✅ Опубликовано на china-ru.ru (подтверждено 02.09.2026): страницы открываются
+без авторизации. Перед подачей повторить проверку из приватного окна и с
+телефона — адреса попадают в карточку реестра и меняться не должны.
 
 ## 5. Соответствие условиям пункта 5 ПП № 1236
 

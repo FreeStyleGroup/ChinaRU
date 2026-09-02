@@ -70,6 +70,74 @@ const copyleft = rows.filter(r => r.copyleft);
 const byLicense = {};
 for (const r of rows) byLicense[r.license] = (byLicense[r.license] ?? 0) + 1;
 
+/* ─────────────────────────────────────────────────────────────
+   Полный прод-граф, включая транзитивные зависимости.
+
+   Перечень прямых зависимостей выше читаем и годится как приложение
+   к заявлению, но утверждение «копилефта нет» относится ко всему
+   поставляемому составу. Проверять его будут эксперты Минцифры,
+   поэтому обход должен собираться вместе с документом, а не отдельно.
+
+   Разворачиваем только dependencies: devDependencies продукт не сопровождают.
+   ───────────────────────────────────────────────────────────── */
+const STRONG_CL = /\b(A?GPL|GPL-[23]|LGPL|SSPL|RSAL|BUSL|CC-BY-NC|Commons-Clause|Elastic-2)/i;
+const WEAK_CL = /\b(MPL|EPL|CDDL|OSL|CPL|Ms-RL)/i;
+
+function resolveFrom(name, fromDir) {
+  let dir = fromDir;
+  for (let i = 0; i < 12; i++) {
+    const cand = join(dir, 'node_modules', name, 'package.json');
+    if (existsSync(cand)) return cand;
+    const up = dirname(dir);
+    if (up === dir) break;
+    dir = up;
+  }
+  return null;
+}
+
+function licOf(pkg) {
+  if (typeof pkg.license === 'string') return pkg.license;
+  if (pkg.license && typeof pkg.license === 'object') return pkg.license.type || '';
+  if (Array.isArray(pkg.licenses)) return pkg.licenses.map(l => l.type || l).join(' OR ');
+  return '';
+}
+
+const graph = new Map();
+const queue = [];
+for (const ws of WORKSPACES) {
+  // WORKSPACES хранит пути к самим package.json, каталог берём через dirname.
+  const pjPath = join(ROOT, ws);
+  if (!existsSync(pjPath)) continue;
+  const pj = readJson(pjPath);
+  for (const dep of Object.keys(pj.dependencies || {})) {
+    queue.push({ name: dep, from: dirname(pjPath) });
+  }
+}
+while (queue.length) {
+  const { name, from } = queue.shift();
+  if (name.startsWith('@china-ru/')) continue;
+  const pjPath = resolveFrom(name, from);
+  if (!pjPath) continue;
+  let pkg;
+  try { pkg = readJson(pjPath); } catch { continue; }
+  const key = `${pkg.name}@${pkg.version}`;
+  if (graph.has(key)) continue;
+  graph.set(key, licOf(pkg) || '(не указана)');
+  const dir = dirname(pjPath);
+  for (const dep of Object.keys(pkg.dependencies || {})) queue.push({ name: dep, from: dir });
+}
+
+const graphByLicense = {};
+const graphStrong = [];
+const graphWeak = [];
+const graphUnknown = [];
+for (const [key, lic] of graph) {
+  graphByLicense[lic] = (graphByLicense[lic] || 0) + 1;
+  if (STRONG_CL.test(lic)) graphStrong.push([key, lic]);
+  else if (WEAK_CL.test(lic)) graphWeak.push([key, lic]);
+  else if (lic === '(не указана)') graphUnknown.push([key, lic]);
+}
+
 const now = process.env.SBOM_DATE ?? ''; // дату проставит правообладатель при печати
 const md = [];
 md.push('# SBOM — реестр зависимостей программы');
@@ -113,6 +181,53 @@ rows.forEach((r, i) => {
 });
 md.push('');
 
+md.push('---');
+md.push('');
+md.push('## Проверка всего графа зависимостей, включая транзитивные');
+md.push('');
+md.push('Перечень выше — прямые прод-зависимости. Утверждение об отсутствии копилефта');
+md.push('относится ко всему поставляемому составу, поэтому отдельно пройден полный граф:');
+md.push('зависимости рабочих пакетов и их зависимости вглубь. `devDependencies` не');
+md.push('разворачиваются — инструменты сборки в поставку не входят.');
+md.push('');
+md.push(`**Обойдено пакетов: ${graph.size}.**`);
+md.push('');
+md.push('| Лицензия | Пакетов |');
+md.push('|---|---|');
+Object.entries(graphByLicense).sort((a, b) => b[1] - a[1])
+  .forEach(([lic, n]) => md.push(`| ${lic} | ${n} |`));
+md.push('');
+if (!graphStrong.length && !graphWeak.length) {
+  md.push('- **Сильный копилефт (GPL, AGPL, LGPL, SSPL, RSAL, BUSL) — не обнаружен.**');
+  md.push('- Слабый копилефт (MPL, EPL, CDDL) — не обнаружен.');
+} else {
+  md.push('⚠️ Обнаружены копилефт-зависимости в транзитивном графе:');
+  md.push('');
+  md.push('| Пакет | Лицензия | Тип |');
+  md.push('|---|---|---|');
+  graphStrong.forEach(([k, l]) => md.push(`| ${k} | ${l} | сильный |`));
+  graphWeak.forEach(([k, l]) => md.push(`| ${k} | ${l} | слабый |`));
+}
+md.push(`- Пакетов без указанной лицензии: ${graphUnknown.length || 'нет'}.`);
+md.push('');
+const ccby = [...graph.entries()].filter(([, l]) => /CC-BY(?!-NC)/i.test(l));
+if (ccby.length) {
+  md.push('### Указание авторства по CC-BY');
+  md.push('');
+  md.push('Лицензия CC-BY копилефт-обязательств не создаёт, но требует указания');
+  md.push('авторства. Настоящий раздел им и является.');
+  md.push('');
+  ccby.forEach(([k, l]) => md.push(`- ${k} — ${l}`));
+  md.push('');
+}
+md.push('### Что сюда не входит');
+md.push('');
+md.push('Образы инфраструктуры (PostgreSQL, Redis, MinIO, Meilisearch, nginx)');
+md.push('зависимостями программы не являются — это внешние службы, разворачиваемые');
+md.push('рядом. Их лицензии разобраны в `docs/registry/README.md`, раздел');
+md.push('«Про лицензии инфраструктуры».');
+md.push('');
+
 mkdirSync(OUT_DIR, { recursive: true });
 writeFileSync(join(OUT_DIR, 'SBOM.md'), md.join('\n'), 'utf8');
 
@@ -120,4 +235,5 @@ console.log('SBOM собран:');
 console.log('  прод-зависимостей:', rows.length);
 console.log('  копилефт:         ', copyleft.length, copyleft.length ? '⚠️ ' + copyleft.map(r => r.name).join(', ') : '(нет)');
 console.log('  лицензии:         ', Object.keys(byLicense).length, 'видов');
+console.log('  весь граф:        ', graph.size, 'пакетов, сильный копилефт:', graphStrong.length || '(нет)');
 console.log('  файл:             ', join(OUT_DIR, 'SBOM.md'));

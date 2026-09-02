@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Тема нужна только до первого кадра Compose: дальше цветами
+         распоряжается ChinaRuTheme. Материал-3 без action bar, иначе
+         поверх Scaffold рисуется вторая шапка. -->
+    <style name="Theme.ChinaRU" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/brand_red</item>
+        <item name="android:windowBackground">@color/background_gray</item>
+    </style>
+</resources>

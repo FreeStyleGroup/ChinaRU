@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Фирменные цвета China: те же значения, что в Compose-теме
+         (ui/theme/Color.kt). Здесь они нужны иконке и системным
+         элементам, которые Compose не рисует. -->
+    <color name="brand_red">#C62828</color>
+    <color name="brand_red_dark">#B71C1C</color>
+    <color name="background_gray">#F5F5F5</color>
+    <color name="white">#FFFFFF</color>
+</resources>

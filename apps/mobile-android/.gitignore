@@ -1,0 +1,16 @@
+*.iml
+.gradle/
+build/
+local.properties
+.idea/
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Ключ подписи и пароли к нему в репозиторий не попадают никогда.
+# Потерянный ключ означает, что обновить приложение в RuStore уже нельзя;
+# утёкший — что кто угодно может выпустить обновление от вашего имени.
+keystore.properties
+*.jks
+*.keystore

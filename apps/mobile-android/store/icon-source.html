@@ -1,0 +1,26 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+    html, body { margin: 0; padding: 0; }
+    /* Ровно 512×512 без полей: магазин сам скруглит углы своей маской. */
+    .icon {
+        width: 512px; height: 512px;
+        background: radial-gradient(120% 120% at 30% 20%, #E53935 0%, #C62828 45%, #B71C1C 100%);
+        display: grid; place-items: center;
+        position: relative; overflow: hidden;
+    }
+    /* Мягкий блик сверху — тот самый дозированный объём, без «игрушечности». */
+    .icon::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 55%);
+    }
+    svg { position: relative; }
+</style>
+<div class="icon">
+    <!-- 中 — тот же знак, что в лаунчер-иконке приложения (ic_launcher_foreground.xml),
+         пропорции сохранены: рамка 40×36 и вертикаль от 20 до 88 в поле 108. -->
+    <svg width="512" height="512" viewBox="0 0 108 108" fill="none">
+        <path d="M34 36 H74 V72 H34 Z" stroke="#FFFFFF" stroke-width="7" stroke-linejoin="miter"/>
+        <path d="M54 20 V88" stroke="#FFFFFF" stroke-width="7"/>
+    </svg>
+</div>

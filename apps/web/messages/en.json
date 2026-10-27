@@ -13,7 +13,7 @@
     "account": "Account"
   },
   "home": {
-    "heroTitle": "B2B marketplace for goods from China",
+    "heroTitle": "Marketplace of industrial equipment from China",
     "heroSubtitle": "Direct supply from verified manufacturers. Catalog, orders and logistics in one place.",
     "heroCta": "Browse catalog",
     "featured": "Featured products",
@@ -54,7 +54,7 @@
     "error": "Request failed. Please check your details."
   },
   "footer": {
-    "tagline": "China.ru — international B2B marketplace.",
+    "tagline": "China.ru — marketplace of industrial equipment from China.",
     "rights": "All rights reserved."
   }
 }

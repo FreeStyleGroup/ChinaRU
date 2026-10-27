@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 
-
 import { Footer } from '@/components/footer';
 import { Header } from '@/components/header';
 import { routing } from '@/i18n/routing';
@@ -17,7 +16,7 @@ import '../globals.css';
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: SITE_NAME, template: `%s · ${SITE_NAME}` },
-  description: 'China.ru — международный B2B-маркетплейс товаров из Китая.',
+  description: 'China.ru — маркетплейс промышленного оборудования из Китая.',
 };
 
 export function generateStaticParams(): { locale: string }[] {

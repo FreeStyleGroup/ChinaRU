@@ -78,7 +78,7 @@ export function organizationJsonLd(): Record<string, unknown> {
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_URL,
-    description: 'Международный B2B-маркетплейс товаров из Китая.',
+    description: 'Маркетплейс промышленного оборудования из Китая.',
   };
 }
 

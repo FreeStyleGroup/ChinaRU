@@ -36,6 +36,14 @@ const envSchema = z.object({
 
   BCRYPT_COST: z.coerce.number().int().min(8).max(15).default(12),
 
+  /**
+   * Сколько обратных прокси стоит перед API. 1 — только наш пограничный
+   * nginx; 2 — стек поднят за nginx хостинга (docker-compose.proxy.yml).
+   * Ошибка на единицу вниз — и req.ip у всех посетителей становится адресом
+   * прокси: rate-limit считает их одним человеком и режет всех разом.
+   */
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(1),
+
   /** Redis для кеша. Пусто → кеш отключён (NoopCache). */
   REDIS_URL: z.string().default(''),
   CACHE_CATEGORIES_TTL: z.coerce.number().int().positive().default(3600),
@@ -120,6 +128,8 @@ export interface AppConfig {
   };
   cookie: { domain: string | undefined; secure: boolean };
   bcrypt: { cost: number };
+  /** Число доверенных обратных прокси перед API (Express `trust proxy`). */
+  trustProxy: number;
   cache: { redisUrl: string; enabled: boolean; categoriesTtl: number };
   rateLimit: { windowMs: number; max: number; authMax: number };
   smtp: {
@@ -181,6 +191,7 @@ export function loadConfig(source: NodeJS.ProcessEnv = process.env): AppConfig {
     },
     cookie: { domain: e.COOKIE_DOMAIN, secure: e.COOKIE_SECURE },
     bcrypt: { cost: e.BCRYPT_COST },
+    trustProxy: e.TRUST_PROXY,
     cache: {
       redisUrl: e.REDIS_URL,
       enabled: e.REDIS_URL.length > 0,

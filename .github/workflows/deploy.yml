@@ -1,8 +1,12 @@
 name: Deploy
 
+# 🔥 Только ручной запуск (Actions → Deploy → Run workflow), не на push в main.
+# Экземпляр живёт на одном VPS с действующим сайтом china-ru.ru: пересборка
+# стека занимает память и процессор, и момент для неё выбирает человек,
+# а не каждый коммит. Запускать после зелёного CI на этом же коммите.
+#
+# Секреты репозитория: DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_PATH.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +17,6 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    # Деплой только после зелёного CI на этом же коммите.
     steps:
       - name: Deploy over SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -22,9 +25,23 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
-            set -e
+            set -eu
             cd ${{ secrets.DEPLOY_PATH }}
-            git fetch --all
+            git fetch origin main
             git reset --hard origin/main
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+            # Наложение docker-compose.proxy.yml обязательно: без него nginx
+            # стека потребует 80/443 у nginx действующего сайта. На Compose
+            # старше 2.24 тег !override молча не срабатывает, поэтому
+            # проверяется итог склейки, а не версия.
+            compose="docker compose -f docker-compose.prod.yml -f docker-compose.proxy.yml --env-file .env.prod"
+            if $compose config | grep -E 'published: "(80|443)"'; then
+              echo "Наложение не сработало: стек занял бы 80/443. Обновите Docker Compose до 2.24+." >&2
+              exit 1
+            fi
+            # Образы по одному: параллельная сборка трёх приложений не
+            # помещается в память рядом с Битриксом.
+            for service in api web admin; do
+              $compose build "$service"
+            done
+            $compose up -d
             docker image prune -f

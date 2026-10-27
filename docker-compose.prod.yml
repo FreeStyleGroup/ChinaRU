@@ -86,11 +86,16 @@ services:
       REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-china-ru.ru}
+      # 🔥 Умолчаний здесь нет намеренно. Домены задаются только в .env.prod;
+      # забытая переменная обязана уронить запуск с внятной ошибкой, а не
+      # поднять стек с чужим доменом в cookie и ссылках. На этих умолчаниях
+      # уже обжигались: стоял апексный china-ru.ru — домен действующего сайта
+      # на Битриксе, которому уходили бы сессионные cookie платформы.
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:?не задан в .env.prod}
       COOKIE_SECURE: 'true'
-      WEB_URL: ${WEB_URL:-https://app.china-ru.ru}
-      ADMIN_URL: ${ADMIN_URL:-https://admin.china-ru.ru}
-      API_PUBLIC_URL: ${API_PUBLIC_URL:-https://api.china-ru.ru}
+      WEB_URL: ${WEB_URL:?не задан в .env.prod}
+      ADMIN_URL: ${ADMIN_URL:?не задан в .env.prod}
+      API_PUBLIC_URL: ${API_PUBLIC_URL:?не задан в .env.prod}
       BCRYPT_COST: '12'
       STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
       S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}

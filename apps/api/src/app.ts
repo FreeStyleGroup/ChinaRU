@@ -20,8 +20,9 @@ export function createApp(deps: ContainerDeps): Express {
   void container.storage.init();
 
   const app = express();
-  // Доверяем первому reverse-proxy (nginx/edge): корректные req.ip и secure-cookies по HTTPS.
-  app.set('trust proxy', 1);
+  // Сколько обратных прокси доверяем — из конфига: за одним nginx это 1,
+  // за nginx хостинга плюс нашим — 2. От этого зависят req.ip и rate-limit.
+  app.set('trust proxy', config.trustProxy);
   app.disable('x-powered-by');
 
   // Структурное логирование запросов с request-id (observability).

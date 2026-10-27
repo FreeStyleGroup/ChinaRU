@@ -23,6 +23,9 @@
    (`china-ru.ru`→web, `api.`→api, `admin.`→admin). Секреты — из `.env.prod`.
 3. **CI/CD:** `ci.yml` (format/lint/typecheck/test на PR) + `deploy.yml` (пуш в `main` →
    SSH на VPS → `git reset --hard` → `docker compose up -d --build`).
+   _Пересмотрено 27.10.2026:_ экземпляр встал на один VPS с действующим сайтом, поэтому
+   `deploy.yml` запускается только вручную и всегда с `docker-compose.proxy.yml`
+   (`docs/deploy.md`, раздел «CI/CD»).
 4. **Конфиг и безопасность:** `.dockerignore` исключает node_modules/.next/secrets;
    `.env.prod.example` — список секретов; cookie `secure=true`, домены из env.
 

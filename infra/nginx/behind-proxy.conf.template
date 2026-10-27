@@ -1,0 +1,69 @@
+# ════════════════════════════════════════════════════════════════
+#  China.ru — внутренний nginx за прокси хостинга (без TLS).
+#
+#  Пара к docker-compose.proxy.yml. Снаружи стоит nginx хостинга: он
+#  терминирует TLS и передаёт запросы на 127.0.0.1:8080 с заголовком
+#  Host. Здесь — только маршрутизация по доменам к web / api / admin.
+#
+#  🔥 X-Forwarded-Proto берём от внешнего nginx, а не из $scheme: здесь
+#  $scheme всегда http, и приложения решили бы, что работают без TLS —
+#  Next.js отдал бы http-ссылки в canonical, а API поставил бы cookie
+#  без Secure. Внешний конфиг обязан передавать этот заголовок
+#  (infra/host-nginx/china-ru-app.conf так и делает).
+# ════════════════════════════════════════════════════════════════
+
+map $http_x_forwarded_proto $fwd_proto {
+  default $http_x_forwarded_proto;
+  ''      $scheme;
+}
+
+# Витрина (Next.js).
+server {
+  listen 80;
+  server_name ${WEB_HOST} www.${WEB_HOST};
+
+  location / {
+    proxy_pass http://web:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $http_x_real_ip;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $fwd_proto;
+  }
+}
+
+# API.
+server {
+  listen 80;
+  server_name ${API_HOST};
+
+  client_max_body_size 5m;
+
+  location / {
+    proxy_pass http://api:3001;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $http_x_real_ip;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $fwd_proto;
+  }
+}
+
+# Админка (статический SPA за своим nginx).
+server {
+  listen 80;
+  server_name ${ADMIN_HOST};
+
+  location / {
+    proxy_pass http://admin:80;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $http_x_real_ip;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $fwd_proto;
+  }
+}
+
+# Всё остальное, что долетело мимо доменов, — молча закрыть.
+server {
+  listen 80 default_server;
+  server_name _;
+  return 444;
+}

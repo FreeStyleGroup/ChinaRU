@@ -1,0 +1,46 @@
+# ════════════════════════════════════════════════════════════════
+#  China.ru — наложение для сервера, где 80/443 уже заняты.
+#
+#  Случай china-ru.ru: на VPS стоит Битрикс-окружение, его nginx
+#  держит 80 и 443 для действующего сайта. Наш пограничный nginx туда
+#  не встанет. Это наложение убирает у него TLS и наружные порты:
+#  контейнер слушает только 127.0.0.1:8080 по HTTP, а TLS и домены
+#  терминирует nginx хостинга — конфиг для него в infra/host-nginx/.
+#
+#  Запуск (оба файла, второй поверх первого):
+#    docker compose -f docker-compose.prod.yml -f docker-compose.proxy.yml \
+#      --env-file .env.prod up -d --build
+#
+#  🔥 Без этого файла compose попытается занять 80/443 и упадёт с
+#  «address already in use», а если хостинговый nginx в этот момент
+#  перезапускался — уронит основной сайт. Проверить, что занято:
+#    ss -tlnp | grep -E ':80 |:443 '
+#
+#  🔥🔥 ТЕГ `!override` ТРЕБУЕТ DOCKER COMPOSE ≥ 2.24, И НА СТАРЫХ
+#  ВЕРСИЯХ ОТКАЗ МОЛЧАЛИВЫЙ. Compose 2.6 тег не понимает: он не ругается,
+#  а СКЛАДЫВАЕТ списки портов — наружу уходят и 80, и 443, и 8080. То есть
+#  ровно то, от чего это наложение защищает, причём без единого
+#  предупреждения. Проверено на 2.6.0.
+#
+#  Поэтому перед запуском смотреть НЕ версию, а результат склейки:
+#    docker compose -f docker-compose.prod.yml -f docker-compose.proxy.yml \
+#      --env-file .env.prod config | grep -E 'published: "(80|443)"'
+#  Пусто — всё верно. Что-то нашлось — СТОП, наложение не сработало,
+#  обновлять Docker Compose.
+# ════════════════════════════════════════════════════════════════
+services:
+  api:
+    environment:
+      # Перед API теперь два прокси: nginx хостинга и наш. См. TRUST_PROXY в config.ts.
+      TRUST_PROXY: '2'
+
+  nginx:
+    ports: !override
+      - '127.0.0.1:8080:80'
+    environment:
+      # Сертификаты в этом режиме у nginx хостинга, CERT_NAME шаблону не
+      # нужен. Но базовый compose требует его в .env.prod (`${CERT_NAME:?}`
+      # проверяется при чтении файла) — оставьте там любое значение.
+      NGINX_ENVSUBST_FILTER: '^(WEB_HOST|API_HOST|ADMIN_HOST)$$'
+    volumes: !override
+      - ./infra/nginx/behind-proxy.conf.template:/etc/nginx/templates/default.conf.template:ro

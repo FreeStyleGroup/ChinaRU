@@ -2,7 +2,7 @@
 #  China.ru — пограничный nginx (TLS-терминация + маршрутизация).
 #
 #  ШАБЛОН. Домены подставляются при старте контейнера из .env.prod:
-#    WEB_HOST    витрина            (например app.china-ru.ru)
+#    WEB_HOST    витрина            (например po.china-ru.ru)
 #    API_HOST    программный интерфейс
 #    ADMIN_HOST  административная панель
 #    CERT_NAME   имя каталога сертификата в /etc/letsencrypt/live/

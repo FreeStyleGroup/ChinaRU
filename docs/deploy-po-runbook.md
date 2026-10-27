@@ -46,7 +46,7 @@ ss -tlnp | grep -E ':80 |:443 |:8080 '
 **Критерии:**
 
 - свободной памяти **не меньше 4 ГБ** — стеку нужно около 3–3,5 ГБ
-  (Postgres, Redis, Meilisearch, MinIO, Node API, Next.js, два nginx);
+  (Postgres, Redis, Meilisearch, SeaweedFS, Node API, Next.js, два nginx);
 - свободного места **не меньше 25 ГБ** — образы, база, загруженные файлы;
 - порт `8080` свободен (на нём будет слушать наш nginx);
 - Docker Compose версии **2.24 и выше** — см. следующий блок.
@@ -140,13 +140,13 @@ nano .env.prod
 
 Заполнить:
 
-| Переменная            | Значение                                                  |
-| --------------------- | --------------------------------------------------------- |
-| `POSTGRES_PASSWORD`   | `openssl rand -hex 24`                                    |
-| `JWT_ACCESS_SECRET`   | `openssl rand -hex 32`                                    |
-| `JWT_REFRESH_SECRET`  | `openssl rand -hex 32` — **другой**, не копия предыдущего |
-| `MEILI_MASTER_KEY`    | `openssl rand -hex 32`                                    |
-| `MINIO_ROOT_PASSWORD` | `openssl rand -hex 24`                                    |
+| Переменная           | Значение                                                  |
+| -------------------- | --------------------------------------------------------- |
+| `POSTGRES_PASSWORD`  | `openssl rand -hex 24`                                    |
+| `JWT_ACCESS_SECRET`  | `openssl rand -hex 32`                                    |
+| `JWT_REFRESH_SECRET` | `openssl rand -hex 32` — **другой**, не копия предыдущего |
+| `MEILI_MASTER_KEY`   | `openssl rand -hex 32`                                    |
+| `S3_SECRET_KEY`      | `openssl rand -hex 24`                                    |
 
 Домены в примере уже проставлены под `po.china-ru.ru` — менять не нужно.
 

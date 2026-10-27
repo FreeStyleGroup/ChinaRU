@@ -7,7 +7,7 @@
 
 Пользователи: **покупатель**, **продавец**, **администратор/модератор**, мобильные
 клиенты. Внешние системы: SMTP, OAuth (Google/Yandex/VK/WeChat), платёжный провайдер,
-FCM/APNs, Meilisearch, Redis, MinIO/S3.
+FCM/APNs, Meilisearch, Redis, SeaweedFS/S3.
 
 ## C2 — Контейнеры
 
@@ -19,7 +19,7 @@ FCM/APNs, Meilisearch, Redis, MinIO/S3.
 | PostgreSQL 16 | —              | Хранилище (через Drizzle)                    |
 | Redis         | —              | Кеш, rate‑limit, очереди                     |
 | Meilisearch   | —              | Полнотекстовый поиск (ru/zh морфология)      |
-| MinIO/S3      | —              | Файлы и изображения                          |
+| SeaweedFS/S3  | —              | Файлы и изображения                          |
 
 ## C3 — Слои API
 

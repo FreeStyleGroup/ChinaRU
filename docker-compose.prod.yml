@@ -51,29 +51,32 @@ services:
       retries: 5
     restart: unless-stopped
 
-  minio:
-    # ⚠️ Плавающий тег latest: за ним завтра окажется другая сборка — возможно,
-    # с другими условиями лицензии (так Redis уехал с BSD на SSPL). Для реестра
-    # ПО это значит, что заявленный состав перестаёт совпадать с фактическим
-    # сам по себе. Перед подачей зафиксировать версию тем, что реально запущено:
-    #   docker image inspect minio/minio --format '{{index .RepoDigests 0}}'
-    # и подставить сюда minio/minio@sha256:... либо конкретный RELEASE-тег.
-    image: minio/minio:latest
-    container_name: china-ru-minio-prod
+  storage:
+    # Объектное хранилище файлов — SeaweedFS (Apache-2.0), S3-совместимый API.
+    # Режим `weed mini` — все роли на одном узле; по документации SeaweedFS
+    # годится для production на одном сервере. Версия закреплена: заявленный
+    # в реестре ПО состав должен совпадать с запущенным.
+    #
+    # Прежде здесь был MinIO. Его образы удалены с Docker Hub (сентябрь 2026),
+    # бесплатная редакция не сопровождается, исправления уязвимостей выходят
+    # только в коммерческой.
+    image: chrislusf/seaweedfs:4.48
+    container_name: china-ru-storage-prod
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # Единственная учётная запись S3 — та же, с которой ходит API.
+      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY:?S3_ACCESS_KEY не задан в .env.prod}
+      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY не задан в .env.prod}
+    # Каталоги Iceberg и Lance продукту не нужны — не поднимаем лишних служб.
+    command: ['mini', '-dir=/data', '-s3.port.iceberg=0', '-s3.port.lance=0']
     volumes:
-      - minio_data_prod:/minio_data
+      - storage_data_prod:/data
     networks: [china-ru-network-prod]
-    command: server /minio_data --console-address ":9001"
     healthcheck:
-      # curl в образе MinIO нет с конца 2023 года (база ubi-micro); проверка
-      # готовности — штатным клиентом mc, который в образ входит.
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:8333/healthz']
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     restart: unless-stopped
 
   api:
@@ -100,16 +103,16 @@ services:
       API_PUBLIC_URL: ${API_PUBLIC_URL:?не задан в .env.prod}
       BCRYPT_COST: '12'
       STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
-      S3_ENDPOINT: ${S3_ENDPOINT:-http://minio:9000}
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-${MINIO_ROOT_USER:-china_ru_minio}}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-${MINIO_ROOT_PASSWORD}}
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://storage:8333}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:?S3_ACCESS_KEY не задан в .env.prod}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?S3_SECRET_KEY не задан в .env.prod}
       S3_BUCKET: ${S3_BUCKET:-china-ru}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_FORCE_PATH_STYLE: 'true'
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
-      minio: { condition: service_healthy }
+      storage: { condition: service_healthy }
     networks: [china-ru-network-prod]
     expose: ['3001']
     healthcheck:
@@ -172,7 +175,7 @@ volumes:
   postgres_data_prod:
   redis_data_prod:
   meilisearch_data_prod:
-  minio_data_prod:
+  storage_data_prod:
   certbot_webroot:
 
 networks:

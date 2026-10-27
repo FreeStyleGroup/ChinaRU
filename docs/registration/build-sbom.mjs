@@ -222,7 +222,7 @@ if (ccby.length) {
 }
 md.push('### Что сюда не входит');
 md.push('');
-md.push('Образы инфраструктуры (PostgreSQL, Redis, MinIO, Meilisearch, nginx)');
+md.push('Образы инфраструктуры (PostgreSQL, Redis, SeaweedFS, Meilisearch, nginx)');
 md.push('зависимостями программы не являются — это внешние службы, разворачиваемые');
 md.push('рядом. Их лицензии разобраны в `docs/registry/README.md`, раздел');
 md.push('«Про лицензии инфраструктуры».');

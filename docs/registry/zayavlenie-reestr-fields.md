@@ -133,7 +133,7 @@
    27.10.2026 — 2 vCPU, 4 ГБ RAM, 70 ГБ диска; память на время
    развёртывания и экспертизы расширяется до 6 ГБ. Её должно хватать
    **обоим**: Битриксу с его PHP и MySQL и нашему стеку из восьми
-   контейнеров (Postgres, Redis, Meilisearch, MinIO, api, web, admin,
+   контейнеров (Postgres, Redis, Meilisearch, SeaweedFS, api, web, admin,
    nginx). Свободную память проверить до запуска: `free -h`. Запас меньше
    4 ГБ — поднимать нельзя, OOM-killer придёт за действующим сайтом, а не
    за нашим. Порядок — `docs/deploy-po-runbook.md`.

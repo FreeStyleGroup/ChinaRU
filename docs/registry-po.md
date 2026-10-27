@@ -22,7 +22,7 @@
 
 ## Стек и импортозамещение
 
-Базовый стек (Node, PostgreSQL, Redis, Meilisearch, MinIO, Next.js, React) — открытое ПО
+Базовый стек (Node, PostgreSQL, Redis, Meilisearch, SeaweedFS, Next.js, React) — открытое ПО
 под свободными лицензиями. Размещение — на российском VPS/облаке. PostgreSQL допускает
 замену на Postgres Pro при необходимости.
 

@@ -86,7 +86,7 @@ const envSchema = z.object({
   /**
    * Объектное хранилище файлов (аватары, документы резюме, картинки товаров).
    * `memory` — встроенное in-process хранилище (dev/тесты, без Docker); `s3` —
-   * S3-совместимое (MinIO в проде). Файлы раздаются прокси-роутами API, поэтому
+   * S3-совместимое (SeaweedFS в проде). Файлы раздаются прокси-роутами API, поэтому
    * бакет может быть приватным — публичные политики/пресайны не нужны.
    */
   STORAGE_DRIVER: z.enum(['memory', 's3']).default('memory'),
@@ -95,7 +95,7 @@ const envSchema = z.object({
   S3_ACCESS_KEY: z.string().default(''),
   S3_SECRET_KEY: z.string().default(''),
   S3_BUCKET: z.string().default('china-ru'),
-  /** MinIO требует path-style адресацию (bucket в пути, а не в поддомене). */
+  /** Хранилище во внутренней сети адресуется path-style (bucket в пути, а не в поддомене). */
   S3_FORCE_PATH_STYLE: z
     .enum(['true', 'false'])
     .default('true')

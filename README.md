@@ -20,7 +20,7 @@
 | API       | Node 22 + Express + TypeScript (ESM)                    |
 | БД        | PostgreSQL 16 + Drizzle ORM                             |
 | Кеш/поиск | Redis · Meilisearch                                     |
-| Файлы     | MinIO (S3‑совместимое)                                  |
+| Файлы     | SeaweedFS (S3‑совместимое)                              |
 | Контракты | Zod (single source of truth) → `z.infer` DTO            |
 | Монорепо  | npm workspaces + Turborepo                              |
 | Качество  | TypeScript strict · ESLint (type‑checked) · Vitest · CI |

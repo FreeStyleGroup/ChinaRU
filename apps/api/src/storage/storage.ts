@@ -21,7 +21,7 @@ export interface StoredFile {
  * Объектное хранилище файлов. Раздача идёт через прокси-роуты API (с проверкой
  * прав), поэтому интерфейс намеренно минимален: положить / прочитать / удалить.
  * Реализации взаимозаменяемы (как `Cache`): `MemoryStorage` для dev/тестов без
- * Docker, `S3Storage` (MinIO/S3) в проде.
+ * Docker, `S3Storage` (SeaweedFS или любое S3) в проде.
  */
 export interface Storage {
   /** Идемпотентная подготовка (создание бакета). Безопасно вызывать многократно. */
@@ -55,7 +55,7 @@ export class MemoryStorage implements Storage {
   }
 }
 
-/** S3-совместимое хранилище (MinIO в проде). */
+/** S3-совместимое хранилище (SeaweedFS в проде). */
 export class S3Storage implements Storage {
   private readonly client: S3Client;
 
@@ -116,7 +116,7 @@ export class S3Storage implements Storage {
   }
 }
 
-/** Выбирает реализацию хранилища по конфигу (`s3` → MinIO/S3, иначе память). */
+/** Выбирает реализацию хранилища по конфигу (`s3` → S3-совместимое, иначе память). */
 export function createStorage(config: AppConfig, logger: Logger): Storage {
   if (config.storage.driver === 's3') return new S3Storage(config.storage, logger);
   return new MemoryStorage();

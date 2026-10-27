@@ -24,7 +24,6 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build --workspace=@china-ru/web
 
 FROM node:22-alpine AS runner
-RUN apk add --no-cache curl
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
@@ -35,8 +34,9 @@ COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /app/apps/web/public ./apps/web/public
 
+# wget — из busybox базового образа Alpine (см. apps/api/Dockerfile).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:3000/ru || exit 1
+  CMD wget -q --spider http://127.0.0.1:3000/ru || exit 1
 
 EXPOSE 3000
 USER node

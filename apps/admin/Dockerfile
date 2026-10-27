@@ -21,9 +21,9 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build --workspace=@china-ru/admin
 
 FROM nginx:1.27-alpine AS runner
-RUN apk add --no-cache curl
 COPY --from=build /app/apps/admin/dist /usr/share/nginx/html
 COPY infra/nginx/admin.conf /etc/nginx/conf.d/default.conf
+# wget — из busybox базового образа Alpine (см. apps/api/Dockerfile).
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -fsS http://localhost/ || exit 1
+  CMD wget -q --spider http://127.0.0.1/ || exit 1
 EXPOSE 80

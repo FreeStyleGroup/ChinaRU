@@ -68,7 +68,9 @@ services:
     networks: [china-ru-network-prod]
     command: server /minio_data --console-address ":9001"
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      # curl в образе MinIO нет с конца 2023 года (база ubi-micro); проверка
+      # готовности — штатным клиентом mc, который в образ входит.
+      test: ['CMD', 'mc', 'ready', 'local']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -111,7 +113,7 @@ services:
     networks: [china-ru-network-prod]
     expose: ['3001']
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3001/api/health']
+      test: ['CMD', 'wget', '-q', '--spider', 'http://127.0.0.1:3001/api/health']
       interval: 10s
       timeout: 5s
       retries: 5

@@ -19,9 +19,16 @@ export const metadata: Metadata = {
   description: 'China.ru — маркетплейс промышленного оборудования из Китая.',
 };
 
-export function generateStaticParams(): { locale: string }[] {
-  return routing.locales.map(locale => ({ locale }));
-}
+/**
+ * Страницы собираются на каждый запрос, а не при сборке образа, поэтому
+ * generateStaticParams для языков здесь нет.
+ *
+ * При `docker build` API недоступен: страницы, собранные заранее (главная,
+ * разделы без параметров), запекались пустыми — «Популярные товары» на главной
+ * оставались пустыми и после появления товаров. Повторные запросы к API при этом
+ * не дорожают: ответы кешируются на уровне fetch (`revalidate` в lib/api.ts).
+ */
+export const dynamic = 'force-dynamic';
 
 export default async function LocaleLayout({
   children,

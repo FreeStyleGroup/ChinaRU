@@ -149,6 +149,12 @@ export class AuthService {
         .set({ consumedAt: new Date() })
         .where(eq(emailVerifications.id, row.id));
       await tx.update(users).set({ emailVerifiedAt: new Date() }).where(eq(users.id, row.userId));
+      // Подтверждённая почта переводит учётку из «ожидает подтверждения» в активные.
+      // Заблокированного не трогаем: подтверждение почты не снимает бан.
+      await tx
+        .update(users)
+        .set({ status: 'active' })
+        .where(and(eq(users.id, row.userId), eq(users.status, 'pending_verify')));
     });
   }
 

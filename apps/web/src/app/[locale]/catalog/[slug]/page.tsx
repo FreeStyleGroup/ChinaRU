@@ -3,8 +3,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 
-import { AddToCart } from '@/components/add-to-cart';
-import { OrderButton } from '@/components/order-button';
+import { ProductActions } from '@/components/product-actions';
 import { ProductReviews } from '@/components/product-reviews';
 import { ApiError, catalogApi } from '@/lib/api';
 import { formatPrice } from '@/lib/format';
@@ -127,10 +126,7 @@ export default async function ProductPage({
             {formatPrice(product.price, product.currency, locale)}
           </p>
 
-          <div className="flex flex-wrap items-start gap-3">
-            <AddToCart productId={product.id} />
-            <OrderButton productId={product.id} />
-          </div>
+          <ProductActions productId={product.id} />
 
           {description && (
             <div className="space-y-2 border-t border-line pt-6">

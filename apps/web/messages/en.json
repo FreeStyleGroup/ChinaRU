@@ -39,7 +39,13 @@
     "description": "Description",
     "reviews": "Reviews",
     "ordered": "Order placed",
-    "loginToOrder": "Sign in to order"
+    "loginToBuy": "Sign in to buy",
+    "addToCart": "Add to cart",
+    "addingToCart": "Adding…",
+    "addedToCart": "Added.",
+    "goToCart": "Go to cart →",
+    "addToCartFailed": "Could not add, please try again",
+    "orderFailed": "Could not place the order, please try again"
   },
   "auth": {
     "loginTitle": "Sign in",

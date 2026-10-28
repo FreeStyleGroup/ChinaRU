@@ -7,6 +7,15 @@ import { useState } from 'react';
 import { Link, useRouter } from '@/i18n/navigation';
 import { useAuth } from '@/lib/auth-context';
 
+/**
+ * Куда вернуть после входа: `?next=/catalog/...` (путь без языка — его добавит роутер).
+ * Только свой путь: «//chuzhoi.ru» или «/\…» — открытая переадресация, их отбрасываем.
+ */
+function safeNext(): string {
+  const next = new URLSearchParams(window.location.search).get('next') ?? '';
+  return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/';
+}
+
 export default function LoginPage() {
   const t = useTranslations('auth');
   const { login } = useAuth();
@@ -21,7 +30,7 @@ export default function LoginPage() {
     setError(false);
     try {
       await login({ email, password });
-      router.push('/');
+      router.push(safeNext());
     } catch {
       setError(true);
     } finally {

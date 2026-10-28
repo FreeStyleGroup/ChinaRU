@@ -39,7 +39,13 @@
     "description": "描述",
     "reviews": "评价",
     "ordered": "订单已提交",
-    "loginToOrder": "登录后下单"
+    "loginToBuy": "登录后购买",
+    "addToCart": "加入购物车",
+    "addingToCart": "正在添加…",
+    "addedToCart": "已添加。",
+    "goToCart": "前往购物车 →",
+    "addToCartFailed": "添加失败，请重试",
+    "orderFailed": "下单失败，请重试"
   },
   "auth": {
     "loginTitle": "登录",

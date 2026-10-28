@@ -39,7 +39,13 @@
     "description": "Описание",
     "reviews": "Отзывы",
     "ordered": "Заказ оформлен",
-    "loginToOrder": "Войдите, чтобы заказать"
+    "loginToBuy": "Войдите, чтобы купить",
+    "addToCart": "В корзину",
+    "addingToCart": "Добавляем…",
+    "addedToCart": "Добавлено.",
+    "goToCart": "Перейти в корзину →",
+    "addToCartFailed": "Не удалось добавить, попробуйте ещё раз",
+    "orderFailed": "Не удалось оформить заказ, попробуйте ещё раз"
   },
   "auth": {
     "loginTitle": "Вход",

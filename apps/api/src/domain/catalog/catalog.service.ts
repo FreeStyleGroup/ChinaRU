@@ -14,7 +14,8 @@ import type {
 } from '@china-ru/db';
 import type { CategoryTreeNode, Paginated, ProductDto, ProductListQuery } from '@china-ru/shared';
 
-const CATEGORIES_CACHE_KEY = 'catalog:categories:tree';
+/** Ключ дерева категорий в кеше. Сбрасывается и при наполнении базы (src/seed.ts). */
+export const CATEGORIES_CACHE_KEY = 'catalog:categories:tree';
 
 function toCategoryTree(cats: Category[]): CategoryTreeNode[] {
   const nodes = new Map<string, CategoryTreeNode>();

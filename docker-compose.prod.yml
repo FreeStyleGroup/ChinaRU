@@ -130,6 +130,11 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL не задан в .env.prod}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL не задан в .env.prod}
     container_name: china-ru-web
+    # Серверные компоненты Next ходят в API напрямую по сети стека (apps/web/src/lib/api.ts).
+    # Без этой переменной они стучались на localhost:3001 внутри своего же контейнера,
+    # получали отказ, и витрина показывала пустой каталог и «Товары не найдены».
+    environment:
+      API_URL: http://api:3001
     depends_on: [api]
     networks: [china-ru-network-prod]
     expose: ['3000']

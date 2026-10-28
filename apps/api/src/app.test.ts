@@ -82,6 +82,11 @@ describe('health & openapi', () => {
     expect(res.body).toMatchObject({ ok: true, data: { status: 'ok', service: 'api' } });
   });
 
+  it('файлы API можно встраивать с соседнего поддомена (витрина, админка)', async () => {
+    const res = await request(server).get('/api/health');
+    expect(res.headers['cross-origin-resource-policy']).toBe('same-site');
+  });
+
   it('GET /api/v1/openapi.json → OpenAPI 3.1 document', async () => {
     const res = await request(server).get('/api/v1/openapi.json');
     expect(res.status).toBe(200);

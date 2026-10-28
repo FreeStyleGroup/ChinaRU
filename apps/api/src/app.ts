@@ -27,7 +27,11 @@ export function createApp(deps: ContainerDeps): Express {
 
   // Структурное логирование запросов с request-id (observability).
   app.use(pinoHttp({ logger }));
-  app.use(helmet());
+  // Фото товаров и аватары отдаёт API (api.<домен>), а показывает витрина (<домен>)
+  // и админка (admin.<домен>). По умолчанию helmet ставит Cross-Origin-Resource-Policy:
+  // same-origin — браузер не показывал картинки с соседнего поддомена. same-site
+  // пускает только сайты того же домена, чужим сайтам встраивать файлы по-прежнему нельзя.
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'same-site' } }));
 
   const allowedOrigins = new Set([
     config.webUrl,

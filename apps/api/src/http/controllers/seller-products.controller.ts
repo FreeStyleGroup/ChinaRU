@@ -1,4 +1,10 @@
-import { createProductSchema, idSchema, ok, updateProductSchema } from '@china-ru/shared';
+import {
+  createProductSchema,
+  idSchema,
+  ok,
+  translateProductNameSchema,
+  updateProductSchema,
+} from '@china-ru/shared';
 
 import { asyncHandler } from '../async-handler';
 import { BadRequestError, UnauthorizedError } from '../errors';
@@ -14,6 +20,7 @@ export interface SellerProductsController {
   remove: RequestHandler;
   addImage: RequestHandler;
   removeImage: RequestHandler;
+  translateName: RequestHandler;
 }
 
 export function createSellerProductsController(deps: {
@@ -23,6 +30,12 @@ export function createSellerProductsController(deps: {
     list: asyncHandler(async (req, res) => {
       if (!req.auth) throw new UnauthorizedError();
       res.json(ok(await deps.sellerProducts.listMyProducts(req.auth.userId)));
+    }),
+
+    translateName: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      const { nameRu } = translateProductNameSchema.parse(req.body);
+      res.json(ok(await deps.sellerProducts.translateName(req.auth.userId, nameRu)));
     }),
 
     create: asyncHandler(async (req, res) => {

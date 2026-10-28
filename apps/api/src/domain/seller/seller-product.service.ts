@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { ConflictError, ForbiddenError, NotFoundError } from '../../http/errors';
 import { toProductDto } from '../dto';
 
+import type { AiProvider } from '../../ai/provider';
 import type { UploadedFile } from '../../http/middleware/upload';
 import type { Storage } from '../../storage/storage';
 import type {
@@ -13,7 +14,12 @@ import type {
   SellerProfile,
   SellerRepository,
 } from '@china-ru/db';
-import type { CreateProductInput, ProductDto, UpdateProductInput } from '@china-ru/shared';
+import type {
+  CreateProductInput,
+  ProductDto,
+  ProductNameTranslationDto,
+  UpdateProductInput,
+} from '@china-ru/shared';
 
 /**
  * Управление товарами и их изображениями со стороны продавца.
@@ -26,8 +32,40 @@ export class SellerProductService {
     private readonly products: ProductRepository,
     private readonly images: ProductImageRepository,
     private readonly storage: Storage,
-    private readonly apiPublicUrl: string
+    private readonly apiPublicUrl: string,
+    private readonly ai: AiProvider
   ) {}
+
+  /**
+   * Перевод названия товара на английский и китайский — подсказка для формы:
+   * продавец видит результат в полях и может поправить его до сохранения.
+   * Только для подтверждённого магазина, чтобы перевод не стал бесплатным ИИ
+   * для всех. Без ключа ИИ на сервере — пустые поля и available: false.
+   */
+  async translateName(userId: string, nameRu: string): Promise<ProductNameTranslationDto> {
+    await this.requireVerifiedSeller(userId);
+    if (!this.ai.enabled) return { nameEn: '', nameZh: '', available: false };
+
+    const out = await this.ai.chatJson<Partial<Record<'nameEn' | 'nameZh', unknown>>>({
+      messages: [
+        {
+          role: 'system',
+          content: [
+            'Ты переводишь названия товаров для маркетплейса промышленного оборудования и товаров из Китая.',
+            'Ответь строго JSON-объектом {"nameEn": "...", "nameZh": "..."}: английский и упрощённый китайский.',
+            'Бренды, модели, артикулы и единицы измерения (DDR5, 32 ГБ → 32GB, CNC-1325) не переводи и не меняй.',
+            'Без кавычек-ёлочек, пояснений и текста вне JSON.',
+          ].join('\n'),
+        },
+        { role: 'user', content: nameRu },
+      ],
+      temperature: 0.2,
+      maxTokens: 300,
+      jsonMode: true,
+    });
+    const pick = (v: unknown): string => (typeof v === 'string' ? v.trim().slice(0, 300) : '');
+    return { nameEn: pick(out.nameEn), nameZh: pick(out.nameZh), available: true };
+  }
 
   private async requireVerifiedSeller(userId: string): Promise<SellerProfile> {
     const seller = await this.sellers.findByUserId(userId);

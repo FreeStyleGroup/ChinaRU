@@ -69,6 +69,17 @@ describe('seller products', () => {
     expect(res.body.error.code).toBe('not_a_seller');
   });
 
+  it('перевод названия — только подтверждённому магазину', async () => {
+    const res = await buyer.post('/api/v1/seller/products/translate').send({ nameRu: 'Насос' });
+    expect(res.status).toBe(403);
+  });
+
+  it('перевод названия без ключа ИИ: пустые поля и available=false', async () => {
+    const res = await seller.post('/api/v1/seller/products/translate').send({ nameRu: 'Насос X100' });
+    expect(res.status).toBe(200);
+    expect(res.body.data).toEqual({ nameEn: '', nameZh: '', available: false });
+  });
+
   it('creates a product as draft', async () => {
     const res = await seller.post('/api/v1/seller/products').send({
       categoryId,

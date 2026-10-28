@@ -41,6 +41,7 @@ import type {
   DealerDto,
   GarageVehicleDto,
   ProductDto,
+  ProductNameTranslationDto,
   VehicleBrandDto,
   VehicleModelDto,
   VehicleType,
@@ -146,6 +147,12 @@ export const sellerProductClient = {
   addImage: (id: string, file: File) => upload<ProductDto>(`/seller/products/${id}/images`, file),
   removeImage: (id: string, imageId: string) =>
     call<ProductDto>(`/seller/products/${id}/images/${imageId}`, { method: 'DELETE' }),
+  /** Подсказка перевода названия на EN и 中文 (ИИ на сервере). */
+  translateName: (nameRu: string) =>
+    call<ProductNameTranslationDto>('/seller/products/translate', {
+      method: 'POST',
+      body: JSON.stringify({ nameRu }),
+    }),
 };
 
 /** Заказы продавца («Мой магазин» → «Заказы»): список своих позиций + смена статуса исполнения. */

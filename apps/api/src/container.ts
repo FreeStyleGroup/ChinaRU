@@ -211,7 +211,8 @@ export function createContainer(deps: ContainerDeps): Container {
     productRepo,
     productImageRepo,
     storage,
-    config.apiPublicUrl
+    config.apiPublicUrl,
+    ai
   );
   const sellerOrders = new SellerOrderService(sellerRepo, orderRepo, notificationRepo);
   const account = new AccountService(userRepo, sellerRepo, storage, config.apiPublicUrl);

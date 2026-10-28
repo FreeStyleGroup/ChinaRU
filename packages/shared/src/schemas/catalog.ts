@@ -59,6 +59,19 @@ const productBaseSchema = z.object({
 export const createProductSchema = productBaseSchema;
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 
+/** Подсказка перевода названия товара в форме продавца (EN и 中文 из русского). */
+export const translateProductNameSchema = z.object({
+  nameRu: z.string().trim().min(1).max(300),
+});
+export type TranslateProductNameInput = z.infer<typeof translateProductNameSchema>;
+
+export interface ProductNameTranslationDto {
+  nameEn: string;
+  nameZh: string;
+  /** false — ИИ на сервере не настроен, переводить нечем (поля остаются пустыми). */
+  available: boolean;
+}
+
 /** Редактирование товара (PATCH). */
 export const updateProductSchema = productBaseSchema
   .partial()

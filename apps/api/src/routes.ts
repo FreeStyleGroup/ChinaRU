@@ -134,6 +134,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── товары продавца («Мой магазин»: CRUD + фото) ─────────
   router.get('/seller/products', requireAuth, sellerProducts.list);
   router.post('/seller/products', requireAuth, sellerProducts.create);
+  router.post('/seller/products/translate', requireAuth, sellerProducts.translateName);
   router.get('/seller/products/:id', requireAuth, sellerProducts.get);
   router.patch('/seller/products/:id', requireAuth, sellerProducts.update);
   router.delete('/seller/products/:id', requireAuth, sellerProducts.remove);

@@ -1,8 +1,9 @@
-import { Badge } from '@china-ru/ui';
+import { ORDER_STATUS_LABELS } from '@china-ru/shared';
 import { useQuery } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatDate, formatMoney } from '@/lib/format';
 
@@ -10,7 +11,7 @@ import type { OrderDto } from '@china-ru/shared';
 
 const columns: Column<OrderDto>[] = [
   { header: 'ID', cell: o => <span className="font-mono text-xs">{o.id.slice(0, 8)}</span> },
-  { header: 'Статус', cell: o => <Badge>{o.status}</Badge> },
+  { header: 'Статус', cell: o => <StatusBadge value={o.status} labels={ORDER_STATUS_LABELS} /> },
   { header: 'Сумма', cell: o => formatMoney(o.totalAmount, o.currency) },
   { header: 'Позиций', cell: o => o.items.length },
   { header: 'Создан', cell: o => formatDate(o.createdAt) },

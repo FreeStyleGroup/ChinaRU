@@ -1,9 +1,10 @@
-import { JOB_CATEGORY_LABELS } from '@china-ru/shared';
-import { Badge, Button } from '@china-ru/ui';
+import { JOB_CATEGORY_LABELS, MODERATION_STATUS_LABELS } from '@china-ru/shared';
+import { Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 
 import type { ContentModerationInput, JobListingDto } from '@china-ru/shared';
@@ -35,7 +36,7 @@ export function VacanciesPage() {
     { header: 'Категория', cell: v => (v.category ? JOB_CATEGORY_LABELS[v.category].ru : '—') },
     { header: 'Город', cell: v => v.city ?? '—' },
     { header: 'Тип', cell: v => v.workType },
-    { header: 'Статус', cell: v => <Badge>{v.moderationStatus}</Badge> },
+    { header: 'Статус', cell: v => <StatusBadge value={v.moderationStatus} labels={MODERATION_STATUS_LABELS} /> },
     {
       header: 'Действия',
       cell: v => (

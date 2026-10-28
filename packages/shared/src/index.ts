@@ -11,6 +11,9 @@ export * from './enums';
 // Примитивы валидации и преобразование ошибок Zod
 export * from './common';
 
+// Русские подписи статусов и ролей с тоном для цвета метки
+export * from './status-labels';
+
 // Пагинация
 export * from './pagination';
 

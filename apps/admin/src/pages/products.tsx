@@ -1,8 +1,9 @@
-import { Badge } from '@china-ru/ui';
+import { PRODUCT_STATUS_LABELS } from '@china-ru/shared';
 import { useQuery } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 
@@ -13,7 +14,7 @@ const columns: Column<ProductDto>[] = [
   { header: 'Артикул', cell: p => p.sku },
   { header: 'Цена', cell: p => formatMoney(p.price, p.currency) },
   { header: 'Остаток', cell: p => p.stock },
-  { header: 'Статус', cell: p => <Badge>{p.status}</Badge> },
+  { header: 'Статус', cell: p => <StatusBadge value={p.status} labels={PRODUCT_STATUS_LABELS} /> },
 ];
 
 export function ProductsPage() {

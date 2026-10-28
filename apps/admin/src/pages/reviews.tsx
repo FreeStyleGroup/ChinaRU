@@ -1,8 +1,10 @@
-import { Badge, Button } from '@china-ru/ui';
+import { REVIEW_STATUS_LABELS } from '@china-ru/shared';
+import { Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 
 import type { ReviewDto, ReviewModerationInput } from '@china-ru/shared';
@@ -26,7 +28,7 @@ export function ReviewsPage() {
     { header: 'Автор', cell: r => r.author.name ?? '—' },
     { header: 'Оценка', cell: r => `★ ${r.rating}` },
     { header: 'Отзыв', cell: r => <span className="line-clamp-2 max-w-md">{r.body}</span> },
-    { header: 'Статус', cell: r => <Badge>{r.status}</Badge> },
+    { header: 'Статус', cell: r => <StatusBadge value={r.status} labels={REVIEW_STATUS_LABELS} /> },
     {
       header: 'Действия',
       cell: r => (

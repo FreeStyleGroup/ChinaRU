@@ -1,8 +1,9 @@
-import { Badge } from '@china-ru/ui';
+import { USER_ROLE_LABELS, USER_STATUS_LABELS } from '@china-ru/shared';
 import { useQuery } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 
@@ -11,8 +12,8 @@ import type { UserDto } from '@china-ru/shared';
 const columns: Column<UserDto>[] = [
   { header: 'Email', cell: u => u.email },
   { header: 'Имя', cell: u => u.name ?? '—' },
-  { header: 'Роль', cell: u => <Badge>{u.role}</Badge> },
-  { header: 'Статус', cell: u => u.status },
+  { header: 'Роль', cell: u => <StatusBadge value={u.role} labels={USER_ROLE_LABELS} /> },
+  { header: 'Статус', cell: u => <StatusBadge value={u.status} labels={USER_STATUS_LABELS} /> },
   { header: 'Регистрация', cell: u => formatDate(u.createdAt) },
 ];
 

@@ -1,9 +1,10 @@
-import { JOB_CATEGORY_LABELS, RESUME_EXPERIENCE_LABELS } from '@china-ru/shared';
-import { Badge, Button } from '@china-ru/ui';
+import { JOB_CATEGORY_LABELS, MODERATION_STATUS_LABELS, RESUME_EXPERIENCE_LABELS } from '@china-ru/shared';
+import { Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 
 import type { ContentModerationInput, ResumeDto } from '@china-ru/shared';
@@ -36,7 +37,7 @@ export function ResumesPage() {
     { header: 'Опыт', cell: r => (r.experience ? RESUME_EXPERIENCE_LABELS[r.experience] : '—') },
     { header: 'HSK', cell: r => (r.hskLevel ? `HSK ${r.hskLevel}` : '—') },
     { header: 'Рейтинг', cell: r => `★ ${Number(r.rating).toFixed(1)}` },
-    { header: 'Статус', cell: r => <Badge>{r.moderationStatus}</Badge> },
+    { header: 'Статус', cell: r => <StatusBadge value={r.moderationStatus} labels={MODERATION_STATUS_LABELS} /> },
     {
       header: 'Действия',
       cell: r => (

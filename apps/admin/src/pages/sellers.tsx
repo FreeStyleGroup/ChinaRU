@@ -1,8 +1,10 @@
-import { Badge, Button } from '@china-ru/ui';
+import { SELLER_VERIFY_STATUS_LABELS } from '@china-ru/shared';
+import { Button } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
+import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 
@@ -26,7 +28,7 @@ export function SellersPage() {
   const columns: Column<SellerProfileDto>[] = [
     { header: 'Компания', cell: s => s.companyName },
     { header: 'ИНН', cell: s => s.inn ?? '—' },
-    { header: 'Статус', cell: s => <Badge>{s.verifyStatus}</Badge> },
+    { header: 'Статус', cell: s => <StatusBadge value={s.verifyStatus} labels={SELLER_VERIFY_STATUS_LABELS} /> },
     { header: 'Создан', cell: s => formatDate(s.createdAt) },
     {
       header: 'Действия',

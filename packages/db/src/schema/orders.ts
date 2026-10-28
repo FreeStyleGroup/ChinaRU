@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -19,6 +20,8 @@ export const orders = pgTable(
   'orders',
   {
     id: uuid('id').primaryKey().defaultRandom(),
+    /** Номер заказа для людей («Заказ № 100001»): сквозной, по возрастанию. */
+    number: integer('number').generatedByDefaultAsIdentity({ startWith: 100001 }).notNull(),
     buyerId: uuid('buyer_id')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
@@ -28,7 +31,11 @@ export const orders = pgTable(
     ...timestamps,
     ...softDelete,
   },
-  t => [index('orders_buyer_idx').on(t.buyerId), index('orders_status_idx').on(t.status)]
+  t => [
+    uniqueIndex('orders_number_uidx').on(t.number),
+    index('orders_buyer_idx').on(t.buyerId),
+    index('orders_status_idx').on(t.status),
+  ]
 );
 
 export const orderItems = pgTable(

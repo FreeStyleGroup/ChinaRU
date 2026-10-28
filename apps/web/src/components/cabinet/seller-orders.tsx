@@ -2,53 +2,32 @@
 
 /**
  * «Мой магазин» → «Заказы»: продавец видит заказы со своими позициями и двигает
- * статус исполнения (в обработке → отправлен → доставлен, либо отмена из обработки).
+ * статус исполнения (собирается → отправлен → выдан, либо отмена при сборке).
+ * Покупатель видит тот же статус у себя в «Моих заказах».
  * Мультивендор: у каждого продавца — только его позиции и его подытог.
  */
-import { Button } from '@china-ru/ui';
+import { FULFILLMENT_STATUS_LABELS } from '@china-ru/shared';
+import { Button, StatusBadge } from '@china-ru/ui';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ClientApiError, sellerOrderClient } from '@/lib/api-client';
+import { formatPrice } from '@/lib/format';
 
 import type { FulfillmentStatus, SellerOrderDto } from '@china-ru/shared';
-
-const STATUS_LABEL: Record<FulfillmentStatus, string> = {
-  processing: 'В обработке',
-  shipped: 'Отправлен',
-  delivered: 'Доставлен',
-  cancelled: 'Отменён',
-};
-
-const STATUS_STYLE: Record<FulfillmentStatus, string> = {
-  processing: 'bg-amber-50 text-amber-700 border-amber-200',
-  shipped: 'bg-blue-50 text-blue-700 border-blue-200',
-  delivered: 'bg-green-50 text-green-700 border-green-200',
-  cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
-};
 
 /** Кнопки-переходы, доступные продавцу из текущего статуса. */
 const NEXT_ACTIONS: Record<FulfillmentStatus, { to: FulfillmentStatus; label: string }[]> = {
   processing: [
-    { to: 'shipped', label: 'Отметить отправленным' },
+    { to: 'shipped', label: 'Отправлен' },
     { to: 'cancelled', label: 'Отменить' },
   ],
-  shipped: [{ to: 'delivered', label: 'Отметить доставленным' }],
+  shipped: [{ to: 'delivered', label: 'Выдан покупателю' }],
   delivered: [],
   cancelled: [],
 };
 
-function StatusBadge({ status }: { status: FulfillmentStatus }) {
-  return (
-    <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLE[status]}`}>
-      {STATUS_LABEL[status]}
-    </span>
-  );
-}
-
-function money(value: string, currency: string): string {
-  const symbol = currency === 'rub' ? '₽' : currency === 'cny' ? '¥' : currency === 'usd' ? '$' : '€';
-  return `${Number.parseFloat(value).toLocaleString('ru-RU')} ${symbol}`;
-}
+const money = (value: string, currency: SellerOrderDto['currency']): string =>
+  formatPrice(value, currency, 'ru-RU');
 
 function OrderCard({
   order,
@@ -83,8 +62,8 @@ function OrderCard({
     <div className="rounded-2xl border border-line bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm text-ink">№ {order.orderId.slice(0, 8).toUpperCase()}</span>
-          <StatusBadge status={order.fulfillmentStatus} />
+          <span className="text-sm font-semibold text-ink">Заказ № {order.orderNumber}</span>
+          <StatusBadge value={order.fulfillmentStatus} labels={FULFILLMENT_STATUS_LABELS} />
         </div>
         <span className="text-sm text-muted">{date}</span>
       </div>

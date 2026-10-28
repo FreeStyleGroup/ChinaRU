@@ -1,12 +1,21 @@
 'use client';
 
-import { Badge } from '@china-ru/ui';
+import { aggregateFulfillment, FULFILLMENT_STATUS_LABELS } from '@china-ru/shared';
+import { StatusBadge } from '@china-ru/ui';
 import { useEffect, useState } from 'react';
 
+import { Link } from '@/i18n/navigation';
 import { orderClient } from '@/lib/api-client';
+import { formatPrice } from '@/lib/format';
 
 import type { OrderDto } from '@china-ru/shared';
 
+/** «Оперативная память DDR5» или «Оперативная память DDR5 и ещё 2». */
+function itemsSummary(order: OrderDto): string {
+  const [first, ...rest] = order.items;
+  if (!first) return '—';
+  return rest.length > 0 ? `${first.nameSnapshot} и ещё ${rest.length}` : first.nameSnapshot;
+}
 
 export default function CabinetOrdersPage() {
   const [orders, setOrders] = useState<OrderDto[] | null>(null);
@@ -38,21 +47,28 @@ export default function CabinetOrdersPage() {
       ) : (
         <div className="space-y-3">
           {orders.map(o => (
-            <div
+            <Link
               key={o.id}
-              className="flex items-center justify-between rounded-xl border border-line bg-white px-5 py-4"
+              href={`/cabinet/orders/${o.id}`}
+              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-white px-5 py-4 transition-colors hover:border-brand/40"
             >
-              <div>
-                <p className="font-mono text-xs text-muted">{o.id.slice(0, 8)}</p>
-                <p className="text-sm text-ink">{o.items.length} поз.</p>
-              </div>
-              <div className="text-right">
+              <div className="min-w-0 space-y-1">
                 <p className="font-semibold text-ink">
-                  {o.totalAmount} {o.currency.toUpperCase()}
+                  Заказ № {o.number}
+                  <span className="ml-2 text-sm font-normal text-muted">
+                    от {new Date(o.createdAt).toLocaleDateString('ru-RU')}
+                  </span>
                 </p>
-                <Badge>{o.status}</Badge>
+                <p className="truncate text-sm text-muted">{itemsSummary(o)}</p>
               </div>
-            </div>
+              <div className="space-y-1 text-right">
+                <p className="font-semibold text-ink">{formatPrice(o.totalAmount, o.currency, 'ru-RU')}</p>
+                <StatusBadge
+                  value={aggregateFulfillment(o.items.map(i => i.fulfillmentStatus))}
+                  labels={FULFILLMENT_STATUS_LABELS}
+                />
+              </div>
+            </Link>
           ))}
         </div>
       )}

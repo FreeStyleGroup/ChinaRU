@@ -10,6 +10,7 @@ export type OrderItem = typeof orderItems.$inferSelect;
 /** Плоская строка «заказ × позиция продавца» для группировки в кабинете продавца. */
 export interface SellerOrderRow {
   orderId: string;
+  orderNumber: number;
   orderStatus: Order['status'];
   currency: Order['currency'];
   orderCreatedAt: Date;
@@ -206,6 +207,7 @@ export class OrderRepository {
     return this.db
       .select({
         orderId: orders.id,
+        orderNumber: orders.number,
         orderStatus: orders.status,
         currency: orders.currency,
         orderCreatedAt: orders.createdAt,

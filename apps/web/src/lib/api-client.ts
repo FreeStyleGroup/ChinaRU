@@ -118,6 +118,7 @@ export const orderClient = {
   create: (input: CreateOrderInput) =>
     call<OrderDto>('/orders', { method: 'POST', body: JSON.stringify(input) }),
   list: () => call<OrderDto[]>('/orders'),
+  get: (id: string) => call<OrderDto>(`/orders/${encodeURIComponent(id)}`),
 };
 
 /** Отзывы на товар: публичный список и создание покупателем. */

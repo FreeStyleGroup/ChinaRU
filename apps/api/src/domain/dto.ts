@@ -1,3 +1,5 @@
+import { aggregateFulfillment } from '@china-ru/shared';
+
 import type {
   ApplicationWithApplicant,
   ApplicationWithVacancy,
@@ -46,7 +48,6 @@ import type {
   OrderDto,
   OrderItemDto,
   SellerOrderDto,
-  FulfillmentStatus,
   PostCommentDto,
   PostDto,
   ProductDto,
@@ -161,13 +162,6 @@ export function toOrderItemDto(i: OrderItem): OrderItemDto {
 }
 
 /** Ранг «продвинутости» исполнения для агрегата по позициям продавца (наименее продвинутый — представитель). */
-const FULFILLMENT_RANK: Record<FulfillmentStatus, number> = {
-  processing: 0,
-  shipped: 1,
-  delivered: 2,
-  cancelled: 3,
-};
-
 /** Группа строк одного заказа (все — одного продавца) → DTO кабинета продавца. */
 export function toSellerOrderDto(rows: SellerOrderRow[]): SellerOrderDto {
   const first = rows[0];
@@ -182,12 +176,10 @@ export function toSellerOrderDto(rows: SellerOrderRow[]): SellerOrderDto {
     fulfillmentStatus: r.fulfillmentStatus,
   }));
   const subtotal = items.reduce((s, i) => s + Number.parseFloat(i.lineTotal), 0).toFixed(2);
-  const fulfillmentStatus = items.reduce<FulfillmentStatus>(
-    (min, i) => (FULFILLMENT_RANK[i.fulfillmentStatus] < FULFILLMENT_RANK[min] ? i.fulfillmentStatus : min),
-    first.fulfillmentStatus
-  );
+  const fulfillmentStatus = aggregateFulfillment(items.map(i => i.fulfillmentStatus));
   return {
     orderId: first.orderId,
+    orderNumber: first.orderNumber,
     orderStatus: first.orderStatus,
     currency: first.currency,
     items,
@@ -200,6 +192,7 @@ export function toSellerOrderDto(rows: SellerOrderRow[]): SellerOrderDto {
 export function toOrderDto(order: Order, items: OrderItem[]): OrderDto {
   return {
     id: order.id,
+    number: order.number,
     buyerId: order.buyerId,
     status: order.status,
     totalAmount: order.totalAmount,

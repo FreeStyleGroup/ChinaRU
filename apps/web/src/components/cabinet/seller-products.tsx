@@ -5,6 +5,7 @@ import { Button } from '@china-ru/ui';
 import { useEffect, useRef, useState } from 'react';
 
 import { catalogClient, ClientApiError, sellerProductClient } from '@/lib/api-client';
+import { formatPrice } from '@/lib/format';
 
 import type {
   CategoryTreeNode,
@@ -650,7 +651,7 @@ export function SellerProducts() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium text-ink">{p.nameRu}</p>
                   <p className="text-xs text-muted">
-                    {p.sku} · {p.price} {p.currency.toUpperCase()} · остаток {p.stock}
+                    {p.sku} · {formatPrice(p.price, p.currency, 'ru-RU')} · остаток {p.stock}
                   </p>
                 </div>
                 <span

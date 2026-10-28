@@ -1,4 +1,5 @@
 import type {
+  FulfillmentStatus,
   ModerationStatus,
   OrderStatus,
   ProductStatus,
@@ -57,6 +58,14 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, StatusLabel> = {
   delivered: { label: 'Доставлен', tone: 'success' },
   cancelled: { label: 'Отменён', tone: 'danger' },
   refunded: { label: 'Возврат', tone: 'danger' },
+};
+
+/** Статус исполнения позиции заказа продавцом — его же видит покупатель. */
+export const FULFILLMENT_STATUS_LABELS: Record<FulfillmentStatus, StatusLabel> = {
+  processing: { label: 'Собирается', tone: 'pending' },
+  shipped: { label: 'Отправлен', tone: 'info' },
+  delivered: { label: 'Выдан', tone: 'success' },
+  cancelled: { label: 'Отменён', tone: 'danger' },
 };
 
 export const REVIEW_STATUS_LABELS: Record<ReviewStatus, StatusLabel> = {

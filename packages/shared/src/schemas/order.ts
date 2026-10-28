@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { idSchema, isoDateTime } from '../common';
 import { currencySchema, fulfillmentStatusSchema, orderStatusSchema } from '../enums';
 
+import type { FulfillmentStatus } from '../enums';
+
 /** Позиция создаваемого заказа. */
 export const createOrderItemSchema = z.object({
   productId: idSchema,
@@ -36,6 +38,25 @@ export const orderItemDtoSchema = z.object({
 });
 export type OrderItemDto = z.infer<typeof orderItemDtoSchema>;
 
+const FULFILLMENT_RANK: Record<FulfillmentStatus, number> = {
+  processing: 0,
+  shipped: 1,
+  delivered: 2,
+  cancelled: 3,
+};
+
+/**
+ * Общий статус исполнения по позициям: самый «отстающий» (собирается, пока хоть
+ * одна позиция собирается); «Отменён» — только когда отменено всё. Одно правило
+ * для кабинета продавца (API) и покупателя (витрина).
+ */
+export function aggregateFulfillment(statuses: FulfillmentStatus[]): FulfillmentStatus {
+  return statuses.reduce<FulfillmentStatus>(
+    (min, s) => (FULFILLMENT_RANK[s] < FULFILLMENT_RANK[min] ? s : min),
+    'cancelled'
+  );
+}
+
 /** Смена статуса исполнения продавцом; переходы валидирует сервис (R3). */
 export const updateFulfillmentSchema = z.object({
   status: fulfillmentStatusSchema,
@@ -60,6 +81,7 @@ export type SellerOrderItemDto = z.infer<typeof sellerOrderItemDtoSchema>;
  */
 export const sellerOrderDtoSchema = z.object({
   orderId: idSchema,
+  orderNumber: z.number().int(),
   orderStatus: orderStatusSchema,
   currency: currencySchema,
   items: z.array(sellerOrderItemDtoSchema),
@@ -71,6 +93,8 @@ export type SellerOrderDto = z.infer<typeof sellerOrderDtoSchema>;
 
 export const orderDtoSchema = z.object({
   id: idSchema,
+  /** Номер заказа для людей («Заказ № 100001»). */
+  number: z.number().int(),
   buyerId: idSchema,
   status: orderStatusSchema,
   totalAmount: z.string(),

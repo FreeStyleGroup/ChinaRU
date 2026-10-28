@@ -1,10 +1,9 @@
 import { SELLER_VERIFY_STATUS_LABELS } from '@china-ru/shared';
-import { Button } from '@china-ru/ui';
+import { Button, StatusBadge } from '@china-ru/ui';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
-import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 

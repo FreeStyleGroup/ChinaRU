@@ -6,6 +6,15 @@ export function formatDate(iso: string): string {
 }
 
 /** Денежная строка + код валюты. */
+/** Сумма для людей: «99 000 ₽», «1 250 ¥». */
 export function formatMoney(amount: string, currency: string): string {
-  return `${amount} ${currency.toUpperCase()}`;
+  try {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+      maximumFractionDigits: 0,
+    }).format(Number(amount));
+  } catch {
+    return `${amount} ${currency.toUpperCase()}`;
+  }
 }

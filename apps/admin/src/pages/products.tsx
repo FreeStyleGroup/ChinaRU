@@ -1,9 +1,9 @@
 import { PRODUCT_STATUS_LABELS } from '@china-ru/shared';
+import { StatusBadge } from '@china-ru/ui';
 import { useQuery } from '@tanstack/react-query';
 
 
 import { DataTable, type Column } from '@/components/data-table';
-import { StatusBadge } from '@/components/status-badge';
 import { api } from '@/lib/api';
 import { formatMoney } from '@/lib/format';
 

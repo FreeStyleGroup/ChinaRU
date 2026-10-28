@@ -119,9 +119,12 @@ export default async function JobsPage({
             name="search"
             defaultValue={sp.search ?? ''}
             placeholder="Должность или ключевые слова…"
-            className="h-12 flex-1 rounded-xl px-4 text-ink outline-none"
+            className="h-12 min-w-0 flex-1 rounded-xl bg-white px-4 text-ink shadow-sm outline-none placeholder:text-muted focus:ring-2 focus:ring-white/60"
           />
-          <button type="submit" className="rounded-xl bg-ink px-6 font-medium text-white">
+          <button
+            type="submit"
+            className="h-12 shrink-0 rounded-xl bg-ink px-6 font-medium text-white transition-colors hover:bg-ink/85"
+          >
             Найти
           </button>
         </form>

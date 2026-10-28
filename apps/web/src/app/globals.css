@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 
 /*
+ * Общие компоненты (Container, Button…) живут в packages/ui и подключаются через
+ * node_modules — Tailwind 4 такие пути сам не сканирует. Без этой строки их классы
+ * (mx-auto, max-w-7xl, px-4, отступы кнопок) не попадали в CSS: вёрстка прилипала
+ * к левому краю, кнопки теряли отступы.
+ */
+@source '../../../../packages/ui/src';
+
+/*
  * Дизайн-токены China-RU. Фирменный — глубокий «китайский» красный, нейтрали —
  * сланцевые, акцент — приглушённое золото. Tailwind v4 (@theme) генерирует из них
  * утилиты: bg-brand, text-ink, border-line, bg-surface, text-muted, ring-brand …

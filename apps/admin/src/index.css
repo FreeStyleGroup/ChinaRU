@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 
+/* Общие компоненты из packages/ui — Tailwind 4 не сканирует их сам (см. apps/web/src/app/globals.css). */
+@source '../../../packages/ui/src';
+
 /* Те же токены бренда, что и витрина (см. apps/web/src/app/globals.css). */
 @theme {
   --color-brand: #c8102e;

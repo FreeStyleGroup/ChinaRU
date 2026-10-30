@@ -35,22 +35,6 @@ services:
       retries: 5
     restart: unless-stopped
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.8
-    container_name: china-ru-meilisearch-prod
-    environment:
-      MEILI_ENV: production
-      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY}
-    volumes:
-      - meilisearch_data_prod:/meili_data
-    networks: [china-ru-network-prod]
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
   storage:
     # Объектное хранилище файлов — SeaweedFS (Apache-2.0), S3-совместимый API.
     # Режим `weed mini` — все роли на одном узле; по документации SeaweedFS
@@ -116,6 +100,14 @@ services:
       AI_BASE_URL: ${AI_BASE_URL:-}
       AI_MODEL: ${AI_MODEL:-}
       AI_IMAGE_MODEL: ${AI_IMAGE_MODEL:-}
+      # Почта (подтверждение адреса, восстановление пароля). Без SMTP_HOST письма
+      # не отправляются — API предупреждает об этом при запуске.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_SECURE: ${SMTP_SECURE:-true}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -186,7 +178,6 @@ services:
 volumes:
   postgres_data_prod:
   redis_data_prod:
-  meilisearch_data_prod:
   storage_data_prod:
   certbot_webroot:
 

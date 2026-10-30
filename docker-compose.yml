@@ -35,24 +35,6 @@ services:
       timeout: 5s
       retries: 5
 
-  meilisearch:
-    image: getmeili/meilisearch:v1.8
-    container_name: china-ru-meilisearch
-    environment:
-      MEILI_ENV: development
-      MEILI_MASTER_KEY: dev_master_key
-    ports:
-      - '7700:7700'
-    volumes:
-      - meilisearch_data:/meili_data
-    networks:
-      - china-ru-network
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:7700/health']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   storage:
     # SeaweedFS — S3-совместимое хранилище, как в проде (docker-compose.prod.yml).
     image: chrislusf/seaweedfs:4.48
@@ -77,7 +59,6 @@ services:
 volumes:
   postgres_data:
   redis_data:
-  meilisearch_data:
   storage_data:
 
 networks:

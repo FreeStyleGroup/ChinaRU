@@ -19,8 +19,15 @@ export interface ContentCheckResult {
 
 /* ── Ссылки и домены ── */
 
-// Свой домен — не считается «внешней ссылкой» (упоминание China.ru разрешено).
-const OWN_DOMAIN_RE = /\b(?:https?:\/\/)?(?:www\.)?china\.ru\b\S*/gi;
+// Свои адреса — не «внешние ссылки»:
+//  - домен правообладателя china-ru.ru и его поддомены (po., api.po. …), с путём;
+//  - название площадки «China.ru» как слово — так записано имя программы.
+// Ссылка же на china.ru (https://china.ru/…, www.china.ru, china.ru/путь) ведёт
+// на чужой сайт и блокируется, как любая другая. Без ретроспективных проверок
+// (lookbehind): модуль работает и в браузере, а Safari до 16.4 их не знает.
+const OWN_DOMAIN_RE =
+  /(^|[^\w.-])(?:https?:\/\/)?(?:[a-z0-9-]+\.)*china-ru\.ru(?![\w-]|\.[\w-])\S*/gi;
+const BRAND_NAME_RE = /(^|[^\w./@-])china\.ru(?![\w/-]|\.[\w-])/gi;
 
 const URL_RE = /(https?:\/\/|www\.)\S+/i;
 const TLD =
@@ -82,8 +89,8 @@ const BANNED_STEMS_LAT = [
 export function inspectContent(text: string): ContentCheckResult {
   const violations: ContentViolation[] = [];
 
-  // Свой домен вырезаем до проверки ссылок — он разрешён.
-  const linkScan = text.replace(OWN_DOMAIN_RE, ' ');
+  // Свой домен и название площадки вырезаем до проверки ссылок — они разрешены.
+  const linkScan = text.replace(OWN_DOMAIN_RE, '$1 ').replace(BRAND_NAME_RE, '$1 ');
   if (URL_RE.test(linkScan) || DOMAIN_RE.test(linkScan)) violations.push('links');
 
   const cyr = compactCyrillic(text);

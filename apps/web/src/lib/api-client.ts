@@ -117,6 +117,27 @@ export const authClient = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  /** Ссылка из письма. Ошибки: 404 `invalid_token`, 410 `token_expired`. */
+  verifyEmail: (token: string) =>
+    call<{ verified: boolean }>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    }),
+  /** Повторное письмо подтверждения (вошедший пользователь). */
+  resendVerification: () =>
+    call<{ alreadyVerified: boolean }>('/auth/verify-email/resend', { method: 'POST' }),
+  /** Всегда успех, даже для незарегистрированного адреса (анти-энумерация). */
+  requestPasswordReset: (email: string) =>
+    call<{ requested: boolean }>('/auth/password-reset/request', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+  /** Новый пароль по ссылке из письма; рвёт все сессии. Ошибки — как у verifyEmail. */
+  resetPassword: (token: string, password: string) =>
+    call<{ reset: boolean }>('/auth/password-reset/confirm', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    }),
 };
 
 export const orderClient = {

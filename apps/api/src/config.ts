@@ -60,7 +60,14 @@ const envSchema = z.object({
     .transform(v => v === 'true'),
   SMTP_USER: z.string().default(''),
   SMTP_PASSWORD: z.string().default(''),
-  MAIL_FROM: z.string().default('China.ru <no-reply@china.ru>'),
+  /**
+   * Отправитель писем — с домена правообладателя (china.ru — чужой домен).
+   * Пустое значение (compose передаёт `${MAIL_FROM:-}`) — тоже умолчание.
+   */
+  MAIL_FROM: z
+    .string()
+    .default('')
+    .transform(v => v.trim() || 'China.ru <no-reply@china-ru.ru>'),
 
   REGISTRATION_OPEN: z
     .enum(['true', 'false'])

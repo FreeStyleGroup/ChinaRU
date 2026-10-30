@@ -83,5 +83,11 @@ describe('referral MLM', () => {
     expect(summary.body.data.totalPartners).toBe(1);
     expect(summary.body.data.partners[0].level).toBe(1);
     expect(summary.body.data.partners[0].active).toBe(true);
+
+    // Приглашение ведёт на витрину этого экземпляра, а не на чужой домен.
+    const link = new URL(summary.body.data.refLink as string);
+    expect(link.origin).toBe(new URL(loadConfig().webUrl).origin);
+    expect(link.pathname).toBe('/register');
+    expect(link.searchParams.get('ref')).toBe(String(refPublicId));
   });
 });

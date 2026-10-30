@@ -2,7 +2,12 @@ import type { ProductDto, StoreDto } from '@china-ru/shared';
 import type { Metadata } from 'next';
 
 export const SITE_NAME = 'China.ru';
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://china.ru';
+/**
+ * Адрес витрины этого экземпляра. В прод-сборке обязателен (compose падает без
+ * NEXT_PUBLIC_SITE_URL); запасное значение — только для `next dev`. Чужой домен
+ * в запасе ушёл бы в canonical, OG и sitemap.
+ */
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 /** Абсолютный URL для каноникал/OG. */
 export function absoluteUrl(path: string): string {

@@ -33,6 +33,8 @@ export interface AuthController {
   logout: RequestHandler;
   me: RequestHandler;
   verifyEmail: RequestHandler;
+  /** Повторное письмо подтверждения адреса (вошедший пользователь). */
+  resendVerification: RequestHandler;
   requestPasswordReset: RequestHandler;
   resetPassword: RequestHandler;
   changePassword: RequestHandler;
@@ -112,6 +114,11 @@ export function createAuthController(deps: AuthControllerDeps): AuthController {
       const { token } = emailVerifySchema.parse(req.body);
       await deps.auth.verifyEmail(token);
       res.json(ok({ verified: true }));
+    }),
+
+    resendVerification: asyncHandler(async (req, res) => {
+      if (!req.auth) throw new UnauthorizedError();
+      res.json(ok(await deps.auth.resendVerification(req.auth.userId)));
     }),
 
     requestPasswordReset: asyncHandler(async (req, res) => {

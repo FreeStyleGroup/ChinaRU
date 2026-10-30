@@ -13,9 +13,14 @@ const MAX_DEPTH = REFERRAL_LEVEL_RATES.length;
 
 /** Реферальная программа MLM: привязка пригласившего, начисления по уровням, сводка. */
 export class ReferralService {
+  /**
+   * @param webUrl адрес витрины этого экземпляра (WEB_URL) — приглашение ведёт
+   * на его страницу регистрации; язык страницы выберет витрина.
+   */
   constructor(
     private readonly referrals: ReferralRepository,
-    private readonly users: UserRepository
+    private readonly users: UserRepository,
+    private readonly webUrl: string
   ) {}
 
   /** Привязывает пригласившего по его числовому publicId (при регистрации). */
@@ -97,9 +102,12 @@ export class ReferralService {
       count: partners.filter(p => p.level === i + 1).length,
     }));
 
+    const refLink = new URL('/register', this.webUrl);
+    refLink.searchParams.set('ref', String(user.publicId));
+
     return {
       refCode: `CN-${String(user.publicId).padStart(6, '0')}`,
-      refLink: `https://china.ru/register?ref=${user.publicId}`,
+      refLink: refLink.toString(),
       points: user.points,
       balance: user.referralBalance,
       totalEarned: total,

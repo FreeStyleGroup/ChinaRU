@@ -16,10 +16,34 @@ describe('content moderation', () => {
   });
 
   it('blocks external links and bare domains', () => {
-    expect(inspectContent('Заходите на https://my-shop.ru за скидками').violations).toContain('links');
+    expect(inspectContent('Заходите на https://my-shop.ru за скидками').violations).toContain(
+      'links'
+    );
     expect(inspectContent('пишите на www.spam.com').violations).toContain('links');
     expect(inspectContent('наш сайт example.shop там всё есть').violations).toContain('links');
     expect(inspectContent('переходи на t.me/spamchannel').violations).toContain('links');
+  });
+
+  it('разрешает свой домен china-ru.ru с поддоменами и название China.ru', () => {
+    for (const text of [
+      'Наш сайт china-ru.ru, витрина https://po.china-ru.ru/ru/catalog — заходите.',
+      'Приглашение: po.china-ru.ru/register?ref=100001',
+      'Подробнее на China.ru.',
+    ]) {
+      expect(inspectContent(text).ok, text).toBe(true);
+    }
+  });
+
+  it('блокирует ссылки на чужой china.ru и подделки под свой домен', () => {
+    for (const text of [
+      'Заходите на https://china.ru/promo',
+      'смотрите www.china.ru',
+      'всё тут: china.ru/promo',
+      'наш партнёр evilchina-ru.ru',
+      'зеркало china-ru.ru.evil.com',
+    ]) {
+      expect(inspectContent(text).violations, text).toContain('links');
+    }
   });
 
   it('blocks profanity, including obfuscation', () => {

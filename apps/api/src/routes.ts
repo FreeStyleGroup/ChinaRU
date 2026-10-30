@@ -92,6 +92,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.post('/auth/logout', auth.logout);
   router.get('/auth/me', requireAuth, auth.me);
   router.post('/auth/verify-email', auth.verifyEmail);
+  router.post('/auth/verify-email/resend', authLimiter, requireAuth, auth.resendVerification);
   router.post('/auth/password-reset/request', authLimiter, auth.requestPasswordReset);
   router.post('/auth/password-reset/confirm', authLimiter, auth.resetPassword);
   router.post('/auth/change-password', requireAuth, auth.changePassword);
@@ -152,11 +153,7 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // Документы резюме (диплом/сертификат/HSK): статический сегмент до '/:id'.
   router.get('/account/resume/documents', requireAuth, jobs.listResumeDocuments);
   router.post('/account/resume/documents', requireAuth, documentUpload, jobs.addResumeDocument);
-  router.get(
-    '/account/resume/documents/:id/download',
-    requireAuth,
-    jobs.downloadResumeDocument
-  );
+  router.get('/account/resume/documents/:id/download', requireAuth, jobs.downloadResumeDocument);
   router.delete('/account/resume/documents/:id', requireAuth, jobs.deleteResumeDocument);
   router.get('/account/applications', requireAuth, jobs.myApplications);
   router.get('/jobs', jobs.listVacancies);

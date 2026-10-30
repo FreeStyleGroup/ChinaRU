@@ -38,7 +38,7 @@ import { AccountService } from './domain/account/account.service';
 import { NotificationService } from './domain/account/notification.service';
 import { AdminService } from './domain/admin/admin.service';
 import { AuthService } from './domain/auth/auth.service';
-import { ConsoleMailer, type Mailer } from './domain/auth/mailer';
+import { ConsoleMailer, SmtpMailer, type Mailer } from './domain/auth/mailer';
 import { PasswordService } from './domain/auth/password.service';
 import { TokenService } from './domain/auth/token.service';
 import { CartService } from './domain/cart/cart.service';
@@ -74,7 +74,10 @@ import {
   type ContentController,
 } from './http/controllers/content.controller';
 import { createFilesController, type FilesController } from './http/controllers/files.controller';
-import { createGarageController, type GarageController } from './http/controllers/garage.controller';
+import {
+  createGarageController,
+  type GarageController,
+} from './http/controllers/garage.controller';
 import { createJobController, type JobController } from './http/controllers/job.controller';
 import {
   createOrdersController,
@@ -88,7 +91,10 @@ import {
   createReferralController,
   type ReferralController,
 } from './http/controllers/referral.controller';
-import { createReviewsController, type ReviewsController } from './http/controllers/reviews.controller';
+import {
+  createReviewsController,
+  type ReviewsController,
+} from './http/controllers/reviews.controller';
 import {
   createSellerOrdersController,
   type SellerOrdersController,
@@ -97,10 +103,19 @@ import {
   createSellerProductsController,
   type SellerProductsController,
 } from './http/controllers/seller-products.controller';
-import { createSocialController, type SocialController } from './http/controllers/social.controller';
+import {
+  createSocialController,
+  type SocialController,
+} from './http/controllers/social.controller';
 import { createStoreController, type StoreController } from './http/controllers/store.controller';
-import { createTenderController, type TenderController } from './http/controllers/tender.controller';
-import { createVehicleController, type VehicleController } from './http/controllers/vehicle.controller';
+import {
+  createTenderController,
+  type TenderController,
+} from './http/controllers/tender.controller';
+import {
+  createVehicleController,
+  type VehicleController,
+} from './http/controllers/vehicle.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
 import { createStorage, type Storage } from './storage/storage';
 
@@ -141,10 +156,27 @@ export interface Container {
   };
 }
 
+/**
+ * SMTP задан — письма уходят по-настоящему. Не задан — заглушка: в разработке
+ * пишет токены в лог, в production только предупреждает (подтверждение почты
+ * и восстановление пароля без SMTP не работают — об этом сразу при запуске).
+ */
+function createMailer(config: AppConfig, logger: Logger): Mailer {
+  if (config.smtp.enabled) {
+    return new SmtpMailer(config.smtp, config.webUrl, logger);
+  }
+  if (config.nodeEnv === 'production') {
+    logger.warn(
+      'SMTP не настроен (SMTP_HOST пуст): письма подтверждения почты и сброса пароля не отправляются'
+    );
+  }
+  return new ConsoleMailer(logger, config.nodeEnv !== 'production');
+}
+
 /** Композиционный корень: собирает репозитории → сервисы → контроллеры из одного Database. */
 export function createContainer(deps: ContainerDeps): Container {
   const { db, config, logger } = deps;
-  const mailer = deps.mailer ?? new ConsoleMailer(logger);
+  const mailer = deps.mailer ?? createMailer(config, logger);
 
   const userRepo = new UserRepository(db);
   const sellerRepo = new SellerRepository(db);
@@ -206,7 +238,7 @@ export function createContainer(deps: ContainerDeps): Container {
     registrationOpen: config.features.registrationOpen,
     referrals: referralRepo,
   });
-  const referrals = new ReferralService(referralRepo, userRepo);
+  const referrals = new ReferralService(referralRepo, userRepo, config.webUrl);
   const catalog = new CatalogService(
     categoryRepo,
     productRepo,

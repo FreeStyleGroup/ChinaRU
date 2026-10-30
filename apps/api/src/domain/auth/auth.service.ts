@@ -164,6 +164,18 @@ export class AuthService {
     });
   }
 
+  /**
+   * Повторное письмо подтверждения — если первое не дошло или ссылка истекла.
+   * Прежние ссылки продолжают действовать до своего срока: каждая одноразовая.
+   */
+  async resendVerification(userId: string): Promise<{ alreadyVerified: boolean }> {
+    const user = await this.deps.users.findById(userId);
+    if (!user) throw new NotFoundError('Пользователь не найден', 'user_not_found');
+    if (user.emailVerifiedAt) return { alreadyVerified: true };
+    await this.sendVerificationEmail(user);
+    return { alreadyVerified: false };
+  }
+
   /** Запрос сброса. Молчим, если email не найден — анти-энумерация. */
   async requestPasswordReset(email: string): Promise<void> {
     const user = await this.deps.users.findByEmail(email);

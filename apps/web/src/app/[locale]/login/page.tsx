@@ -73,6 +73,11 @@ export default function LoginPage() {
               className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-brand"
             />
           </label>
+          <p className="-mt-2 text-right text-sm">
+            <Link href="/forgot-password" className="text-brand">
+              {t('forgotPassword')}
+            </Link>
+          </p>
           {error && <p className="text-sm text-brand">{t('error')}</p>}
           <Button type="submit" className="w-full" disabled={loading}>
             {t('submitLogin')}

@@ -4,6 +4,7 @@ import { CABINET_SECTIONS } from '@china-ru/shared';
 import { Container } from '@china-ru/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { EmailVerifyNotice } from '@/components/cabinet/email-verify-notice';
 import { CabinetMenuModal } from '@/components/cabinet/menu-modal';
 import { NavIcon } from '@/components/cabinet/nav-icon';
 import { isStoreVerified, SellerContext } from '@/components/cabinet/seller-context';
@@ -159,6 +160,7 @@ export default function CabinetLayout({ children }: { children: ReactNode }) {
         </aside>
 
         <section>
+          <EmailVerifyNotice />
           <SellerContext.Provider
             value={{ profile: seller, loading: sellerLoading, setProfile: setSeller }}
           >

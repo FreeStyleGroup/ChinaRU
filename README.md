@@ -19,7 +19,7 @@
 | Admin     | React 19 + Vite (SPA) + shadcn/ui — RBAC                |
 | API       | Node 22 + Express + TypeScript (ESM)                    |
 | БД        | PostgreSQL 16 + Drizzle ORM                             |
-| Кеш/поиск | Redis · Meilisearch                                     |
+| Кеш       | Redis                                                   |
 | Файлы     | SeaweedFS (S3‑совместимое)                              |
 | Контракты | Zod (single source of truth) → `z.infer` DTO            |
 | Монорепо  | npm workspaces + Turborepo                              |

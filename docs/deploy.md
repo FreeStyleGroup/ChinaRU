@@ -1,12 +1,12 @@
 # Деплой China.ru
 
-Стек контейнеризован: PostgreSQL, Redis, Meilisearch, SeaweedFS (S3), API (Node), Web
+Стек контейнеризован: PostgreSQL, Redis, SeaweedFS (S3), API (Node), Web
 (Next.js standalone), Admin (статика за nginx) и пограничный nginx с TLS.
 
 ## Локальная разработка инфраструктуры
 
 ```bash
-docker compose up -d           # postgres + redis + meilisearch + storage (dev)
+docker compose up -d           # postgres + redis + storage (dev)
 cp .env.example .env           # заполнить DATABASE_URL и JWT-секреты
 npm run dev                    # все приложения через Turborepo
 ```

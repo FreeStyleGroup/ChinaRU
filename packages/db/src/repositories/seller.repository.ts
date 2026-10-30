@@ -43,6 +43,15 @@ export class SellerRepository {
     return row ?? null;
   }
 
+  async findByPublicId(publicId: number): Promise<SellerProfile | null> {
+    const [row] = await this.db
+      .select()
+      .from(sellerProfiles)
+      .where(and(eq(sellerProfiles.publicId, publicId), isNull(sellerProfiles.deletedAt)))
+      .limit(1);
+    return row ?? null;
+  }
+
   async findByNickname(nickname: string): Promise<SellerProfile | null> {
     const [row] = await this.db
       .select()

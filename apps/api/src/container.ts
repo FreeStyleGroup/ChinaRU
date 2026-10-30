@@ -12,6 +12,7 @@ import {
   OrderRepository,
   PostCommentRepository,
   PostRepository,
+  PriceRequestRepository,
   ReportRepository,
   ProductImageRepository,
   ProductRepository,
@@ -52,6 +53,8 @@ import { SellerOrderService } from './domain/seller/seller-order.service';
 import { SellerProductService } from './domain/seller/seller-product.service';
 import { ReportService } from './domain/social/report.service';
 import { SocialService } from './domain/social/social.service';
+import { PriceRequestService } from './domain/store/price-request.service';
+import { StoreService } from './domain/store/store.service';
 import { TenderService } from './domain/tenders/tender.service';
 import { GarageService } from './domain/vehicles/garage.service';
 import { DealerService, VehicleService } from './domain/vehicles/vehicle.service';
@@ -78,6 +81,10 @@ import {
   type OrdersController,
 } from './http/controllers/orders.controller';
 import {
+  createPriceRequestsController,
+  type PriceRequestsController,
+} from './http/controllers/price-requests.controller';
+import {
   createReferralController,
   type ReferralController,
 } from './http/controllers/referral.controller';
@@ -91,6 +98,7 @@ import {
   type SellerProductsController,
 } from './http/controllers/seller-products.controller';
 import { createSocialController, type SocialController } from './http/controllers/social.controller';
+import { createStoreController, type StoreController } from './http/controllers/store.controller';
 import { createTenderController, type TenderController } from './http/controllers/tender.controller';
 import { createVehicleController, type VehicleController } from './http/controllers/vehicle.controller';
 import { createAuthMiddleware, type AuthMiddleware } from './http/middleware/auth';
@@ -128,6 +136,8 @@ export interface Container {
     tenders: TenderController;
     vehicles: VehicleController;
     garage: GarageController;
+    store: StoreController;
+    priceRequests: PriceRequestsController;
   };
 }
 
@@ -165,6 +175,7 @@ export function createContainer(deps: ContainerDeps): Container {
   const auditRepo = new AuditRepository(db);
   const contentAgentRepo = new ContentAgentRepository(db);
   const articleRepo = new ArticleRepository(db);
+  const priceRequestRepo = new PriceRequestRepository(db);
 
   const ai = createAiProvider(config, logger);
   const storage = createStorage(config, logger);
@@ -215,6 +226,13 @@ export function createContainer(deps: ContainerDeps): Container {
     ai
   );
   const sellerOrders = new SellerOrderService(sellerRepo, orderRepo, notificationRepo);
+  const store = new StoreService(sellerRepo, productRepo, storage, config.apiPublicUrl);
+  const priceRequests = new PriceRequestService(
+    productRepo,
+    sellerRepo,
+    priceRequestRepo,
+    notificationRepo
+  );
   const account = new AccountService(userRepo, sellerRepo, storage, config.apiPublicUrl);
   const notificationService = new NotificationService(notificationRepo);
   const horoscope = new HoroscopeService(userRepo, ai, cache);
@@ -283,6 +301,8 @@ export function createContainer(deps: ContainerDeps): Container {
       tenders: createTenderController({ tenders }),
       vehicles: createVehicleController({ vehicles, dealers }),
       garage: createGarageController({ garage }),
+      store: createStoreController({ store }),
+      priceRequests: createPriceRequestsController({ priceRequests }),
     },
   };
 }

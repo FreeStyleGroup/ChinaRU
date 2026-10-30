@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   numeric,
   pgTable,
   text,
@@ -13,7 +14,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { softDelete, timestamps } from './columns';
-import { currency, productStatus, reviewStatus } from './enums';
+import { currency, priceRequestStatus, productStatus, reviewStatus } from './enums';
 import { sellerProfiles, users } from './users';
 
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
@@ -29,6 +30,12 @@ export const categories = pgTable(
     nameRu: text('name_ru').notNull(),
     nameEn: text('name_en'),
     nameZh: text('name_zh'),
+    /** Краткое описание раздела для шапки каталога (по языкам). */
+    descriptionRu: text('description_ru'),
+    descriptionEn: text('description_en'),
+    descriptionZh: text('description_zh'),
+    /** Обложка раздела: адрес файла в хранилище платформы (раздаёт API). */
+    imageUrl: text('image_url'),
     depth: integer('depth').notNull().default(0),
     sort: integer('sort').notNull().default(0),
     ...timestamps,
@@ -59,8 +66,17 @@ export const products = pgTable(
     descriptionRu: text('description_ru'),
     descriptionEn: text('description_en'),
     descriptionZh: text('description_zh'),
-    price: numeric('price', { precision: 12, scale: 2 }).notNull(),
+    /**
+     * Цена; NULL — «цена по запросу» (B2B-оборудование): товар нельзя положить
+     * в корзину, покупатель отправляет продавцу запрос цены (price_requests).
+     */
+    price: numeric('price', { precision: 12, scale: 2 }),
     currency: currency('currency').notNull().default('rub'),
+    /** Характеристики «название — значение» в порядке показа. */
+    specs: jsonb('specs')
+      .$type<{ name: string; value: string }[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     stock: integer('stock').notNull().default(0),
     status: productStatus('status').notNull().default('draft'),
     rating: numeric('rating', { precision: 3, scale: 2 }).notNull().default('0'),
@@ -95,6 +111,43 @@ export const productImages = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   t => [index('product_images_product_idx').on(t.productId)]
+);
+
+/**
+ * Запрос цены по товару без цены. Контакты покупателя продавец видит в кабинете
+ * (имя и e-mail учётной записи + телефон, если покупатель его оставил) и отвечает
+ * вне платформы; статус запроса ведёт сам.
+ */
+export const priceRequests = pgTable(
+  'price_requests',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    sellerId: uuid('seller_id')
+      .notNull()
+      .references(() => sellerProfiles.id, { onDelete: 'cascade' }),
+    buyerId: uuid('buyer_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    qty: integer('qty').notNull().default(1),
+    comment: text('comment'),
+    contactPhone: text('contact_phone'),
+    status: priceRequestStatus('status').notNull().default('new'),
+    ...timestamps,
+  },
+  t => [
+    index('price_requests_seller_idx').on(t.sellerId, t.createdAt),
+    index('price_requests_buyer_idx').on(t.buyerId),
+    index('price_requests_product_idx').on(t.productId),
+    // Один открытый запрос покупателя по товару: повтор — ответ «уже отправлен»,
+    // даже если два запроса пришли одновременно.
+    uniqueIndex('price_requests_open_uidx')
+      .on(t.buyerId, t.productId)
+      .where(sql`${t.status} = 'new'`),
+    check('price_requests_qty_positive', sql`${t.qty} > 0`),
+  ]
 );
 
 export const reviews = pgTable(

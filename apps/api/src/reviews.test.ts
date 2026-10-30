@@ -50,7 +50,7 @@ describe('product reviews (verified purchase + moderation)', () => {
     seller = request.agent(server);
     const sReg = await seller
       .post('/api/v1/auth/register')
-      .send({ email: 'rv-seller@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'rv-seller@x.test', password: 'secret123' });
     await new SellerRepository(db).create({
       userId: sReg.body.data.user.id as string,
       companyName: 'Продавец Отзывов',
@@ -70,20 +70,20 @@ describe('product reviews (verified purchase + moderation)', () => {
 
     // Покупатель оформляет заказ (даёт право на отзыв).
     buyer = request.agent(server);
-    await buyer.post('/api/v1/auth/register').send({ email: 'rv-buyer@x.test', password: 'secret123' });
+    await buyer.post('/api/v1/auth/register').send({ pdConsent: true, email: 'rv-buyer@x.test', password: 'secret123' });
     await buyer.post('/api/v1/orders').send({ items: [{ productId, qty: 1 }] });
 
     // Посторонний без покупки.
     stranger = request.agent(server);
     await stranger
       .post('/api/v1/auth/register')
-      .send({ email: 'rv-stranger@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'rv-stranger@x.test', password: 'secret123' });
 
     // Админ.
     admin = request.agent(server);
     const aReg = await admin
       .post('/api/v1/auth/register')
-      .send({ email: 'rv-admin@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'rv-admin@x.test', password: 'secret123' });
     await new UserRepository(db).update(aReg.body.data.user.id as string, { role: 'admin' });
   });
 

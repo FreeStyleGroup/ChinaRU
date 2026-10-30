@@ -4,7 +4,6 @@ import { CABINET_SECTIONS } from '@china-ru/shared';
 import { Container } from '@china-ru/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 
-
 import { CabinetMenuModal } from '@/components/cabinet/menu-modal';
 import { NavIcon } from '@/components/cabinet/nav-icon';
 import { isStoreVerified, SellerContext } from '@/components/cabinet/seller-context';
@@ -65,7 +64,9 @@ export default function CabinetLayout({ children }: { children: ReactNode }) {
 
   return (
     <Container className="py-8">
-      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+      {/* minmax(0,1fr), а не 1fr/auto: иначе колонка растягивается по самой длинной
+          неразрывной строке (название товара с truncate) и телефон уезжает вбок. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
         <aside className="h-fit rounded-2xl border border-line bg-white p-4">
           <div className="flex items-center gap-3 border-b border-line px-2 pb-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-sm font-bold text-brand">

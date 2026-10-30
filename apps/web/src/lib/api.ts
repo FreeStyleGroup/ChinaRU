@@ -14,6 +14,7 @@ import type {
   ReviewDto,
   ResumeListQuery,
   ResumePublicDto,
+  StoreDto,
   TenderDto,
   TenderListQuery,
   DealerDto,
@@ -56,6 +57,7 @@ function buildProductQuery(query: Partial<ProductListQuery>): string {
   if (query.pageSize) params.set('pageSize', String(query.pageSize));
   if (query.categoryId) params.set('categoryId', query.categoryId);
   if (query.sellerId) params.set('sellerId', query.sellerId);
+  if (query.status) params.set('status', query.status);
   if (query.search) params.set('search', query.search);
   if (query.sort) params.set('sort', query.sort);
   if (query.minPrice !== undefined) params.set('minPrice', String(query.minPrice));
@@ -74,6 +76,16 @@ export const catalogApi = {
     apiGet<ProductDto>(`/catalog/products/${encodeURIComponent(slug)}`, { revalidate: 300 }),
   reviews: (productId: string) =>
     apiGet<ReviewDto[]>(`/products/${encodeURIComponent(productId)}/reviews`, { revalidate: 120 }),
+};
+
+/**
+ * Публичная страница магазина. Ключ — никнейм, числовой publicId или id профиля
+ * продавца (`ProductDto.sellerId`); неподтверждённый магазин — 404 `store_not_found`.
+ */
+export const storeApi = {
+  // Минута, а не пять, как у товаров: продавец оформляет страницу и сразу её открывает.
+  store: (key: string) =>
+    apiGet<StoreDto>(`/stores/${encodeURIComponent(key)}`, { revalidate: 60 }),
 };
 
 function buildJobQuery(query: Partial<JobListQuery>): string {
@@ -113,8 +125,7 @@ export const jobsApi = {
 
 /** Соцсеть: начальная лента для SSR (далее догрузка/интерактив — в браузере). */
 export const socialApi = {
-  feed: (page = 1) =>
-    apiGet<Paginated<PostDto>>(`/social/feed?page=${page}`, { revalidate: 30 }),
+  feed: (page = 1) => apiGet<Paginated<PostDto>>(`/social/feed?page=${page}`, { revalidate: 30 }),
 };
 
 function buildTenderQuery(query: Partial<TenderListQuery>): string {

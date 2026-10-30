@@ -1,4 +1,4 @@
-import type { ProductDto } from '@china-ru/shared';
+import type { ProductDto, StoreDto } from '@china-ru/shared';
 import type { Metadata } from 'next';
 
 export const SITE_NAME = 'China.ru';
@@ -36,7 +36,13 @@ export function buildMetadata(input: PageMetaInput): Metadata {
   };
 }
 
-/** JSON-LD Schema.org Product. По умолчанию русские поля; можно передать локализованные. */
+/**
+ * JSON-LD Schema.org Product. По умолчанию русские поля; можно передать локализованные.
+ *
+ * «Цена по запросу» (price === null) — без `offers`: Offer без цены поисковики
+ * считают ошибкой разметки, а выдумывать цену нельзя. Product без предложения
+ * остаётся корректной разметкой (название, артикул, фото, характеристики).
+ */
 export function productJsonLd(
   product: ProductDto,
   path: string,
@@ -51,14 +57,27 @@ export function productJsonLd(
     sku: product.sku,
     ...(description ? { description } : {}),
     ...(product.images.length > 0 ? { image: product.images.map(i => i.url) } : {}),
-    offers: {
-      '@type': 'Offer',
-      price: product.price,
-      priceCurrency: product.currency.toUpperCase(),
-      availability:
-        product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
-      url: absoluteUrl(path),
-    },
+    ...(product.specs.length > 0
+      ? {
+          additionalProperty: product.specs.map(s => ({
+            '@type': 'PropertyValue',
+            name: s.name,
+            value: s.value,
+          })),
+        }
+      : {}),
+    ...(product.price !== null
+      ? {
+          offers: {
+            '@type': 'Offer',
+            price: product.price,
+            priceCurrency: product.currency.toUpperCase(),
+            availability:
+              product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+            url: absoluteUrl(path),
+          },
+        }
+      : {}),
     ...(product.reviewCount > 0
       ? {
           aggregateRating: {
@@ -79,6 +98,29 @@ export function organizationJsonLd(): Record<string, unknown> {
     name: SITE_NAME,
     url: SITE_URL,
     description: 'Маркетплейс промышленного оборудования из Китая.',
+  };
+}
+
+/**
+ * JSON-LD страницы магазина. Тип — Organization, а не Store: Store в Schema.org —
+ * торговая точка (LocalBusiness с адресом), а у продавца площадки адреса на
+ * странице нет — контакты видит только модератор.
+ */
+export function storeJsonLd(
+  store: StoreDto,
+  path: string,
+  override?: { description?: string | null }
+): Record<string, unknown> {
+  const description = override?.description ?? store.description;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: store.companyName,
+    ...(store.companyNameZh ? { alternateName: store.companyNameZh } : {}),
+    url: absoluteUrl(path),
+    ...(store.logoUrl ? { logo: store.logoUrl } : {}),
+    ...(store.bannerUrl ? { image: store.bannerUrl } : {}),
+    ...(description ? { description } : {}),
   };
 }
 

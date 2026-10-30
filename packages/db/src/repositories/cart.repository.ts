@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { cartItems, productImages, products } from '../schema';
 
@@ -31,9 +31,14 @@ export interface RawCartItem {
 export class CartRepository {
   constructor(private readonly db: Database) {}
 
-  /** Позиции корзины пользователя с данными товара и первичным изображением. */
+  /**
+   * Позиции корзины пользователя с данными товара и первичным изображением.
+   * Товары «по запросу» (цена NULL) в корзину не попадают (CartService), а если
+   * продавец снял цену у уже лежащего в корзине товара — позиция не показывается:
+   * заказать её по цене нельзя.
+   */
   async listByUser(userId: string): Promise<CartLine[]> {
-    return this.db
+    const rows = await this.db
       .select({
         id: cartItems.id,
         productId: cartItems.productId,
@@ -57,14 +62,16 @@ export class CartRepository {
       )
       .where(eq(cartItems.userId, userId))
       .orderBy(desc(cartItems.createdAt));
+    return rows.flatMap(r => (r.price === null ? [] : [{ ...r, price: r.price }]));
   }
 
-  /** Сырые позиции для оформления заказа (без join). */
+  /** Позиции для оформления заказа — те же, что видит покупатель (без товаров «по запросу»). */
   async rawByUser(userId: string): Promise<RawCartItem[]> {
     return this.db
       .select({ productId: cartItems.productId, qty: cartItems.qty })
       .from(cartItems)
-      .where(eq(cartItems.userId, userId));
+      .innerJoin(products, eq(products.id, cartItems.productId))
+      .where(and(eq(cartItems.userId, userId), isNotNull(products.price)));
   }
 
   /** Добавить товар: если позиция есть — прибавить количество (upsert по user+product). */

@@ -23,6 +23,9 @@ export * from './moderation';
 // Китайский зодиак (раздел «Гороскоп» в кабинете)
 export * from './zodiac';
 
+// Правовые документы оператора персональных данных (152-ФЗ)
+export * from './legal';
+
 // Доменные схемы и DTO
 export * from './schemas/auth';
 export * from './schemas/user';

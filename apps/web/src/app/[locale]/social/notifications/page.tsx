@@ -17,7 +17,23 @@ const LABELS: Record<string, string> = {
   review: 'Новый отзыв',
   chat: 'Новое сообщение',
   system: 'Системное уведомление',
+  price_request: 'Новый запрос цены',
 };
+
+/**
+ * Куда ведёт уведомление. Запрос цены — во вкладку «Запросы цены» кабинета
+ * продавца; в подписи — товар из payload (его кладёт API: productName).
+ */
+function notificationTarget(n: NotificationDto): { href: string; detail: string | null } | null {
+  if (n.type === 'price_request') {
+    const name = n.payload.productName;
+    return {
+      href: '/cabinet/store?tab=requests',
+      detail: typeof name === 'string' && name.trim() !== '' ? name : null,
+    };
+  }
+  return null;
+}
 
 function timeAgo(iso: string): string {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -86,17 +102,34 @@ export default function NotificationsPage() {
             Уведомлений пока нет.
           </p>
         )}
-        {items.map(n => (
-          <div
-            key={n.id}
-            className={`rounded-xl border border-line p-4 ${n.readAt ? 'bg-white' : 'bg-surface'}`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink">{LABELS[n.type] ?? n.type}</span>
-              <span className="text-xs text-muted">{timeAgo(n.createdAt)}</span>
+        {items.map(n => {
+          const target = notificationTarget(n);
+          const body = (
+            <>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm font-medium text-ink">{LABELS[n.type] ?? n.type}</span>
+                <span className="shrink-0 text-xs text-muted">{timeAgo(n.createdAt)}</span>
+              </div>
+              {target?.detail && (
+                <p className="mt-1 truncate text-sm text-muted">{target.detail}</p>
+              )}
+            </>
+          );
+          const cls = `block rounded-xl border border-line p-4 ${n.readAt ? 'bg-white' : 'bg-surface'}`;
+          return target ? (
+            <Link
+              key={n.id}
+              href={target.href}
+              className={`${cls} transition-colors hover:border-brand/40`}
+            >
+              {body}
+            </Link>
+          ) : (
+            <div key={n.id} className={cls}>
+              {body}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <Link href="/social" className="mt-6 inline-block text-sm text-muted hover:text-ink">

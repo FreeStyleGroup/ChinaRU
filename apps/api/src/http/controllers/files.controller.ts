@@ -11,7 +11,17 @@ export interface FilesController {
   avatar: RequestHandler;
   /** Публичная раздача изображения товара (`product-images/{productId}/{imageId}`). */
   productImage: RequestHandler;
+  /** Оформление магазина — баннер/логотип (`stores/{sellerId}/{fileId}`). */
+  storeImage: RequestHandler;
+  /** Обложка раздела каталога (`categories/{categoryId}/{fileId}`). */
+  categoryImage: RequestHandler;
 }
+
+/**
+ * Файлы оформления неизменяемы: каждая загрузка получает новый fileId (адрес),
+ * поэтому их можно кешировать на год — замена картинки меняет адрес.
+ */
+const IMMUTABLE = 'public, max-age=31536000, immutable';
 
 export function createFilesController(deps: { storage: Storage }): FilesController {
   return {
@@ -31,6 +41,26 @@ export function createFilesController(deps: { storage: Storage }): FilesControll
       if (!file) throw new NotFoundError('Изображение не найдено', 'image_not_found');
       res.setHeader('Content-Type', file.contentType);
       res.setHeader('Cache-Control', 'public, max-age=86400');
+      res.send(file.body);
+    }),
+
+    storeImage: asyncHandler(async (req, res) => {
+      const sellerId = idSchema.parse(req.params.sellerId);
+      const fileId = idSchema.parse(req.params.fileId);
+      const file = await deps.storage.get(`stores/${sellerId}/${fileId}`);
+      if (!file) throw new NotFoundError('Изображение не найдено', 'image_not_found');
+      res.setHeader('Content-Type', file.contentType);
+      res.setHeader('Cache-Control', IMMUTABLE);
+      res.send(file.body);
+    }),
+
+    categoryImage: asyncHandler(async (req, res) => {
+      const categoryId = idSchema.parse(req.params.categoryId);
+      const fileId = idSchema.parse(req.params.fileId);
+      const file = await deps.storage.get(`categories/${categoryId}/${fileId}`);
+      if (!file) throw new NotFoundError('Изображение не найдено', 'image_not_found');
+      res.setHeader('Content-Type', file.contentType);
+      res.setHeader('Cache-Control', IMMUTABLE);
       res.send(file.body);
     }),
   };

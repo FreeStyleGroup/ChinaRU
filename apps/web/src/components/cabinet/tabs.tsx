@@ -11,15 +11,23 @@ export interface TabDef {
 /**
  * Лёгкие клиентские вкладки для разделов кабинета (подпись + опц. счётчик).
  * Контент каждой вкладки задаётся функцией render(activeKey).
+ *
+ * Без `active` вкладки помнят выбор сами; с `active` + `onChange` выбор хранит
+ * страница (например, в адресе `?tab=`, чтобы на вкладку вела ссылка).
  */
 export function Tabs({
   tabs,
+  active: controlled,
+  onChange,
   children,
 }: {
   tabs: readonly TabDef[];
+  active?: string;
+  onChange?: (key: string) => void;
   children: (active: string) => ReactNode;
 }) {
-  const [active, setActive] = useState(tabs[0]?.key ?? '');
+  const [own, setOwn] = useState(tabs[0]?.key ?? '');
+  const active = controlled ?? own;
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap gap-1 border-b border-line">
@@ -29,8 +37,10 @@ export function Tabs({
             <button
               key={t.key}
               type="button"
+              aria-pressed={on}
               onClick={() => {
-                setActive(t.key);
+                setOwn(t.key);
+                onChange?.(t.key);
               }}
               className={`-mb-px flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm transition-colors ${
                 on

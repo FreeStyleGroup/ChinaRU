@@ -1,5 +1,5 @@
 import { Card, CardBody } from '@china-ru/ui';
-
+import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
 import { formatPrice } from '@/lib/format';
@@ -8,7 +8,8 @@ import { localizedName } from '@/lib/localize';
 import type { ProductDto } from '@china-ru/shared';
 
 export function ProductCard({ product, locale }: { product: ProductDto; locale: string }) {
-  const image = product.images[0];
+  const t = useTranslations('product');
+  const image = product.images.find(i => i.isPrimary) ?? product.images[0];
   const name = localizedName(product, locale);
 
   return (
@@ -19,6 +20,7 @@ export function ProductCard({ product, locale }: { product: ProductDto; locale: 
             <img
               src={image.url}
               alt={name}
+              loading="lazy"
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
@@ -29,12 +31,17 @@ export function ProductCard({ product, locale }: { product: ProductDto; locale: 
         </div>
         <CardBody className="space-y-2">
           <h3 className="line-clamp-2 min-h-10 text-sm font-medium text-ink">{name}</h3>
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-ink">
-              {formatPrice(product.price, product.currency, locale)}
-            </span>
+          <div className="flex items-center justify-between gap-2">
+            {/* null — «цена по запросу»: не «0 ₽», а приглашение запросить цену. */}
+            {product.price === null ? (
+              <span className="text-sm font-semibold text-brand">{t('priceOnRequest')}</span>
+            ) : (
+              <span className="font-semibold text-ink">
+                {formatPrice(product.price, product.currency, locale)}
+              </span>
+            )}
             {product.reviewCount > 0 && (
-              <span className="text-xs text-muted">★ {product.rating}</span>
+              <span className="shrink-0 text-xs text-muted">★ {product.rating}</span>
             )}
           </div>
         </CardBody>

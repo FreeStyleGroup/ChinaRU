@@ -27,8 +27,13 @@ function toCategoryTree(cats: Category[]): CategoryTreeNode[] {
       nameRu: c.nameRu,
       nameEn: c.nameEn,
       nameZh: c.nameZh,
+      descriptionRu: c.descriptionRu,
+      descriptionEn: c.descriptionEn,
+      descriptionZh: c.descriptionZh,
+      imageUrl: c.imageUrl,
       depth: c.depth,
       sort: c.sort,
+      productCount: 0,
       createdAt: c.createdAt.toISOString(),
       updatedAt: c.updatedAt.toISOString(),
       children: [],
@@ -61,23 +66,44 @@ export class CatalogService {
     private readonly categoriesTtl: number
   ) {}
 
-  /** Дерево категорий с кешем (редко меняется). Промах кеша → читаем БД и кладём. */
+  /**
+   * Дерево категорий со счётчиками активных товаров (свои + все подразделы).
+   * Структура дерева меняется редко и берётся из кеша; счётчики меняются с
+   * каждым товаром, поэтому считаются при каждом запросе одним GROUP BY и в кеш
+   * не попадают — иначе витрина час показывала бы устаревшие числа.
+   */
   async categoryTree(): Promise<CategoryTreeNode[]> {
-    const cached = await this.cache.get<CategoryTreeNode[]>(CATEGORIES_CACHE_KEY);
-    if (cached) return cached;
-    const tree = toCategoryTree(await this.categories.listAll());
-    await this.cache.set(CATEGORIES_CACHE_KEY, tree, this.categoriesTtl);
-    return tree;
+    let tree = await this.cache.get<CategoryTreeNode[]>(CATEGORIES_CACHE_KEY);
+    if (!tree) {
+      tree = toCategoryTree(await this.categories.listAll());
+      await this.cache.set(CATEGORIES_CACHE_KEY, tree, this.categoriesTtl);
+    }
+    const counts = await this.products.countActiveByCategory();
+    const withCounts = (node: CategoryTreeNode): CategoryTreeNode => {
+      const children = node.children.map(withCounts);
+      const own = counts.get(node.id) ?? 0;
+      return {
+        ...node,
+        children,
+        productCount: own + children.reduce((sum, c) => sum + c.productCount, 0),
+      };
+    };
+    return tree.map(withCounts);
   }
 
+  /**
+   * Публичная выдача — только опубликованные товары. Фильтр `status` из запроса
+   * здесь не действует: черновики и снятые модератором товары видят продавец (в
+   * кабинете) и администратор (в админке), но не витрина.
+   */
   async listProducts(query: ProductListQuery): Promise<Paginated<ProductDto>> {
     const result = await this.products.list({
       page: query.page,
       limit: query.pageSize,
       sortBy: SORT_MAP[query.sort],
+      status: 'active',
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(query.sellerId ? { sellerId: query.sellerId } : {}),
-      ...(query.status ? { status: query.status } : {}),
       ...(query.minPrice !== undefined ? { minPrice: query.minPrice } : {}),
       ...(query.maxPrice !== undefined ? { maxPrice: query.maxPrice } : {}),
       ...(query.search ? { search: query.search } : {}),
@@ -90,7 +116,9 @@ export class CatalogService {
 
   async getProductBySlug(slug: string): Promise<ProductDto> {
     const product = await this.products.findBySlug(slug);
-    if (!product) throw new NotFoundError('Товар не найден', 'product_not_found');
+    if (product?.status !== 'active') {
+      throw new NotFoundError('Товар не найден', 'product_not_found');
+    }
     const images = await this.images.listByProduct(product.id);
     return toProductDto(product, images);
   }

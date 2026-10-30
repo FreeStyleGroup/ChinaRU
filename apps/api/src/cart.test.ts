@@ -78,7 +78,7 @@ describe('cart flow', () => {
     agent = request.agent(server);
     await agent
       .post('/api/v1/auth/register')
-      .send({ email: 'cart-buyer@china-ru.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'cart-buyer@china-ru.test', password: 'secret123' });
   });
 
   it('rejects cart access without auth → 401', async () => {

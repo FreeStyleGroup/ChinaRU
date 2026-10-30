@@ -47,7 +47,7 @@ describe('seller orders (fulfillment lifecycle)', () => {
     seller = request.agent(server);
     const reg = await seller
       .post('/api/v1/auth/register')
-      .send({ email: 'so-seller@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'so-seller@x.test', password: 'secret123' });
     const sellerUserId = reg.body.data.user.id as string;
     await new SellerRepository(db).create({
       userId: sellerUserId,
@@ -67,7 +67,7 @@ describe('seller orders (fulfillment lifecycle)', () => {
 
     // Покупатель оформляет заказ на 2 шт.
     buyer = request.agent(server);
-    await buyer.post('/api/v1/auth/register').send({ email: 'so-buyer@x.test', password: 'secret123' });
+    await buyer.post('/api/v1/auth/register').send({ pdConsent: true, email: 'so-buyer@x.test', password: 'secret123' });
     const order = await buyer.post('/api/v1/orders').send({ items: [{ productId, qty: 2 }] });
     orderId = order.body.data.id as string;
   });

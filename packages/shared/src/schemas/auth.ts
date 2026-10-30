@@ -11,6 +11,12 @@ export const registerSchema = z.object({
   locale: localeSchema.optional(),
   /** Числовой publicId пригласившего (реферальная программа MLM). */
   ref: z.coerce.number().int().positive().optional(),
+  /**
+   * Согласие на обработку персональных данных (ст. 9 152-ФЗ). Без него учётная
+   * запись не создаётся: проверка на сервере, а не только галочкой в форме, —
+   * иначе прямой запрос к API регистрировал бы без согласия.
+   */
+  pdConsent: z.literal(true, { error: 'Подтвердите согласие на обработку персональных данных' }),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 

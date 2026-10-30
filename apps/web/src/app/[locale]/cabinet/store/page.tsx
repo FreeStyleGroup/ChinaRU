@@ -4,17 +4,24 @@
  * «Начать торговать» → «Мой магазин». Любой пользователь подаёт заявку на продавца
  * (данные компании) → модерация админом → после подтверждения открывается кабинет
  * магазина (Обзор). У магазина числовой ID; никнейм доступен после верификации.
+ * Оформление публичной страницы (описание, баннер, логотип) доступно уже на
+ * проверке; запросы цены на товары «по запросу» — во вкладке «Запросы цены».
  */
-import { Button } from '@china-ru/ui';
-import { useState } from 'react';
-
+import { Button, buttonVariants } from '@china-ru/ui';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useState } from 'react';
 
 import { CompanyVacancies } from '@/components/cabinet/company-vacancies';
 import { useSellerProfile } from '@/components/cabinet/seller-context';
 import { SellerOrders } from '@/components/cabinet/seller-orders';
+import { SellerPriceRequests } from '@/components/cabinet/seller-price-requests';
 import { SellerProducts } from '@/components/cabinet/seller-products';
-import { Tabs } from '@/components/cabinet/tabs';
-import { accountClient, ClientApiError } from '@/lib/api-client';
+import { StoreDesign } from '@/components/cabinet/store-design';
+import { Tabs, type TabDef } from '@/components/cabinet/tabs';
+import { Link } from '@/i18n/navigation';
+import { accountClient, ClientApiError, sellerPriceRequestClient } from '@/lib/api-client';
+import { storePath } from '@/lib/store';
 
 import type { CreateSellerProfileInput, SellerProfileDto } from '@china-ru/shared';
 
@@ -53,7 +60,8 @@ function OnboardingForm({
   const [error, setError] = useState('');
 
   const set =
-    (key: keyof CreateSellerProfileInput) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    (key: keyof CreateSellerProfileInput) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       setForm(prev => ({ ...prev, [key]: e.target.value }));
     };
 
@@ -186,7 +194,14 @@ function OnboardingForm({
   );
 }
 
-function PendingState({ profile }: { profile: SellerProfileDto }) {
+/** Заявка на проверке. Оформить страницу магазина можно уже сейчас — к публикации она готова. */
+function PendingState({
+  profile,
+  onProfile,
+}: {
+  profile: SellerProfileDto;
+  onProfile: (p: SellerProfileDto) => void;
+}) {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-ink">Мой магазин</h1>
@@ -198,11 +213,18 @@ function PendingState({ profile }: { profile: SellerProfileDto }) {
           {profile.companyName}» проверяется модератором. Обычно это занимает 1–2 рабочих дня.
         </p>
       </div>
+      <StoreDesign profile={profile} onSaved={onProfile} />
     </div>
   );
 }
 
-function NicknamePanel({ profile, onSaved }: { profile: SellerProfileDto; onSaved: (p: SellerProfileDto) => void }) {
+function NicknamePanel({
+  profile,
+  onSaved,
+}: {
+  profile: SellerProfileDto;
+  onSaved: (p: SellerProfileDto) => void;
+}) {
   const [value, setValue] = useState(profile.nickname ?? '');
   const [status, setStatus] = useState<'idle' | 'saving' | 'error'>('idle');
   const [error, setError] = useState('');
@@ -300,6 +322,26 @@ function Placeholder({ text }: { text: string }) {
   );
 }
 
+/** Число новых (неотвеченных) запросов цены — для счётчика на вкладке. */
+function useNewPriceRequests(): { count: number | undefined; refresh: () => void } {
+  const [count, setCount] = useState<number | undefined>(undefined);
+  const refresh = useCallback((): void => {
+    sellerPriceRequestClient
+      .list({ status: 'new', pageSize: 1 })
+      .then(res => {
+        setCount(res.total);
+      })
+      .catch(() => {
+        // Счётчик — подсказка: не загрузился — вкладка просто без числа.
+        setCount(undefined);
+      });
+  }, []);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+  return { count, refresh };
+}
+
 function SellerDashboard({
   profile,
   onProfile,
@@ -307,6 +349,33 @@ function SellerDashboard({
   profile: SellerProfileDto;
   onProfile: (p: SellerProfileDto) => void;
 }) {
+  const t = useTranslations('cabinetStore');
+  const searchParams = useSearchParams();
+  const newRequests = useNewPriceRequests();
+
+  const tabs = STORE_TABS.flatMap((tab): TabDef[] =>
+    tab.key === 'orders'
+      ? [
+          tab,
+          {
+            key: 'requests',
+            label: t('tabRequests'),
+            ...(newRequests.count ? { count: newRequests.count } : {}),
+          },
+        ]
+      : [tab]
+  );
+  // Вкладка — в адресе (`?tab=requests`): на неё ведёт уведомление о новом запросе цены.
+  const tabParam = searchParams.get('tab');
+  const active = tabs.some(tab => tab.key === tabParam) ? (tabParam ?? 'overview') : 'overview';
+  const selectTab = (key: string): void => {
+    const url = new URL(window.location.href);
+    if (key === 'overview') url.searchParams.delete('tab');
+    else url.searchParams.set('tab', key);
+    // Нативный history.replaceState Next синхронизирует с useSearchParams — без перезагрузки.
+    window.history.replaceState(null, '', url);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -319,18 +388,34 @@ function SellerDashboard({
             ✓
           </span>
         </h1>
-        <span className="text-sm text-muted">
-          Магазин: <StoreHandle profile={profile} />
-        </span>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-sm text-muted">
+            Магазин: <StoreHandle profile={profile} />
+          </span>
+          <Link
+            href={storePath(profile)}
+            target="_blank"
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+          >
+            {t('openStore')} <span aria-hidden>↗</span>
+          </Link>
+        </div>
       </div>
 
-      <Tabs tabs={STORE_TABS}>
-        {active => {
-          if (active === 'products') return <SellerProducts />;
-          if (active === 'orders') return <SellerOrders />;
-          if (active === 'shop')
-            return <NicknamePanel profile={profile} onSaved={onProfile} />;
-          if (active === 'overview') return <StoreOverview />;
+      <Tabs tabs={tabs} active={active} onChange={selectTab}>
+        {current => {
+          if (current === 'products') return <SellerProducts />;
+          if (current === 'orders') return <SellerOrders />;
+          if (current === 'requests')
+            return <SellerPriceRequests onChanged={newRequests.refresh} />;
+          if (current === 'shop')
+            return (
+              <div className="space-y-6">
+                <StoreDesign profile={profile} onSaved={onProfile} />
+                <NicknamePanel profile={profile} onSaved={onProfile} />
+              </div>
+            );
+          if (current === 'overview') return <StoreOverview />;
           return <Placeholder text="Раздел в разработке." />;
         }}
       </Tabs>
@@ -351,7 +436,7 @@ export default function StorePage() {
     return <OnboardingForm rejected onApplied={setProfile} />;
   }
   if (profile.verifyStatus === 'pending') {
-    return <PendingState profile={profile} />;
+    return <PendingState profile={profile} onProfile={setProfile} />;
   }
   return <SellerDashboard profile={profile} onProfile={setProfile} />;
 }

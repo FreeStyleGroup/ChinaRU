@@ -17,6 +17,7 @@ import type {
   OrderItem,
   SellerOrderRow,
   PostWithAuthor,
+  PriceRequestRow,
   Product,
   Report,
   ProductImage,
@@ -50,6 +51,7 @@ import type {
   SellerOrderDto,
   PostCommentDto,
   PostDto,
+  PriceRequestDto,
   ProductDto,
   ProductImageDto,
   ReportDto,
@@ -58,6 +60,7 @@ import type {
   ResumePublicDto,
   ReviewDto,
   SellerProfileDto,
+  StoreDto,
   TenderBidDto,
   TenderDto,
   VehicleBrandDto,
@@ -108,12 +111,47 @@ export function toSellerProfileDto(s: SellerProfile): SellerProfileDto {
     contactEmail: s.contactEmail,
     contactPhone: s.contactPhone,
     description: s.description,
+    bannerUrl: s.bannerUrl,
+    logoUrl: s.logoUrl,
     rating: s.rating,
     reviewCount: s.reviewCount,
     verifyStatus: s.verifyStatus,
     verifiedAt: s.verifiedAt ? s.verifiedAt.toISOString() : null,
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
+  };
+}
+
+/** Публичная страница магазина — без реквизитов и контактов заявки. */
+export function toStoreDto(s: SellerProfile, productCount: number): StoreDto {
+  return {
+    id: s.id,
+    publicId: s.publicId,
+    nickname: s.nickname,
+    companyName: s.companyName,
+    companyNameZh: s.companyNameZh,
+    description: s.description,
+    bannerUrl: s.bannerUrl,
+    logoUrl: s.logoUrl,
+    rating: s.rating,
+    reviewCount: s.reviewCount,
+    verified: s.verifyStatus === 'verified',
+    productCount,
+    createdAt: s.createdAt.toISOString(),
+  };
+}
+
+export function toPriceRequestDto(r: PriceRequestRow): PriceRequestDto {
+  return {
+    id: r.request.id,
+    status: r.request.status,
+    qty: r.request.qty,
+    comment: r.request.comment,
+    contactPhone: r.request.contactPhone,
+    product: r.product,
+    buyer: r.buyer,
+    createdAt: r.request.createdAt.toISOString(),
+    updatedAt: r.request.updatedAt.toISOString(),
   };
 }
 
@@ -141,6 +179,7 @@ export function toProductDto(p: Product, images: ProductImage[]): ProductDto {
     rating: p.rating,
     reviewCount: p.reviewCount,
     tags: p.tags,
+    specs: p.specs,
     images: images.map(toProductImageDto),
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),

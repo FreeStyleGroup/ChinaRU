@@ -8,6 +8,7 @@ import {
   type Database,
 } from '@china-ru/db';
 import { createTestDb } from '@china-ru/db/testing';
+import { LEGAL_DOCS } from '@china-ru/shared';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
@@ -137,27 +138,42 @@ describe('auth flow', () => {
   it('rejects invalid registration with 422 + field errors', async () => {
     const res = await request(server)
       .post('/api/v1/auth/register')
-      .send({ email: 'not-an-email', password: 'short' });
+      .send({ pdConsent: true, email: 'not-an-email', password: 'short' });
     expect(res.status).toBe(422);
     expect(res.body.ok).toBe(false);
     expect(res.body.error.code).toBe('validation');
     expect(res.body.error.fields).toHaveProperty('email');
   });
 
+  it('refuses registration without consent to personal data processing', async () => {
+    const res = await request(server)
+      .post('/api/v1/auth/register')
+      .send({ email: 'no-consent@china-ru.test', password: 'secret123' });
+    expect(res.status).toBe(422);
+    expect(res.body.error.fields).toHaveProperty('pdConsent');
+    expect(await new UserRepository(db).findByEmail('no-consent@china-ru.test')).toBeNull();
+  });
+
   it('registers, sets cookies and returns the user', async () => {
     const res = await agent
       .post('/api/v1/auth/register')
-      .send({ email: 'Buyer@China-RU.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'Buyer@China-RU.test', password: 'secret123' });
     expect(res.status).toBe(201);
     expect(res.body.data.user.email).toBe('buyer@china-ru.test');
     expect(res.body.data.tokens.accessToken).toBeTypeOf('string');
     expect(res.headers['set-cookie']).toBeDefined();
   });
 
+  it('records when and to which document the consent was given', async () => {
+    const user = await new UserRepository(db).findByEmail('buyer@china-ru.test');
+    expect(user?.pdConsentAt).toBeInstanceOf(Date);
+    expect(user?.pdConsentDoc).toBe(LEGAL_DOCS.pdConsent);
+  });
+
   it('rejects duplicate email with 409', async () => {
     const res = await request(server)
       .post('/api/v1/auth/register')
-      .send({ email: 'buyer@china-ru.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'buyer@china-ru.test', password: 'secret123' });
     expect(res.status).toBe(409);
     expect(res.body.error.code).toBe('email_taken');
   });
@@ -181,7 +197,7 @@ describe('account (cabinet)', () => {
     agent = request.agent(server);
     await agent
       .post('/api/v1/auth/register')
-      .send({ email: 'acc@china.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'acc@china.test', password: 'secret123' });
   });
 
   it('updates profile fields', async () => {
@@ -239,7 +255,7 @@ describe('orders', () => {
     agent = request.agent(server);
     await agent
       .post('/api/v1/auth/register')
-      .send({ email: 'orderer@china-ru.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'orderer@china-ru.test', password: 'secret123' });
   });
 
   it('rejects order creation without auth → 401', async () => {

@@ -26,3 +26,4 @@ export * from './analytics.repository';
 export * from './content-agent.repository';
 export * from './article.repository';
 export * from './audit.repository';
+export * from './price-request.repository';

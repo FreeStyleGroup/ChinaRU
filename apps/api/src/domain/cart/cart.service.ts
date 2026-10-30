@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from '../../http/errors';
+import { BadRequestError, ConflictError, NotFoundError } from '../../http/errors';
 import { toCartDto } from '../dto';
 
 import type { OrderService } from '../orders/order.service';
@@ -21,6 +21,13 @@ export class CartService {
     if (!product) throw new NotFoundError('Товар недоступен', 'product_unavailable');
     if (product.status !== 'active') {
       throw new NotFoundError('Товар недоступен', 'product_unavailable');
+    }
+    // До остатка: у товара «по запросу» остаток обычно 0, а причина — цена.
+    if (product.price === null) {
+      throw new ConflictError(
+        'Цена по запросу — отправьте продавцу запрос цены',
+        'price_on_request'
+      );
     }
     if (product.stock < 1) {
       throw new BadRequestError('Товара нет в наличии', 'out_of_stock');

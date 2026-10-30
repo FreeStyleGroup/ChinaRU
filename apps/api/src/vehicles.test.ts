@@ -24,7 +24,7 @@ let server: Server;
 
 async function makeUser(email: string): Promise<request.Agent> {
   const agent = request.agent(server);
-  await agent.post('/api/v1/auth/register').send({ email, password: 'secret123' });
+  await agent.post('/api/v1/auth/register').send({ pdConsent: true, email, password: 'secret123' });
   return agent;
 }
 

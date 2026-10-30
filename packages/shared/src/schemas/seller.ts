@@ -47,6 +47,9 @@ export const sellerProfileDtoSchema = z.object({
   contactEmail: z.string().nullable(),
   contactPhone: z.string().nullable(),
   description: z.string().nullable(),
+  /** Оформление публичной страницы магазина (абсолютные адреса) или null. */
+  bannerUrl: z.string().nullable(),
+  logoUrl: z.string().nullable(),
   rating: z.string(),
   reviewCount: z.number().int(),
   verifyStatus: sellerVerifyStatusSchema,

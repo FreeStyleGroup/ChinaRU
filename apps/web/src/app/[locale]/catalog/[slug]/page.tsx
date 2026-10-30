@@ -1,16 +1,21 @@
-import { Badge, Container } from '@china-ru/ui';
+import { Badge, cn, Container } from '@china-ru/ui';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
-
+import { PriceRequestForm } from '@/components/price-request-form';
 import { ProductActions } from '@/components/product-actions';
+import { ProductGallery } from '@/components/product-gallery';
 import { ProductReviews } from '@/components/product-reviews';
-import { ApiError, catalogApi } from '@/lib/api';
+import { KeySpecs, ProductSpecs } from '@/components/product-specs';
+import { SellerCard } from '@/components/seller-card';
+import { Link } from '@/i18n/navigation';
+import { ApiError, catalogApi, storeApi } from '@/lib/api';
+import { categoryHref, findCategoryPath } from '@/lib/categories';
 import { formatPrice } from '@/lib/format';
 import { localizedName, pickText } from '@/lib/localize';
 import { breadcrumbJsonLd, buildMetadata, productJsonLd } from '@/lib/seo';
 
-import type { ProductDto, ReviewDto } from '@china-ru/shared';
+import type { CategoryTreeNode, ProductDto, ReviewDto, StoreDto } from '@china-ru/shared';
 import type { Metadata } from 'next';
 
 async function loadProduct(slug: string): Promise<ProductDto | null> {
@@ -25,6 +30,24 @@ async function loadProduct(slug: string): Promise<ProductDto | null> {
 async function loadReviews(productId: string): Promise<ReviewDto[]> {
   try {
     return await catalogApi.reviews(productId);
+  } catch {
+    return [];
+  }
+}
+
+/** Магазин продавца для блока «Продавец». Нет страницы магазина (404) или сбой — блок скрыт. */
+async function loadStore(sellerId: string): Promise<StoreDto | null> {
+  try {
+    return await storeApi.store(sellerId);
+  } catch {
+    return null;
+  }
+}
+
+/** Цепочка разделов товара для хлебных крошек; без дерева — без крошек раздела. */
+async function loadCategoryTrail(categoryId: string): Promise<CategoryTreeNode[]> {
+  try {
+    return findCategoryPath(await catalogApi.categories(), categoryId);
   } catch {
     return [];
   }
@@ -63,10 +86,15 @@ export default async function ProductPage({
   const { locale, slug } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('product');
+  const tc = await getTranslations('catalog');
 
   const product = await loadProduct(slug);
   if (!product) notFound();
-  const reviews = await loadReviews(product.id);
+  const [reviews, store, trail] = await Promise.all([
+    loadReviews(product.id),
+    loadStore(product.sellerId),
+    loadCategoryTrail(product.categoryId),
+  ]);
 
   const name = localizedName(product, locale);
   const description = pickText(
@@ -80,62 +108,101 @@ export default async function ProductPage({
     productJsonLd(product, path, { name, description }),
     breadcrumbJsonLd([
       { name: 'China.ru', path: `/${locale}` },
-      { name: 'Catalog', path: `/${locale}/catalog` },
+      { name: tc('title'), path: `/${locale}/catalog` },
+      ...trail.map(c => ({
+        name: localizedName(c, locale),
+        path: `/${locale}/catalog?categoryId=${encodeURIComponent(c.id)}`,
+      })),
       { name, path },
     ]),
   ];
-  const image = product.images[0];
+  const rating = Math.round(Number(product.rating));
 
   return (
-    <Container className="py-12">
+    <Container className="py-8 sm:py-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="grid gap-10 lg:grid-cols-2">
-        <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-surface">
-          {image ? (
-            <img src={image.url} alt={name} className="h-full w-full object-cover" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-6xl font-bold text-line">
-              {name.slice(0, 1)}
-            </div>
-          )}
-        </div>
 
-        <div className="space-y-6">
+      <nav aria-label={tc('breadcrumbs')} className="mb-6">
+        <ol className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted">
+          <li>
+            <Link href="/catalog" className="hover:text-brand">
+              {tc('title')}
+            </Link>
+          </li>
+          {trail.map(c => (
+            <li key={c.id} className="flex items-center gap-2">
+              <span aria-hidden>›</span>
+              <Link href={categoryHref(c.id)} className="hover:text-brand">
+                {localizedName(c, locale)}
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div className="grid gap-8 lg:grid-cols-2 lg:gap-10">
+        <ProductGallery images={product.images} name={name} />
+
+        <div className="min-w-0 space-y-6">
           <div className="space-y-2">
             <Badge>
               {t('sku')}: {product.sku}
             </Badge>
-            <h1 className="text-3xl font-bold tracking-tight text-ink">{name}</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{name}</h1>
             {product.reviewCount > 0 && (
               <p className="flex items-center gap-2 text-sm text-muted">
                 <span className="text-amber-500" aria-hidden>
-                  {'★'.repeat(Math.round(Number(product.rating)))}
-                  <span className="text-line">
-                    {'★'.repeat(5 - Math.round(Number(product.rating)))}
-                  </span>
+                  {'★'.repeat(rating)}
+                  <span className="text-line">{'★'.repeat(5 - rating)}</span>
                 </span>
-                {Number(product.rating).toFixed(1)} · {product.reviewCount} отзыв(ов)
+                {Number(product.rating).toFixed(1)} ·{' '}
+                {t('reviewCount', { count: product.reviewCount })}
               </p>
             )}
           </div>
 
-          <p className="text-3xl font-bold text-brand">
-            {formatPrice(product.price, product.currency, locale)}
-          </p>
-
-          <ProductActions productId={product.id} />
-
-          {description && (
-            <div className="space-y-2 border-t border-line pt-6">
-              <h2 className="text-lg font-semibold text-ink">{t('description')}</h2>
-              <p className="whitespace-pre-line text-muted">{description}</p>
+          {product.price === null ? (
+            <div className="space-y-4 rounded-2xl border border-line bg-surface/60 p-5">
+              <div>
+                <p className="text-2xl font-bold text-ink">{t('priceOnRequest')}</p>
+                <p className="mt-1 text-sm text-muted">{t('priceOnRequestHint')}</p>
+              </div>
+              <PriceRequestForm productId={product.id} />
             </div>
+          ) : (
+            <>
+              <p className="text-3xl font-bold text-brand">
+                {formatPrice(product.price, product.currency, locale)}
+              </p>
+              <ProductActions productId={product.id} />
+            </>
           )}
+
+          <KeySpecs specs={product.specs} />
+
+          {store && <SellerCard store={store} locale={locale} />}
         </div>
       </div>
+
+      {(product.specs.length > 0 || description) && (
+        <div
+          className={cn(
+            'mt-12 grid gap-10',
+            product.specs.length > 0 && description ? 'lg:grid-cols-2' : 'max-w-4xl'
+          )}
+        >
+          <ProductSpecs specs={product.specs} />
+          {description && (
+            <section className="space-y-4">
+              <h2 className="text-xl font-semibold text-ink">{t('description')}</h2>
+              <p className="leading-relaxed whitespace-pre-line text-muted">{description}</p>
+            </section>
+          )}
+        </div>
+      )}
 
       <div className="mt-12">
         <ProductReviews productId={product.id} initial={reviews} />

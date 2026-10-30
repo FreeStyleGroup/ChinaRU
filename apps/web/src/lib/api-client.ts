@@ -42,6 +42,11 @@ import type {
   GarageVehicleDto,
   ProductDto,
   ProductNameTranslationDto,
+  CreatePriceRequestInput,
+  PriceRequestDto,
+  PriceRequestListQuery,
+  PriceRequestStatus,
+  UpdateStoreInput,
   VehicleBrandDto,
   VehicleModelDto,
   VehicleType,
@@ -136,6 +141,36 @@ export const catalogClient = {
   categories: () => call<CategoryTreeNode[]>('/catalog/categories'),
 };
 
+/**
+ * Запрос цены покупателем по товару без цены. Ошибки: 401 — не вошёл; 404
+ * `product_not_found`; 409 `price_set` (цена уже есть — товар покупается),
+ * `own_product`, `price_request_exists` (открытый запрос уже отправлен).
+ */
+export const priceRequestClient = {
+  create: (productId: string, input: CreatePriceRequestInput) =>
+    call<{ id: string }>(`/catalog/products/${encodeURIComponent(productId)}/price-requests`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+};
+
+/** «Мой магазин» → «Запросы цены»: входящие запросы продавца и их статус. */
+export const sellerPriceRequestClient = {
+  list: (query: Partial<PriceRequestListQuery> = {}) => {
+    const sp = new URLSearchParams();
+    if (query.status) sp.set('status', query.status);
+    if (query.page) sp.set('page', String(query.page));
+    if (query.pageSize) sp.set('pageSize', String(query.pageSize));
+    const qs = sp.toString();
+    return call<Paginated<PriceRequestDto>>(`/seller/price-requests${qs ? `?${qs}` : ''}`);
+  },
+  setStatus: (id: string, status: PriceRequestStatus) =>
+    call<PriceRequestDto>(`/seller/price-requests/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+};
+
 /** Управление товарами продавца («Мой магазин»). */
 export const sellerProductClient = {
   list: () => call<ProductDto[]>('/seller/products'),
@@ -196,6 +231,17 @@ export const accountClient = {
       method: 'PUT',
       body: JSON.stringify({ nickname }),
     }),
+  /** Оформление публичной страницы магазина: описание, баннер, логотип. */
+  updateStore: (input: UpdateStoreInput) =>
+    call<SellerProfileDto>('/account/seller/store', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+  uploadStoreBanner: (file: File) => upload<SellerProfileDto>('/account/seller/store/banner', file),
+  removeStoreBanner: () =>
+    call<SellerProfileDto>('/account/seller/store/banner', { method: 'DELETE' }),
+  uploadStoreLogo: (file: File) => upload<SellerProfileDto>('/account/seller/store/logo', file),
+  removeStoreLogo: () => call<SellerProfileDto>('/account/seller/store/logo', { method: 'DELETE' }),
 };
 
 export const jobClient = {

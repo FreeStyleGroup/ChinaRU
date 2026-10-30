@@ -46,13 +46,13 @@ describe('seller products', () => {
   beforeAll(async () => {
     // Покупатель без магазина.
     buyer = request.agent(server);
-    await buyer.post('/api/v1/auth/register').send({ email: 'sp-buyer@x.test', password: 'secret123' });
+    await buyer.post('/api/v1/auth/register').send({ pdConsent: true, email: 'sp-buyer@x.test', password: 'secret123' });
 
     // Продавец: регистрируем и вручную выдаём верифицированный профиль магазина.
     seller = request.agent(server);
     const reg = await seller
       .post('/api/v1/auth/register')
-      .send({ email: 'sp-seller@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'sp-seller@x.test', password: 'secret123' });
     const userId = reg.body.data.user.id as string;
     await new SellerRepository(db).create({
       userId,

@@ -2,6 +2,7 @@
 
 import { slugify } from '@china-ru/shared';
 import { Button } from '@china-ru/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
 import { catalogClient, ClientApiError, sellerProductClient } from '@/lib/api-client';
@@ -11,6 +12,7 @@ import type {
   CategoryTreeNode,
   CreateProductInput,
   ProductDto,
+  ProductSpec,
   ProductStatus,
   UpdateProductInput,
 } from '@china-ru/shared';
@@ -35,6 +37,24 @@ function flattenCategories(nodes: CategoryTreeNode[], depth = 0): CategoryOption
   ]);
 }
 
+/** Строка редактора характеристик; `key` — только для React, на сервер не уходит. */
+interface SpecRow {
+  key: number;
+  name: string;
+  value: string;
+}
+
+/** Границы как у `productSpecsSchema` в @china-ru/shared. */
+const SPECS_MAX = 40;
+const SPEC_NAME_MAX = 120;
+const SPEC_VALUE_MAX = 500;
+
+let specRowSeq = 0;
+function specRow(name = '', value = ''): SpecRow {
+  specRowSeq += 1;
+  return { key: specRowSeq, name, value };
+}
+
 interface FormState {
   categoryId: string;
   slug: string;
@@ -44,8 +64,11 @@ interface FormState {
   nameZh: string;
   descriptionRu: string;
   price: string;
+  /** «Цена по запросу»: цена не указывается, покупатели присылают запрос цены. */
+  priceOnRequest: boolean;
   stock: string;
   status: ProductStatus;
+  specs: SpecRow[];
 }
 
 function blankForm(categoryId: string): FormState {
@@ -58,8 +81,10 @@ function blankForm(categoryId: string): FormState {
     nameZh: '',
     descriptionRu: '',
     price: '',
+    priceOnRequest: false,
     stock: '0',
     status: 'active',
+    specs: [],
   };
 }
 
@@ -72,10 +97,24 @@ function formFromProduct(p: ProductDto): FormState {
     nameEn: p.nameEn ?? '',
     nameZh: p.nameZh ?? '',
     descriptionRu: p.descriptionRu ?? '',
-    price: p.price,
+    price: p.price ?? '',
+    priceOnRequest: p.price === null,
     stock: String(p.stock),
     status: p.status,
+    specs: p.specs.map(s => specRow(s.name, s.value)),
   };
+}
+
+/**
+ * Характеристики к отправке: пустые строки отбрасываются; строка, где заполнено
+ * только одно поле, — ошибка (иначе продавец молча потерял бы половину данных).
+ */
+function specsToSave(rows: SpecRow[]): ProductSpec[] | null {
+  const filled = rows
+    .map(r => ({ name: r.name.trim(), value: r.value.trim() }))
+    .filter(r => r.name !== '' || r.value !== '');
+  if (filled.some(r => r.name === '' || r.value === '')) return null;
+  return filled;
 }
 
 /** Ограничения API на фото товара — проверяем до отправки, чтобы ошибка была понятной сразу. */
@@ -94,8 +133,7 @@ interface PendingImage {
   preview: string;
 }
 
-const inputCls =
-  'h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-brand';
+const inputCls = 'h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-brand';
 
 function ProductForm({
   initial,
@@ -108,6 +146,7 @@ function ProductForm({
   onSaved: () => void;
   onClose: () => void;
 }) {
+  const tp = useTranslations('sellerProduct');
   const [product, setProduct] = useState<ProductDto | null>(initial);
   const [form, setForm] = useState<FormState>(
     initial ? formFromProduct(initial) : blankForm(categories[0]?.id ?? '')
@@ -198,9 +237,37 @@ function ProductForm({
     setForm(prev => ({ ...prev, slug: slug.trim() === '' ? slugify(prev.nameRu) : slug }));
   };
 
+  const setSpec =
+    (key: number, field: 'name' | 'value') =>
+    (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const text = e.target.value;
+      setForm(prev => ({
+        ...prev,
+        specs: prev.specs.map(r => (r.key === key ? { ...r, [field]: text } : r)),
+      }));
+    };
+
+  const addSpec = (): void => {
+    setForm(prev =>
+      prev.specs.length >= SPECS_MAX ? prev : { ...prev, specs: [...prev.specs, specRow()] }
+    );
+  };
+
+  const removeSpec = (key: number): void => {
+    setForm(prev => ({ ...prev, specs: prev.specs.filter(r => r.key !== key) }));
+  };
+
   const save = async (): Promise<void> => {
-    setStatus('saving');
     setError('');
+    const specs = specsToSave(form.specs);
+    if (!specs) {
+      setStatus('error');
+      setError(tp('specIncomplete'));
+      return;
+    }
+    // null — «цена по запросу»: покупатели вместо корзины присылают запрос цены.
+    const price = form.priceOnRequest ? null : form.price.trim();
+    setStatus('saving');
     try {
       if (product) {
         const patch: UpdateProductInput = {
@@ -208,9 +275,11 @@ function ProductForm({
           slug: form.slug.trim(),
           sku: form.sku.trim(),
           nameRu: form.nameRu.trim(),
-          price: form.price.trim(),
+          price,
           stock: Number(form.stock),
           status: form.status,
+          // Все строки целиком: удалённая в форме характеристика удаляется и у товара.
+          specs,
           ...(form.nameEn.trim() ? { nameEn: form.nameEn.trim() } : {}),
           ...(form.nameZh.trim() ? { nameZh: form.nameZh.trim() } : {}),
           ...(form.descriptionRu.trim() ? { descriptionRu: form.descriptionRu.trim() } : {}),
@@ -222,8 +291,9 @@ function ProductForm({
           slug: form.slug.trim(),
           sku: form.sku.trim(),
           nameRu: form.nameRu.trim(),
-          price: form.price.trim(),
+          price,
           stock: Number(form.stock),
+          ...(specs.length > 0 ? { specs } : {}),
           ...(form.nameEn.trim() ? { nameEn: form.nameEn.trim() } : {}),
           ...(form.nameZh.trim() ? { nameZh: form.nameZh.trim() } : {}),
           ...(form.descriptionRu.trim() ? { descriptionRu: form.descriptionRu.trim() } : {}),
@@ -235,7 +305,12 @@ function ProductForm({
         }
         setProduct(created);
         const failedPhotos =
-          pending.length > 0 ? await uploadAll(created, pending.map(p => p.file)) : 0;
+          pending.length > 0
+            ? await uploadAll(
+                created,
+                pending.map(p => p.file)
+              )
+            : 0;
         pending.forEach(p => {
           URL.revokeObjectURL(p.preview);
         });
@@ -264,7 +339,9 @@ function ProductForm({
         current = await sellerProductClient.addImage(current.id, file);
         setProduct(current);
       } catch (err) {
-        failed.push(`«${file.name}»: ${err instanceof ClientApiError ? err.message : 'не загрузилось'}`);
+        failed.push(
+          `«${file.name}»: ${err instanceof ClientApiError ? err.message : 'не загрузилось'}`
+        );
       }
     }
     setUploading(false);
@@ -284,7 +361,10 @@ function ProductForm({
     if (product) {
       await uploadAll(product, ok);
     } else {
-      setPending(prev => [...prev, ...ok.map(file => ({ file, preview: URL.createObjectURL(file) }))]);
+      setPending(prev => [
+        ...prev,
+        ...ok.map(file => ({ file, preview: URL.createObjectURL(file) })),
+      ]);
     }
   };
 
@@ -364,7 +444,12 @@ function ProductForm({
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block space-y-1">
             <span className="text-sm font-medium text-ink">Категория *</span>
-            <select required value={form.categoryId} onChange={set('categoryId')} className={inputCls}>
+            <select
+              required
+              value={form.categoryId}
+              onChange={set('categoryId')}
+              className={inputCls}
+            >
               {categories.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.label}
@@ -372,16 +457,35 @@ function ProductForm({
               ))}
             </select>
           </label>
-          <label className="block space-y-1">
-            <span className="text-sm font-medium text-ink">Цена, ₽ *</span>
-            <input
-              required
-              value={form.price}
-              onChange={set('price')}
-              placeholder="1500.00"
-              className={inputCls}
-            />
-          </label>
+          <div className="space-y-2">
+            <label className="block space-y-1">
+              <span className="text-sm font-medium text-ink">
+                Цена, ₽{form.priceOnRequest ? '' : ' *'}
+              </span>
+              {/* Флажок «по запросу» сохраняет набранную цену: снял — она вернулась. */}
+              <input
+                required={!form.priceOnRequest}
+                disabled={form.priceOnRequest}
+                inputMode="decimal"
+                value={form.priceOnRequest ? '' : form.price}
+                onChange={set('price')}
+                placeholder={form.priceOnRequest ? tp('priceOnRequest') : '1500.00'}
+                className={`${inputCls} disabled:bg-surface disabled:text-muted`}
+              />
+            </label>
+            <label className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={form.priceOnRequest}
+                onChange={e => {
+                  const checked = e.target.checked;
+                  setForm(prev => ({ ...prev, priceOnRequest: checked }));
+                }}
+                className="h-4 w-4 shrink-0 accent-brand"
+              />
+              {tp('priceOnRequest')}
+            </label>
+          </div>
           <label className="block space-y-1">
             <span className="text-sm font-medium text-ink">Остаток *</span>
             <input
@@ -394,6 +498,11 @@ function ProductForm({
             />
           </label>
         </div>
+        {form.priceOnRequest && (
+          <p className="-mt-2 rounded-lg bg-surface px-3 py-2 text-xs text-muted">
+            {tp('priceOnRequestHint')}
+          </p>
+        )}
 
         <div className="space-y-1">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -436,12 +545,73 @@ function ProductForm({
           />
         </label>
 
+        {/* Характеристики: строки «название — значение», до 40 — таблица на странице товара */}
+        <div className="space-y-3 border-t border-line pt-4">
+          <div>
+            <p className="text-sm font-semibold text-ink">{tp('specs')}</p>
+            <p className="text-xs text-muted">{tp('specsHint')}</p>
+          </div>
+          {form.specs.length > 0 && (
+            <ul className="space-y-2">
+              {form.specs.map((row, i) => (
+                <li key={row.key} className="flex items-start gap-2">
+                  <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                    <input
+                      value={row.name}
+                      onChange={setSpec(row.key, 'name')}
+                      maxLength={SPEC_NAME_MAX}
+                      placeholder={tp('specName')}
+                      aria-label={`${tp('specName')} ${i + 1}`}
+                      className={inputCls}
+                    />
+                    <input
+                      value={row.value}
+                      onChange={setSpec(row.key, 'value')}
+                      maxLength={SPEC_VALUE_MAX}
+                      placeholder={tp('specValue')}
+                      aria-label={`${tp('specValue')} ${i + 1}`}
+                      className={inputCls}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeSpec(row.key);
+                    }}
+                    aria-label={`${tp('removeSpec')} ${i + 1}`}
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-xl text-muted hover:bg-surface hover:text-brand"
+                  >
+                    ×
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addSpec}
+              disabled={form.specs.length >= SPECS_MAX}
+            >
+              {tp('addSpec')}
+            </Button>
+            <span className="text-xs text-muted tabular-nums">
+              {form.specs.length} / {SPECS_MAX}
+            </span>
+          </div>
+        </div>
+
         {/* Фотографии: у нового товара копятся до создания, у сохранённого — загружаются сразу */}
         <div className="space-y-3 border-t border-line pt-4">
           <p className="text-sm font-semibold text-ink">Фотографии</p>
           <div className="flex flex-wrap gap-3">
             {product?.images.map(img => (
-              <div key={img.id} className="relative h-24 w-24 overflow-hidden rounded-xl border border-line">
+              <div
+                key={img.id}
+                className="relative h-24 w-24 overflow-hidden rounded-xl border border-line"
+              >
                 <img src={img.url} alt="" className="h-full w-full object-cover" />
                 <button
                   type="button"
@@ -461,7 +631,10 @@ function ProductForm({
               </div>
             ))}
             {pending.map((p, i) => (
-              <div key={p.preview} className="relative h-24 w-24 overflow-hidden rounded-xl border border-dashed border-brand/50">
+              <div
+                key={p.preview}
+                className="relative h-24 w-24 overflow-hidden rounded-xl border border-dashed border-brand/50"
+              >
                 <img src={p.preview} alt="" className="h-full w-full object-cover opacity-80" />
                 <button
                   type="button"
@@ -482,7 +655,9 @@ function ProductForm({
             ))}
             <label
               className={`flex h-24 w-24 flex-col items-center justify-center rounded-xl border border-dashed border-line text-sm text-muted ${
-                uploading ? 'cursor-wait opacity-60' : 'cursor-pointer hover:border-brand hover:text-brand'
+                uploading
+                  ? 'cursor-wait opacity-60'
+                  : 'cursor-pointer hover:border-brand hover:text-brand'
               }`}
             >
               {uploading ? 'Загрузка…' : '+ фото'}
@@ -527,19 +702,19 @@ function ProductForm({
               !form.sku.trim() ||
               !form.slug.trim() ||
               !form.categoryId ||
-              !form.price.trim()
+              (!form.priceOnRequest && !form.price.trim())
             }
           >
             {status === 'saving' ? 'Сохраняем…' : 'Сохранить'}
           </Button>
         </div>
       </form>
-
     </div>
   );
 }
 
 export function SellerProducts() {
+  const tp = useTranslations('sellerProduct');
   const [products, setProducts] = useState<ProductDto[] | null>(null);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [editing, setEditing] = useState<{ mode: 'new' } | { mode: 'edit'; id: string } | null>(
@@ -637,7 +812,8 @@ export function SellerProducts() {
             return (
               <div
                 key={p.id}
-                className="flex items-center gap-4 rounded-2xl border border-line bg-white p-3"
+                // flex-wrap + basis у текста: на телефоне статус и кнопки уходят второй строкой.
+                className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-line bg-white p-3"
               >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-surface">
                   {img ? (
@@ -648,10 +824,14 @@ export function SellerProducts() {
                     </div>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-40">
                   <p className="truncate font-medium text-ink">{p.nameRu}</p>
                   <p className="text-xs text-muted">
-                    {p.sku} · {formatPrice(p.price, p.currency, 'ru-RU')} · остаток {p.stock}
+                    {p.sku} ·{' '}
+                    {p.price === null
+                      ? tp('listOnRequest')
+                      : formatPrice(p.price, p.currency, 'ru-RU')}{' '}
+                    · остаток {p.stock}
                   </p>
                 </div>
                 <span

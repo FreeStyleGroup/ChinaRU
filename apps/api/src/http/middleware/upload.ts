@@ -11,6 +11,11 @@ export const AVATAR_MAX_BYTES = 2 * 1024 * 1024; // 2 МБ
 export const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024; // 10 МБ
 export const PRODUCT_IMAGE_MAX_BYTES = 5 * 1024 * 1024; // 5 МБ
 
+/** Оформление магазина: без GIF — баннер и логотип статичны. */
+export const STORE_IMAGE_MIMES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const STORE_BANNER_MAX_BYTES = 5 * 1024 * 1024; // 5 МБ
+export const STORE_LOGO_MAX_BYTES = 2 * 1024 * 1024; // 2 МБ
+
 export interface UploadLimits {
   maxBytes: number;
   mimes: readonly string[];

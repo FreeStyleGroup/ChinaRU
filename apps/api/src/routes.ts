@@ -10,6 +10,9 @@ import {
   IMAGE_MIMES,
   PRODUCT_IMAGE_MAX_BYTES,
   singleUpload,
+  STORE_BANNER_MAX_BYTES,
+  STORE_IMAGE_MIMES,
+  STORE_LOGO_MAX_BYTES,
 } from './http/middleware/upload';
 import { openApiDocument } from './openapi/spec';
 
@@ -37,6 +40,8 @@ export function createV1Router(container: Container, config: AppConfig): Router 
     tenders,
     vehicles,
     garage,
+    store,
+    priceRequests,
   } = container.controllers;
   const { requireAuth, optionalAuth } = container.authMiddleware;
 
@@ -49,6 +54,23 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   const productImageUpload = singleUpload('file', {
     maxBytes: PRODUCT_IMAGE_MAX_BYTES,
     mimes: IMAGE_MIMES,
+  });
+  // Оформление магазина: баннер ≤5 МБ, логотип ≤2 МБ; тип ещё раз проверяется по содержимому.
+  const storeBannerUpload = singleUpload('file', {
+    maxBytes: STORE_BANNER_MAX_BYTES,
+    mimes: STORE_IMAGE_MIMES,
+  });
+  const storeLogoUpload = singleUpload('file', {
+    maxBytes: STORE_LOGO_MAX_BYTES,
+    mimes: STORE_IMAGE_MIMES,
+  });
+
+  // Запросы цены: продавцу приходит уведомление на каждый — не даём засыпать его ими.
+  const priceRequestLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
   });
 
   // Усиленный лимит на чувствительные auth-эндпоинты (брутфорс/перебор).
@@ -78,6 +100,16 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/catalog/categories', catalog.categoryTree);
   router.get('/catalog/products', catalog.listProducts);
   router.get('/catalog/products/:slug', catalog.getProduct);
+  // «Цена по запросу»: покупатель отправляет продавцу запрос по товару без цены.
+  router.post(
+    '/catalog/products/:id/price-requests',
+    requireAuth,
+    priceRequestLimiter,
+    priceRequests.create
+  );
+
+  // ───────── магазины (публичная страница продавца) ─────────
+  router.get('/stores/:key', store.getPublic);
 
   // ───────── отзывы на товар (публичное чтение + создание покупателем) ─────────
   router.get('/products/:id/reviews', reviews.listForProduct);
@@ -86,6 +118,8 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── файлы (публичная раздача аватаров и фото товаров через прокси) ─────────
   router.get('/files/avatars/:userId', files.avatar);
   router.get('/files/product-images/:productId/:imageId', files.productImage);
+  router.get('/files/stores/:sellerId/:fileId', files.storeImage);
+  router.get('/files/categories/:categoryId/:fileId', files.categoryImage);
 
   // ───────── контент (публичное чтение): блок новостей + статьи разделов ─────────
   router.get('/content/articles', content.listArticles);
@@ -103,6 +137,12 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   router.get('/account/seller', requireAuth, account.getSeller);
   router.post('/account/seller/apply', requireAuth, account.applySeller);
   router.put('/account/seller/nickname', requireAuth, account.setSellerNickname);
+  // Оформление публичной страницы магазина.
+  router.patch('/account/seller/store', requireAuth, store.update);
+  router.post('/account/seller/store/banner', requireAuth, storeBannerUpload, store.uploadBanner);
+  router.delete('/account/seller/store/banner', requireAuth, store.removeBanner);
+  router.post('/account/seller/store/logo', requireAuth, storeLogoUpload, store.uploadLogo);
+  router.delete('/account/seller/store/logo', requireAuth, store.removeLogo);
   router.get('/account/referral', requireAuth, referral.summary);
   router.get('/account/horoscope', requireAuth, account.horoscope);
 
@@ -149,6 +189,10 @@ export function createV1Router(container: Container, config: AppConfig): Router 
   // ───────── заказы продавца («Мой магазин» → «Заказы»: список + статус исполнения) ─────────
   router.get('/seller/orders', requireAuth, sellerOrders.list);
   router.patch('/seller/orders/:orderId/fulfillment', requireAuth, sellerOrders.setFulfillment);
+
+  // ───────── запросы цены продавцу («Мой магазин» → «Запросы цены») ─────────
+  router.get('/seller/price-requests', requireAuth, priceRequests.listForSeller);
+  router.patch('/seller/price-requests/:id', requireAuth, priceRequests.setStatus);
 
   // ───────── соцсеть (B2B-лента: посты пользователей и компаний + нативная реклама) ─────────
   // Публичное чтение с optionalAuth — чтобы проставлять флаг `liked` авторизованному.

@@ -83,7 +83,14 @@ export const NOTIFICATION_TYPES = [
   'follow',
   'report',
   'tender',
+  'price_request',
 ] as const;
+/**
+ * Запрос цены по товару без цены («цена по запросу», B2B): новый → продавец
+ * ответил покупателю → закрыт. Ответ идёт по контактам покупателя вне платформы,
+ * статус ведёт продавец.
+ */
+export const PRICE_REQUEST_STATUSES = ['new', 'answered', 'closed'] as const;
 /** Объект жалобы и статус её рассмотрения модератором. */
 export const REPORT_TARGET_TYPES = ['post', 'user'] as const;
 export const REPORT_STATUSES = ['pending', 'resolved', 'dismissed'] as const;
@@ -181,6 +188,7 @@ export const tenderLawSchema = z.enum(TENDER_LAWS);
 export const tenderStatusSchema = z.enum(TENDER_STATUSES);
 export const tenderBidStatusSchema = z.enum(TENDER_BID_STATUSES);
 export const vehicleTypeSchema = z.enum(VEHICLE_TYPES);
+export const priceRequestStatusSchema = z.enum(PRICE_REQUEST_STATUSES);
 
 export type UserRole = z.infer<typeof userRoleSchema>;
 export type UserStatus = z.infer<typeof userStatusSchema>;
@@ -201,6 +209,7 @@ export type JobCategory = z.infer<typeof jobCategorySchema>;
 export type SocialPostStatus = z.infer<typeof socialPostStatusSchema>;
 export type BookingStatus = z.infer<typeof bookingStatusSchema>;
 export type NotificationType = z.infer<typeof notificationTypeSchema>;
+export type PriceRequestStatus = z.infer<typeof priceRequestStatusSchema>;
 export type ReportTargetType = z.infer<typeof reportTargetTypeSchema>;
 export type ReportStatus = z.infer<typeof reportStatusSchema>;
 export type DevicePlatform = z.infer<typeof devicePlatformSchema>;

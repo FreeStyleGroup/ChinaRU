@@ -33,7 +33,7 @@ afterAll(async () => {
 describe('cabinet horoscope forecast', () => {
   it('requires a birthday, then returns the sign + daily facets', async () => {
     const agent = request.agent(server);
-    await agent.post('/api/v1/auth/register').send({ email: 'horo@x.test', password: 'secret123' });
+    await agent.post('/api/v1/auth/register').send({ pdConsent: true, email: 'horo@x.test', password: 'secret123' });
 
     // Без даты рождения — 400.
     const noBirthday = await agent.get('/api/v1/account/horoscope');

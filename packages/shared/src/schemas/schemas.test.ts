@@ -13,13 +13,26 @@ describe('auth schemas', () => {
     const parsed = registerSchema.parse({
       email: '  User@Example.COM ',
       password: 'secret123',
+      pdConsent: true,
     });
     expect(parsed.email).toBe('user@example.com');
   });
 
   it('register rejects letters-only password', () => {
-    const res = registerSchema.safeParse({ email: 'a@b.co', password: 'onlyletters' });
+    const res = registerSchema.safeParse({
+      email: 'a@b.co',
+      password: 'onlyletters',
+      pdConsent: true,
+    });
     expect(res.success).toBe(false);
+  });
+
+  it('register requires consent to personal data processing', () => {
+    for (const pdConsent of [undefined, false, 'true', 1]) {
+      const res = registerSchema.safeParse({ email: 'a@b.co', password: 'secret123', pdConsent });
+      expect(res.success).toBe(false);
+      if (!res.success) expect(Object.keys(fieldErrors(res.error))).toContain('pdConsent');
+    }
   });
 
   it('login requires a non-empty password', () => {

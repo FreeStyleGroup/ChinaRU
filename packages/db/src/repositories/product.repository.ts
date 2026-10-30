@@ -1,11 +1,13 @@
-import { and, asc, count, desc, eq, gte, ilike, isNull, lte, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, ilike, isNull, lte, sql, type SQL } from 'drizzle-orm';
 
-import { products } from '../schema';
+import { productImages, products } from '../schema';
 
 import type { Database } from '../client';
 
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
+/** Фото, которое создаётся вместе с товаром (productId подставляется сам). */
+export type NewProductImageOfProduct = Omit<typeof productImages.$inferInsert, 'productId'>;
 export type ProductUpdate = Partial<
   Omit<NewProduct, 'id' | 'sellerId' | 'createdAt' | 'updatedAt'>
 >;
@@ -54,11 +56,13 @@ export class ProductRepository {
 
     const where = and(...this.buildConditions(f));
 
+    // Товары «по запросу» (цена NULL) при сортировке по цене — в конце списка в обе
+    // стороны: у них нет цены, по которой их можно поставить между другими.
     const orderBy =
       f.sortBy === 'price_asc'
-        ? asc(products.price)
+        ? sql`${products.price} ASC NULLS LAST`
         : f.sortBy === 'price_desc'
-          ? desc(products.price)
+          ? sql`${products.price} DESC NULLS LAST`
           : f.sortBy === 'rating'
             ? desc(products.rating)
             : desc(products.createdAt);
@@ -67,7 +71,7 @@ export class ProductRepository {
       .select()
       .from(products)
       .where(where)
-      .orderBy(orderBy)
+      .orderBy(orderBy, asc(products.id))
       .limit(limit)
       .offset(offset);
 
@@ -85,6 +89,40 @@ export class ProductRepository {
       .where(and(eq(products.id, id), isNull(products.deletedAt)))
       .limit(1);
     return row ?? null;
+  }
+
+  /** Активных товаров по каждой категории (только категории, где они есть). */
+  async countActiveByCategory(): Promise<Map<string, number>> {
+    const rows = await this.db
+      .select({ categoryId: products.categoryId, value: count() })
+      .from(products)
+      .where(and(eq(products.status, 'active'), isNull(products.deletedAt)))
+      .groupBy(products.categoryId);
+    return new Map(rows.map(r => [r.categoryId, r.value]));
+  }
+
+  /** Все товары категории в любом статусе (кроме удалённых) — можно ли убрать категорию. */
+  async countByCategory(categoryId: string): Promise<number> {
+    const [agg] = await this.db
+      .select({ value: count() })
+      .from(products)
+      .where(and(eq(products.categoryId, categoryId), isNull(products.deletedAt)));
+    return agg?.value ?? 0;
+  }
+
+  /** Активных товаров у продавца (счётчик на странице магазина). */
+  async countActiveBySeller(sellerId: string): Promise<number> {
+    const [agg] = await this.db
+      .select({ value: count() })
+      .from(products)
+      .where(
+        and(
+          eq(products.sellerId, sellerId),
+          eq(products.status, 'active'),
+          isNull(products.deletedAt)
+        )
+      );
+    return agg?.value ?? 0;
   }
 
   async findBySlug(slug: string): Promise<Product | null> {
@@ -112,6 +150,21 @@ export class ProductRepository {
     const [row] = await this.db.insert(products).values(data).returning();
     if (!row) throw new Error('products.insert returned no row');
     return row;
+  }
+
+  /**
+   * Товар вместе с фото — одной транзакцией: опубликованный товар не появится
+   * на витрине без картинок, даже если запись фото не удалась.
+   */
+  async createWithImages(data: NewProduct, images: NewProductImageOfProduct[]): Promise<Product> {
+    return this.db.transaction(async tx => {
+      const [row] = await tx.insert(products).values(data).returning();
+      if (!row) throw new Error('products.insert returned no row');
+      if (images.length > 0) {
+        await tx.insert(productImages).values(images.map(i => ({ ...i, productId: row.id })));
+      }
+      return row;
+    });
   }
 
   /** Обновление с проверкой владельца (продавца) — на уровне запроса. */

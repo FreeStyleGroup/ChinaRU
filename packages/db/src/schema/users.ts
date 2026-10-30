@@ -54,6 +54,13 @@ export const users = pgTable(
     referralBalance: numeric('referral_balance', { precision: 14, scale: 2 })
       .notNull()
       .default('0'),
+    /**
+     * Согласие на обработку персональных данных: когда дано и на какой документ
+     * (адрес опубликованного текста). Пусто — учётная запись создана до того,
+     * как регистрация стала требовать согласие.
+     */
+    pdConsentAt: timestamp('pd_consent_at', { withTimezone: true }),
+    pdConsentDoc: text('pd_consent_doc'),
     /** Включённые опциональные разделы кабинета (ключи из CABINET_SECTIONS). */
     menuSections: text('menu_sections')
       .array()
@@ -118,6 +125,9 @@ export const sellerProfiles = pgTable(
     contactEmail: text('contact_email'),
     contactPhone: text('contact_phone'),
     description: text('description'),
+    /** Оформление публичной страницы магазина: баннер и логотип (адреса файлов в хранилище). */
+    bannerUrl: text('banner_url'),
+    logoUrl: text('logo_url'),
     rating: numeric('rating', { precision: 3, scale: 2 }).notNull().default('0'),
     reviewCount: integer('review_count').notNull().default(0),
     verifyStatus: sellerVerifyStatus('verify_status').notNull().default('unverified'),

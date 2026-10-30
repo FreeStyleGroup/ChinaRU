@@ -14,6 +14,7 @@ import {
   OAUTH_PROVIDERS,
   ORDER_STATUSES,
   FULFILLMENT_STATUSES,
+  PRICE_REQUEST_STATUSES,
   PRODUCT_STATUSES,
   REFERRAL_EVENTS,
   REPORT_STATUSES,
@@ -69,3 +70,4 @@ export const tenderLaw = pgEnum('tender_law', TENDER_LAWS);
 export const tenderStatus = pgEnum('tender_status', TENDER_STATUSES);
 export const tenderBidStatus = pgEnum('tender_bid_status', TENDER_BID_STATUSES);
 export const vehicleType = pgEnum('vehicle_type', VEHICLE_TYPES);
+export const priceRequestStatus = pgEnum('price_request_status', PRICE_REQUEST_STATUSES);

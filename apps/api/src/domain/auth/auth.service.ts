@@ -5,6 +5,7 @@ import {
   type User,
   type UserRepository,
 } from '@china-ru/db';
+import { LEGAL_DOCS } from '@china-ru/shared';
 import { and, eq, isNull } from 'drizzle-orm';
 
 import {
@@ -60,11 +61,16 @@ export class AuthService {
     }
 
     const passwordHash = await this.deps.passwords.hash(input.password);
+    // Согласие на обработку ПД проверено схемой (pdConsent === true); фиксируем,
+    // когда и на какой опубликованный текст оно дано — это ответ оператора на
+    // вопрос «на каком основании обрабатываются данные» (ч. 3 ст. 9 152-ФЗ).
     const created = await this.deps.users.create({
       email: input.email,
       passwordHash,
       name: input.name ?? null,
       locale: input.locale ?? 'ru',
+      pdConsentAt: new Date(),
+      pdConsentDoc: LEGAL_DOCS.pdConsent,
     });
 
     if (input.ref !== undefined && this.deps.referrals) {

@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { isUniqueViolation } from '../errors';
 import { createTestDb } from '../testing/pglite';
 
 import { CategoryRepository } from './category.repository';
 import { OrderError, OrderRepository } from './order.repository';
+import { ProductImageRepository } from './product-image.repository';
 import { ProductRepository } from './product.repository';
 import { SellerRepository } from './seller.repository';
 import { UserRepository } from './user.repository';
@@ -144,6 +146,34 @@ describe('ProductRepository.list', () => {
 
     const updated = await products.updateOwned(product.id, seller.id, { stock: 7 });
     expect(updated?.stock).toBe(7);
+  });
+});
+
+describe('ProductRepository.createWithImages', () => {
+  it('записывает товар и фото вместе; при занятом слаге — ни товара, ни фото', async () => {
+    const { seller, category } = await baseFixtures();
+    const { products } = repos();
+    const images = new ProductImageRepository(handle.db);
+    const base = { sellerId: seller.id, categoryId: category.id, nameRu: 'Станок', price: null };
+    const photos = [
+      { url: 'https://x.test/1', sort: 0, isPrimary: true },
+      { url: 'https://x.test/2', sort: 1, isPrimary: false },
+    ];
+
+    const created = await products.createWithImages({ ...base, slug: 'lathe', sku: 'L-1' }, photos);
+    expect((await images.listByProduct(created.id)).map(i => i.url)).toEqual([
+      'https://x.test/1',
+      'https://x.test/2',
+    ]);
+
+    // Слаг занят, даже если товар удалён: уникальный индекс видит и удалённые.
+    await products.softDeleteOwned(created.id, seller.id);
+    const failed = await products
+      .createWithImages({ ...base, slug: 'lathe', sku: 'L-2' }, photos)
+      .catch((error: unknown) => error);
+    expect(isUniqueViolation(failed, 'products_slug_uidx')).toBe(true);
+    expect(isUniqueViolation(failed, 'products_seller_sku_uidx')).toBe(false);
+    expect(await products.findBySellerSku(seller.id, 'L-2')).toBeNull();
   });
 });
 

@@ -44,4 +44,28 @@ export class CategoryRepository {
       .limit(1);
     return row ?? null;
   }
+
+  async update(
+    id: string,
+    patch: Partial<Omit<NewCategory, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Category | null> {
+    const [row] = await this.db
+      .update(categories)
+      .set(patch)
+      .where(and(eq(categories.id, id), isNull(categories.deletedAt)))
+      .returning();
+    return row ?? null;
+  }
+
+  /**
+   * Мягкое удаление пустой категории. Слаг освобождается под тем же именем не
+   * будет (уникальный индекс по slug), поэтому так убирают только разделы,
+   * которые больше не нужны.
+   */
+  async softDelete(id: string): Promise<void> {
+    await this.db
+      .update(categories)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(categories.id, id), isNull(categories.deletedAt)));
+  }
 }

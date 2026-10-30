@@ -113,6 +113,20 @@
       "when": 1793228396415,
       "tag": "0015_order_number",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793381466402,
+      "tag": "0016_pd_consent",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793383939917,
+      "tag": "0017_catalog_store_price_requests",
+      "breakpoints": true
     }
   ]
 }

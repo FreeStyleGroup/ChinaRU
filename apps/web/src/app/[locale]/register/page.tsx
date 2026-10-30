@@ -1,5 +1,6 @@
 'use client';
 
+import { LEGAL_DOCS } from '@china-ru/shared';
 import { Button, Container } from '@china-ru/ui';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -27,14 +28,22 @@ function RegisterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [consent, setConsent] = useState(false);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = async (): Promise<void> => {
+    if (!consent) return;
     setLoading(true);
     setError(false);
     try {
-      await register({ email, password, ...(name ? { name } : {}), ...(ref ? { ref } : {}) });
+      await register({
+        email,
+        password,
+        pdConsent: true,
+        ...(name ? { name } : {}),
+        ...(ref ? { ref } : {}),
+      });
       router.push('/');
     } catch {
       setError(true);
@@ -94,8 +103,43 @@ function RegisterForm() {
               className="h-11 w-full rounded-lg border border-line px-3 outline-none focus:border-brand"
             />
           </label>
+          <label className="flex items-start gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              required
+              checked={consent}
+              onChange={e => {
+                setConsent(e.target.checked);
+              }}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+            />
+            <span>
+              {t.rich('consent', {
+                consent: chunks => (
+                  <a
+                    href={LEGAL_DOCS.pdConsent}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-brand underline"
+                  >
+                    {chunks}
+                  </a>
+                ),
+                policy: chunks => (
+                  <a
+                    href={LEGAL_DOCS.privacyPolicy}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-brand underline"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </span>
+          </label>
           {error && <p className="text-sm text-brand">{t('error')}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || !consent}>
             {t('submitRegister')}
           </Button>
         </form>

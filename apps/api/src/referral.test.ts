@@ -63,7 +63,7 @@ describe('referral MLM', () => {
     const referrer = request.agent(server);
     const reg = await referrer
       .post('/api/v1/auth/register')
-      .send({ email: 'referrer@x.test', password: 'secret123' });
+      .send({ pdConsent: true, email: 'referrer@x.test', password: 'secret123' });
     const refPublicId = (reg.body as { data: { user: { publicId: number } } }).data.user.publicId;
     expect(refPublicId).toBeGreaterThanOrEqual(100001);
 
@@ -71,7 +71,7 @@ describe('referral MLM', () => {
     const referee = request.agent(server);
     await referee
       .post('/api/v1/auth/register')
-      .send({ email: 'referee@x.test', password: 'secret123', ref: refPublicId });
+      .send({ pdConsent: true, email: 'referee@x.test', password: 'secret123', ref: refPublicId });
     const order = await referee.post('/api/v1/orders').send({ items: [{ productId, qty: 1 }] });
     expect(order.status).toBe(201);
 

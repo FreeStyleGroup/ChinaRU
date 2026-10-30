@@ -15,7 +15,7 @@ let server: Server;
 
 async function makeAgent(email: string, promote: 'admin' | 'seller' | null) {
   const agent = request.agent(server);
-  const res = await agent.post('/api/v1/auth/register').send({ email, password: 'secret123' });
+  const res = await agent.post('/api/v1/auth/register').send({ pdConsent: true, email, password: 'secret123' });
   const userId = (res.body as { data: { user: { id: string } } }).data.user.id;
   if (promote === 'admin') {
     await new UserRepository(db).update(userId, { role: 'admin' });

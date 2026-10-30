@@ -1,18 +1,27 @@
 import { DEFAULT_CONTENT_AGENTS, HOROSCOPE_HERO_IMAGE, slugify, zodiacImage } from '@china-ru/shared';
 
+import { INDUSTRIAL_CATALOG } from './catalog-dataset';
 import { ArticleRepository, CategoryRepository, ContentAgentRepository } from './repositories';
 import { metroCities } from './schema';
 import { seedVehicles } from './seed-vehicles';
 
 import type { Database } from './client';
 
-/** Корневые категории каталога: без них продавцу некуда положить товар. */
-const ROOT_CATEGORIES = [
-  { slug: 'electronics', nameRu: 'Электроника', nameZh: '电子产品', sort: 10 },
-  { slug: 'clothing', nameRu: 'Одежда и обувь', nameZh: '服装', sort: 20 },
-  { slug: 'home', nameRu: 'Дом и сад', nameZh: '家居', sort: 30 },
-  { slug: 'industrial', nameRu: 'Промышленное оборудование', nameZh: '工业设备', sort: 40 },
-];
+/**
+ * Корневые категории каталога — разделы основного сайта china-ru.ru (маркетплейс
+ * промышленного оборудования): без них продавцу некуда положить товар. Обложки
+ * разделов и товары переносит отдельный сценарий seed-catalog.
+ */
+const ROOT_CATEGORIES = INDUSTRIAL_CATALOG.categories.map(c => ({
+  slug: c.slug,
+  nameRu: c.nameRu,
+  nameEn: c.nameEn,
+  nameZh: c.nameZh,
+  descriptionRu: c.descriptionRu,
+  descriptionEn: c.descriptionEn,
+  descriptionZh: c.descriptionZh,
+  sort: c.sort,
+}));
 
 /**
  * Справочные и демонстрационные данные экземпляра: корневые категории каталога,

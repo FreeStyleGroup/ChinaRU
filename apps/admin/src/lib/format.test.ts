@@ -11,7 +11,9 @@ describe('admin format', () => {
     expect(formatDate('not-a-date')).toBe('not-a-date');
   });
 
-  it('formats money with uppercased currency', () => {
-    expect(formatMoney('200.00', 'rub')).toBe('200.00 RUB');
+  // Суммы для людей (aef833b): разряды через неразрывный пробел, без копеек, знак валюты.
+  it('formats money for people: grouped, no kopecks, currency sign', () => {
+    expect(formatMoney('200.00', 'rub')).toMatch(/^200\s₽$/u);
+    expect(formatMoney('99000', 'rub')).toMatch(/^99\s000\s₽$/u);
   });
 });

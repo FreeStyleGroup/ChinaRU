@@ -36,7 +36,7 @@ describe('seedReferenceData', () => {
   it('наполняет каталог категориями — без них продавец не может завести товар', async () => {
     await seedReferenceData(handle.db);
     const s = await snapshot();
-    expect(s.categories).toBe(4);
+    expect(s.categories).toBe(12);
     expect(s.metro).toBe(2);
     expect(s.articles).toBeGreaterThan(0);
     expect(s.brands).toBeGreaterThan(0);

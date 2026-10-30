@@ -5,12 +5,18 @@
  * в каталоге подбираются применимые запчасти (через таблицу fitment). Живые данные.
  */
 import { Button } from '@china-ru/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { Link } from '@/i18n/navigation';
 import { ClientApiError, garageClient, vehicleClient } from '@/lib/api-client';
 
-import type { GarageVehicleDto, ProductDto, VehicleBrandDto, VehicleModelDto } from '@china-ru/shared';
+import type {
+  GarageVehicleDto,
+  ProductDto,
+  VehicleBrandDto,
+  VehicleModelDto,
+} from '@china-ru/shared';
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEARS = Array.from({ length: CURRENT_YEAR - 1999 }, (_, i) => CURRENT_YEAR - i);
@@ -26,6 +32,7 @@ const TO_PARTS = [
 ];
 
 export default function GaragePage() {
+  const tp = useTranslations('product');
   const [cars, setCars] = useState<GarageVehicleDto[]>([]);
   const [brands, setBrands] = useState<VehicleBrandDto[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -273,13 +280,19 @@ export default function GaragePage() {
                     className="rounded-xl border border-line bg-white p-3 transition-colors hover:border-brand"
                   >
                     {p.images[0] ? (
-                      <img src={p.images[0].url} alt={p.nameRu} className="mb-2 h-24 w-full rounded object-cover" />
+                      <img
+                        src={p.images[0].url}
+                        alt={p.nameRu}
+                        className="mb-2 h-24 w-full rounded object-cover"
+                      />
                     ) : (
                       <div className="mb-2 h-24 w-full rounded bg-surface" />
                     )}
                     <p className="line-clamp-2 text-sm text-ink">{p.nameRu}</p>
                     <p className="mt-1 font-semibold text-ink">
-                      {Number(p.price).toLocaleString('ru-RU')} ₽
+                      {p.price === null
+                        ? tp('priceOnRequest')
+                        : `${Number(p.price).toLocaleString('ru-RU')} ₽`}
                     </p>
                   </Link>
                 ))}

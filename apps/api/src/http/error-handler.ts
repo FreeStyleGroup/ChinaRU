@@ -11,6 +11,7 @@ const ORDER_ERROR_STATUS: Record<OrderError['code'], number> = {
   empty_order: 400,
   product_unavailable: 409,
   insufficient_stock: 409,
+  price_on_request: 409,
 };
 
 /**

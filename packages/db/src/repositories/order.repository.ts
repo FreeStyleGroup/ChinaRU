@@ -36,7 +36,7 @@ export interface CreateOrderInput {
 /** Ошибка доменной логики заказа; сервис (R3) маппит code → HTTP. */
 export class OrderError extends Error {
   constructor(
-    readonly code: 'empty_order' | 'product_unavailable' | 'insufficient_stock',
+    readonly code: 'empty_order' | 'product_unavailable' | 'insufficient_stock' | 'price_on_request',
     message: string
   ) {
     super(message);
@@ -78,6 +78,12 @@ export class OrderRepository {
         }
         if (product.status !== 'active') {
           throw new OrderError('product_unavailable', `Product ${item.productId} is unavailable`);
+        }
+        // «Цена по запросу» — заказать по цене нельзя, только запросить цену у продавца.
+        // Проверяется до остатка: у такого товара остаток обычно 0, и покупатель
+        // должен узнать причину («запросите цену»), а не «нет в наличии».
+        if (product.price === null) {
+          throw new OrderError('price_on_request', `Product ${item.productId} has no price`);
         }
         if (product.stock < item.qty) {
           throw new OrderError('insufficient_stock', `Not enough stock for ${item.productId}`);

@@ -55,7 +55,7 @@ describe('подтверждение почты', () => {
     const email = 'verify-me@x.test';
     const reg = await request(server)
       .post('/api/v1/auth/register')
-      .send({ email, password: 'secret12345', name: 'Тест' });
+      .send({ pdConsent: true, email, password: 'secret12345', name: 'Тест' });
     expect(reg.status).toBe(201);
 
     const users = new UserRepository(db);
@@ -75,7 +75,7 @@ describe('подтверждение почты', () => {
     const email = 'banned@x.test';
     await request(server)
       .post('/api/v1/auth/register')
-      .send({ email, password: 'secret12345', name: 'Тест' });
+      .send({ pdConsent: true, email, password: 'secret12345', name: 'Тест' });
     const users = new UserRepository(db);
     const user = await users.findByEmail(email);
     if (!user) throw new Error('user not created');

@@ -63,7 +63,7 @@ async function seed(database: Database): Promise<void> {
 /** Регистрирует пользователя агентом и при необходимости повышает его до admin. */
 async function makeAgent(email: string, promote: boolean) {
   const agent = request.agent(server);
-  const res = await agent.post('/api/v1/auth/register').send({ email, password: 'secret123' });
+  const res = await agent.post('/api/v1/auth/register').send({ pdConsent: true, email, password: 'secret123' });
   if (promote) {
     const userId = (res.body as { data: { user: { id: string } } }).data.user.id;
     await new UserRepository(db).update(userId, { role: 'admin' });

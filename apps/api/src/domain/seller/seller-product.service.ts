@@ -129,6 +129,7 @@ export class SellerProductService {
       ...(input.descriptionZh !== undefined ? { descriptionZh: input.descriptionZh } : {}),
       ...(input.currency ? { currency: input.currency } : {}),
       ...(input.tags ? { tags: input.tags } : {}),
+      ...(input.specs ? { specs: input.specs } : {}),
     });
     return toProductDto(created, []);
   }
@@ -168,6 +169,7 @@ export class SellerProductService {
     if (input.stock !== undefined) patch.stock = input.stock;
     if (input.status !== undefined) patch.status = input.status;
     if (input.tags !== undefined) patch.tags = input.tags;
+    if (input.specs !== undefined) patch.specs = input.specs;
 
     const updated = await this.products.updateOwned(productId, seller.id, patch);
     if (!updated) throw new NotFoundError('Товар не найден', 'product_not_found');
